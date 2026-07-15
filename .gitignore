@@ -1,0 +1,24 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# node
+node_modules/
+.next/
+
+# app data — never commit audio or analysis DBs (copyright + size)
+*.db
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.ogg
+.disstruments/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
