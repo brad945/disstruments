@@ -1,0 +1,62 @@
+# CLAUDE.md — Disstruments
+
+Song deconstruction app: upload a song → stems + fine-grained instrument identification
++ key/BPM in one DAW-style report. Personal project (Bradley), doubling as an ML
+engineering portfolio piece.
+
+## Read these before building anything
+
+- `PRD.md` — product scope. **Scope law: every feature must trace to an F-number.
+  Anything else needs Bradley's explicit approval as a PRD amendment first. Never
+  silently add features.** Amendment A1 (bottom of PRD) is the current direction.
+- `SYSTEMS_DESIGN.md` — architecture, data model, API contracts, licenses.
+- `ML_ENGINEERING.md` — the fine-grained instrument recognition plan (the core feature).
+
+## Current state (as of first commits)
+
+Draft 1 is built and runs: upload → transcode/dedup → in-process job queue with SSE →
+Demucs 4-stem separation → PANNs coarse tagging → key/BPM/LUFS → report JSON → Next.js
+dark DAW UI (waveform, instrument lanes, synced stem mixer). Tests pass in fake-ML mode.
+**Not yet done: first real run on this Mac (`make setup && make setup-ml`), so expect
+small integration fixes.**
+
+## Next up (draft 2 = PRD Amendment A1)
+
+ML track, in order (milestones in ML_ENGINEERING.md §8):
+1. M1: `taxonomy.yaml` (~60 leaves, 3 levels) + dataset loaders (MedleyDB, OpenMIC,
+   Slakh) + eval harness CLI with fine-grained metrics (mAP, hierarchical F1, ECE)
+2. M2: synthetic MIDI-render pipeline v1 + frozen-MERT linear probe baseline
+3. M3–M5: LoRA ablation ladder, calibration, domain-gap study, ONNX serving
+
+Deferred to draft 3: structure (F9), chords (F10), MIDI export (F11), genre profiles (F19).
+
+## Dev commands
+
+- `make api-fake` + `make web` — run app with fake ML (fast, no models)
+- `make api` + `make web` — real models (MPS on this M5 Mac)
+- `make test` — pytest, fake-ML mode; rate-limit tests run with limits ON
+- Env config: `DISS_*` vars, see `backend/disstruments/config.py`
+
+## Hard rules (from PRD — do not violate)
+
+- Stems are only ever served to the uploading user (legal posture, PRD §9 / NG7).
+- Never train on user uploads. Never commit audio files (gitignored for a reason).
+- No YouTube/link ingestion without Bradley's explicit go-ahead (PRD NG2).
+- Rate limiting stays implemented-but-dormant; keep its tests running with limits on.
+- Confidence honesty (F15): never present low-confidence detections as fact; UI shows
+  "?" for 0.30–0.60, hides below 0.30. Calibration work must keep this meaningful.
+- ML models: no new model/checkpoint without (a) an eval-harness run, (b) license
+  recorded in SYSTEMS_DESIGN §4 (madmom is BY-NC-SA — do not ship; Essentia is AGPL).
+- Interfaces stay swappable (SQLite→Postgres, in-process queue→Celery, local FS→S3);
+  don't couple app logic to the local implementations.
+
+## Bradley's working preferences
+
+- Concise and direct; no fluff.
+- Grill him with clarifying questions BEFORE building when scope is ambiguous —
+  wave-style, one decision at a time, with a recommended answer each. He'd rather be
+  asked than have you guess.
+- Genres he cares about: rock / indie / pop first.
+- Emphasize the ML engineering angle in design decisions — this project should read as
+  technically serious (ablations, calibration, measured domain gaps, artist-disjoint
+  evals), not just glue code.
