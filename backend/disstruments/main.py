@@ -30,7 +30,8 @@ def create_app() -> FastAPI:
     init_storage()
     app = FastAPI(title="Disstruments", version="0.1.0")
     app.middleware("http")(rate_limit_middleware)
-    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"],
+    app.add_middleware(CORSMiddleware,
+                       allow_origins=[f"http://localhost:{settings.web_port}"],
                        allow_methods=["*"], allow_headers=["*"],
                        expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining",
                                        "X-RateLimit-Reset", "Retry-After"])

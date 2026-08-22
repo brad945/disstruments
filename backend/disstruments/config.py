@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # Legal posture (design doc §9): canonical wav deleted after job unless kept
     keep_canonical: bool = False
 
+    # Dev ports — keep in sync with Makefile API_PORT/WEB_PORT
+    web_port: int = 3642            # Next dev server; used for the CORS origin
+
     # ML
     fake_ml: bool = False           # deterministic fake stages for dev/tests
     stem_model: str = "htdemucs"    # demucs v4; "htdemucs_6s" for 6-stem once evaled

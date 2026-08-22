@@ -9,11 +9,13 @@ dark, DAW-style report. Companion docs: `PRD.md`, `SYSTEMS_DESIGN.md` (scope law
 brew install ffmpeg            # if you don't have it
 make setup                     # python venv + npm install
 make setup-ml                  # torch/demucs/panns/librosa (~several GB, one-time)
-make api                       # backend :8000  (terminal 1)
-make web                       # frontend :3000 (terminal 2)
+make api                       # backend :8642  (terminal 1)
+make web                       # frontend :3642 (terminal 2)
 ```
 
-Open http://localhost:3000, drop in an mp3/wav/flac you own, watch the stages stream,
+Ports live in the Makefile (`API_PORT`/`WEB_PORT`, default 8642/3642).
+
+Open http://localhost:3642, drop in an mp3/wav/flac you own, watch the stages stream,
 click through to the report.
 
 No models yet? `make api-fake` runs the entire app with deterministic fake ML —
