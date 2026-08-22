@@ -208,3 +208,39 @@ Directionally right but legally incomplete. What's protected is the **recording 
 ## 13. Change control
 
 This PRD is the source of truth for scope. Any feature not traceable to an F-number requires an explicit PRD amendment approved by Bradley before implementation.
+
+---
+
+## Amendment A1 — Fine-grained instrument recognition becomes the core (approved by Bradley, 2026-08-21)
+
+**Decision:** the single most important feature is *specific* instrument identification —
+leaf-level ("nylon-string acoustic guitar", "Rhodes", "808 sub"), not coarse ("guitar",
+"keys"). The project is explicitly positioned as an ML engineering showcase on top of the
+existing SWE/system design. Full technical plan: `ML_ENGINEERING.md`.
+
+### New features
+
+- **F27 (M):** Hierarchical instrument taxonomy (~60 leaf classes, 3 levels, versioned
+  `taxonomy.yaml`); level 1 stays OpenMIC-compatible so draft-1 results remain valid.
+- **F28 (M):** Synthetic training-data pipeline: MIDI → randomized sampler/synth/effects/
+  mastering rendering → perfectly labeled clips (target 100k). Provenance logged per clip.
+- **F29 (M):** Fine-tuned recognition model: pretrained music foundation backbone
+  (MERT primary; CLAP/PaSST baselines) + hierarchical head; ablation ladder from linear
+  probe to LoRA; artist-disjoint eval; promotion via existing §8.3 gates.
+- **F30 (M):** Calibrated confidences (temperature scaling, ECE reported) so F15's UI
+  thresholds correspond to real probabilities.
+- **F31 (M):** Synthetic→real domain-gap measurement and mitigation (domain
+  randomization, hierarchical co-training with coarse real labels).
+- **F32 (S):** Zero-shot CLAP text-prompt tagging as baseline + "search my library by
+  sound description" demo.
+- **F33 (M):** Report UI upgrade: leaf-level labels with graceful fallback to parent
+  ("guitar (subtype uncertain)") per F15 honesty rules.
+
+### Reprioritization
+
+- **Draft 2 = F25 (eval harness) + F27–F31 + F33.** The ML track.
+- Structure (F9), chords (F10), MIDI (F11), genre profiles (F19) move to **draft 3**.
+  Genre profiles get *better* from this trade: they'll aggregate leaf-level instruments.
+- Risk #1 (taxonomy too coarse) is retired — it's now the roadmap, not a risk.
+- Open question 2 is resolved (yes, fine-grained subclasses; funded with real effort).
+- Budget accepted: ≲$1k total compute (mostly optional), per ML_ENGINEERING.md §8.
