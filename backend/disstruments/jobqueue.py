@@ -57,7 +57,9 @@ def record_job_cost(user_id: int, gpu_s: float = 0.0, storage_bytes: int = 0, jo
                .filter(CostLedger.user_id == user_id, CostLedger.day == _today())
                .one_or_none())
         if row is None:
-            row = CostLedger(user_id=user_id, day=_today())
+            # Column defaults only apply at INSERT flush; set explicitly so += works pre-flush.
+            row = CostLedger(user_id=user_id, day=_today(),
+                             gpu_s=0.0, storage_bytes=0, jobs_count=0)
             s.add(row)
         row.gpu_s += gpu_s
         row.storage_bytes += storage_bytes

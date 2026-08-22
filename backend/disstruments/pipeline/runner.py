@@ -15,7 +15,8 @@ from ..config import settings
 from ..db import Analysis, Instrument, Job, Song, StageRun, Stem, get_session
 from ..events import bus
 from ..jobqueue import record_job_cost
-from ..storage import storage
+# Late-bound: storage.storage is None until init_storage(); a from-import would freeze it.
+from .. import storage as storage_mod
 from . import attributes, separation, tagging
 from .transcode import to_canonical
 
@@ -58,7 +59,7 @@ def run_job(job_id: int) -> None:
 
     # -- pre: canonical wav ----------------------------------------------------
     res, _ = _stage(job_id, "transcode", "ffmpeg", "system",
-                    to_canonical, storage.path(original_key), canonical)
+                    to_canonical, storage_mod.storage.path(original_key), canonical)
     if not canonical.exists():
         _finish(job_id, song, {}, status="failed")
         return
@@ -77,7 +78,7 @@ def run_job(job_id: int) -> None:
             s.commit()
         for name, path in sep["stems"].items():
             key = f"songs/{song.id}/stems/{name}.wav"
-            size = storage.save(key, path)
+            size = storage_mod.storage.save(key, path)
             record_job_cost(song.user_id, storage_bytes=size)
             stem_keys[name] = key
             stems_meta.append({"name": name, "object_key": key, "bytes": size})

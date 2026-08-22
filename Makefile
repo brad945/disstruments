@@ -1,10 +1,12 @@
 # Disstruments — local dev
 # Prereqs: python 3.11+, node 18+, ffmpeg (`brew install ffmpeg`)
+# Pinned to 3.12: best prebuilt-wheel coverage for the ML extras (torch/demucs/panns).
+PYTHON ?= python3.12
 
 .PHONY: setup setup-ml api web dev test
 
 setup:            ## backend deps (fake-ML capable) + frontend deps
-	cd backend && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+	cd backend && $(PYTHON) -m venv .venv && .venv/bin/pip install -e ".[dev]"
 	cd frontend && npm install
 
 setup-ml:         ## real ML models (torch/demucs/panns/librosa) — several GB
