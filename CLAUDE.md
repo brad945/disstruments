@@ -17,8 +17,10 @@ engineering portfolio piece.
 Draft 1 is built and runs: upload → transcode/dedup → in-process job queue with SSE →
 Demucs 4-stem separation → PANNs coarse tagging → key/BPM/LUFS → report JSON → Next.js
 dark DAW UI (waveform, instrument lanes, synced stem mixer). Tests pass in fake-ML mode.
-**Not yet done: first real run on this Mac (`make setup && make setup-ml`), so expect
-small integration fixes.**
+First real run on this Mac done (2026-09-27, `docs/debriefs/phase-1.md` step 3): ~20 s
+end-to-end for a 133 s song, Demucs on MPS. Known: PANNs runs on CPU over the full song
+(7.8 GB peak), and its uncalibrated scores vs fixed F15 thresholds hide true detections
+(motivates F30). `make setup-ml` fetches + checksums PANNs weights.
 
 ## Next up (draft 2 = PRD Amendment A1)
 

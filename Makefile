@@ -13,6 +13,7 @@ setup:            ## backend deps (fake-ML capable) + frontend deps
 
 setup-ml:         ## real ML models (torch/demucs/panns/librosa) — several GB
 	cd backend && .venv/bin/pip install -e ".[ml]"
+	sh backend/scripts/fetch_weights.sh
 
 api:              ## run backend on :$(API_PORT)
 	cd backend && .venv/bin/uvicorn "disstruments.main:get_app" --factory --port $(API_PORT)

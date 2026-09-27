@@ -1,8 +1,7 @@
 # Builder's Debrief — Phase 1: Making Draft 1 Actually Run
 
-> Status: covers steps 1–2 (setup, tests, fake-ML end-to-end) and the port move.
-> Step 3 (real-model run on an actual mp3: per-stage wall time, peak memory, MPS
-> verification) is pending — its numbers get appended here when it happens.
+> Status: complete — steps 1–2 (setup, tests, fake-ML end-to-end), the port move, and
+> step 3 (first real-model run, 2026-09-27; see the last section).
 
 The theme of this phase: **code that has only been logic-tested meets a real
 machine.** Every failure we hit lived at an integration seam — interpreter ↔ OS,
@@ -155,9 +154,67 @@ multiply silently.
 
 ---
 
-## Step 3 placeholder — real-model run (pending)
+## Step 3 — first real-model run (2026-09-27)
 
-To be filled after the first real mp3 analysis: wall time per stage (transcode /
-separation / tagging×5 / attributes), peak memory, MPS-vs-CPU confirmation for Demucs
-and PANNs, subjective stem/tag quality, and whether separation stays under the ~5-min
-budget that keeps `htdemucs` as the default model tier.
+**Setup.** Full stack via the real API (`uvicorn` + `curl` upload, isolated
+`DISS_DATA_DIR`), wrapped in macOS `/usr/bin/time -l` for peak memory. Audio: librosa's
+Creative-Commons example tracks (no copyrighted audio, nothing committed) —
+*Let's Go Fishin'* (Karissa Hobbs, 133.0 s, vocals/guitar/bass/drums) and *Vibe Ace*
+(Kevin MacLeod, 61.5 s). Caveat: both are 22.05 kHz mono sources, so they understate
+bandwidth and stereo cues a real rock/pop master would give the models.
+
+### War story #4 — every tagging stage failed; the job still "succeeded"
+First real run: separation OK, **all five tagging stages failed** with
+`FileNotFoundError: ~/panns_data/Cnn14_DecisionLevelMax.pth`. Phase 1.1 had pre-fetched
+`Cnn14_mAP=0.431.pth` — the checkpoint for panns' `AudioTagging` class — but the pipeline
+uses `SoundEventDetection`, which loads a *different* checkpoint through the same silent
+`os.system('wget …')`. The job finished as `partial` and the report assembled without
+instruments: graceful degradation (F12) worked exactly as designed, and that is also why
+nobody noticed. **Fix:** `backend/scripts/fetch_weights.sh` fetches all three PANNs files
+with curl and **sha256-verifies** them; `make setup-ml` runs it. **Concepts:** (1) fix the
+*class* of bug, not the instance — the first fix patched one file, the durable fix pins
+every artifact by checksum (F13); (2) graceful degradation needs an alarm: a stage that
+fails on *every* job is an outage, not degradation. Follow-up: surface stage-failure
+rates, don't just record them.
+
+### Numbers (warm run, M5, htdemucs on MPS, PANNs on CPU)
+
+| Stage | *Fishin'* (133 s) | *Vibe Ace* (61.5 s) |
+|---|---|---|
+| transcode (ffmpeg) | 0.12 s | 0.06 s |
+| separation (htdemucs, **MPS confirmed** via `params_json.device`) | 11.2 s | 5.9 s |
+| tagging, mix + 4 stems (PANNs SED, **CPU** — hardcoded in `tagging.py`) | 8.3 s | 1.8 s |
+| attributes (librosa key/BPM, pyloudnorm) | 0.56 s | 0.24 s |
+| **total** | **≈20 s** | **≈8 s** |
+
+- Cold run (first job; model loads): ≈23 s for *Fishin'* — model load costs ~3 s, not
+  minutes, once weights are on disk.
+- **Separation real-time factor ≈ 0.085–0.096** → a 4-minute song separates in ~20–25 s.
+  That's >10× inside the ~5-min budget, so `htdemucs` stays default and there is headroom
+  to evaluate `htdemucs_ft` (a 4-model bag, ~4× cost) as a quality tier.
+- **Peak memory footprint 7.8 GB** (whole process, all three jobs, includes MPS). With
+  tagging broken it was 3.5 GB, so PANNs SED over the *full song in one tensor* on CPU
+  is the ~4 GB delta. It scales with duration (the upload cap is 15 min) → follow-up:
+  chunk SED inference. Tagging time also scaled superlinearly (2.2× longer audio, ~4.6×
+  tagging time), consistent with that.
+- Weights on disk: htdemucs **84 MB** (safetensors, HF `adefossez/HTDemucs`); PANNs
+  2 × 327 MB.
+
+### Quality — the finding that justifies the ML roadmap
+*Fishin'* report: guitar 0.65 (bass stem), bass 0.55, ukulele 0.43 ("?" band); key
+A# major (0.99), 117.5 BPM. **No voice and no drums**, on a song with both. Diagnosis on
+the isolated stems: PANNs' 95th-percentile *Singing* score on the **vocals stem** is
+0.14 (max 0.20); on the drums stem *Drum* is 0.11 and even clip-level *Drum machine* is
+only 0.26. The stems are fine — the scores are simply **uncalibrated**, and F15's fixed
+0.30/0.60 thresholds treat them as probabilities. A hard threshold on uncalibrated
+sigmoid outputs is not "confidence honesty"; it silently hides true detections.
+This is the empirical case for F30 (per-level temperature scaling on a real held-out
+split) — calibration isn't polish, it's what makes the F15 thresholds mean anything.
+Not patched in draft 1 (lowering thresholds by eye would just be uncalibrated in a new
+place); it becomes the first before/after ECE story in M3.
+
+**Interview question:** *"Your pipeline reported success but produced no instruments —
+how would you have caught that in production?"* **Answer:** "Per-stage failure-rate
+metrics with an alert; a stage failing on 100% of jobs is an outage even when the
+report degrades gracefully. And a canary: a fixed known song whose expected instrument
+set is asserted after every deploy — the golden set (§3.3) doubles as that canary."

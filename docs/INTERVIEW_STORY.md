@@ -64,9 +64,15 @@ without touching system state.
 
 - Draft-1 pipeline: 8 stages per job (transcode, separation, mix tagging, 4 per-stem
   taggings, attributes); 10/10 tests in fake-ML mode; rate-limit contract tested ON.
-- Models in play: Demucs v4 `htdemucs` (~1 GB weights, 4 stems), PANNs Cnn14 (312 MB,
+- Models in play: Demucs v4 `htdemucs` (84 MB weights, 4 stems), PANNs Cnn14 (327 MB,
   527 AudioSet classes), librosa key/BPM, pyloudnorm LUFS.
-- Real-run latency per stage on M5/MPS: *(pending — phase 1 step 3)*.
+- Real run on M5 (133 s song, warm): separation 11.2 s on MPS (real-time factor
+  ≈0.09 → ~20–25 s for a 4-min song, >10× inside the 5-min budget); tagging 8.3 s
+  (PANNs, CPU); end-to-end ≈20 s. Peak memory footprint 7.8 GB (full-song SED on CPU
+  is ~4 GB of it → chunking follow-up).
+- Stock PANNs on an isolated vocal stem: *Singing* scores only 0.14 (95th pct) → hidden
+  by the 0.30 threshold. Uncalibrated scores + fixed thresholds = hidden true
+  detections. This is the motivating example for calibration (F30).
 - Taxonomy: ~60 leaves, 3 levels *(pending M1)*. Dataset sizes: OpenMIC 20k clips/20
   classes; MedleyDB ~196 multitracks; Slakh2100 2100 tracks/34 classes *(loaders
   pending M1)*.
