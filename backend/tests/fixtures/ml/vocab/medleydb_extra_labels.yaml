@@ -1,0 +1,3 @@
+# Instrument labels used in real MedleyDB metadata (marl/medleydb data/Metadata, all 330
+# files) but missing from resources/taxonomy.yaml. Found by scanning every file.
+- woodwind section

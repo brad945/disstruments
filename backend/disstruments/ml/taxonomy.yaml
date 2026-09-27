@@ -1,0 +1,290 @@
+# Disstruments instrument taxonomy (PRD F27, ML_ENGINEERING §2).
+#
+# Flat node list; the parent is implied by the dotted id (`guitar.electric.clean` ->
+# `guitar.electric` -> `guitar`). Order is pre-order and is the canonical column order
+# for label/score matrices. Max depth 3; leaves may sit at depth 2 when a third level
+# would not be audibly decidable.
+#
+# Leaf rules: (a) audibly decidable by an expert from an isolated stem, (b) coverable.
+#   data:    real sources that reach this leaf EXACTLY via mappings.yaml. slakh/openmic:
+#            equal to mapping reachability (tests/ml/test_taxonomy.py). medleydb: reachable
+#            AND >= 1 positive in the public release (tests/ml/test_coverage.py). Per-leaf
+#            example counts: `python -m disstruments.ml.eval coverage`.
+#   planned: sources that do not exist yet (synthetic = M2 render pipeline; golden =
+#            hand-labeled eval-only golden set, PRD §8.2). Only used where no real source
+#            reaches the leaf. `golden` alone = no training source at all (open question).
+#
+# OpenMIC-2018 compatibility: every OpenMIC class maps to exactly one node (mappings.yaml
+# `openmic.classes`); guitar/bass/drums/cymbals/voice are level-1 nodes, the other 15
+# classes sit at level 2-3.
+#
+# 2.0.0 (breaking): cymbals moved to level 1; voice.sung.{male,female} merged into
+# voice.sung; bass.electric.picked is synthetic-only.
+# See disstruments/ml/datasets/openmic.py for the OpenMIC projection.
+version: 2.0.0
+
+nodes:
+  # ---------------------------------------------------------------- guitar
+  - id: guitar
+    name: Guitar
+  - id: guitar.acoustic
+    name: Acoustic guitar
+  - id: guitar.acoustic.nylon
+    name: Nylon-string acoustic guitar
+    data: [slakh]
+  - id: guitar.acoustic.steel
+    name: Steel-string acoustic guitar
+    data: [slakh]
+  - id: guitar.electric
+    name: Electric guitar
+  - id: guitar.electric.clean
+    name: Clean electric guitar
+    data: [medleydb, slakh]
+  - id: guitar.electric.distorted
+    name: Distorted / overdriven electric guitar
+    note: crunch and high-gain merged; the boundary is not reliably decidable
+    data: [medleydb, slakh]
+  - id: guitar.lap_steel
+    name: Lap / pedal steel guitar
+    data: [medleydb]
+
+  # ---------------------------------------------------------------- bass
+  - id: bass
+    name: Bass
+  - id: bass.electric
+    name: Electric bass
+  - id: bass.electric.fingered
+    name: Electric bass (fingered)
+    planned: [synthetic]
+  - id: bass.electric.picked
+    name: Electric bass (picked)
+    note: no real source; the only picked Slakh patch is palm-muted (would confound muting with picking)
+    planned: [synthetic]
+  - id: bass.electric.slap
+    name: Electric bass (slap)
+    data: [slakh]
+  - id: bass.electric.fretless
+    name: Fretless electric bass
+    planned: [synthetic]
+  - id: bass.upright
+    name: Upright / double bass
+    data: [medleydb, slakh]
+  - id: bass.synth
+    name: Synth bass
+  - id: bass.synth.analog
+    name: Analog-style synth bass
+    planned: [synthetic]
+  - id: bass.synth.sub_808
+    name: 808 / sub bass
+    planned: [synthetic]
+
+  # ---------------------------------------------------------------- keys
+  - id: keys
+    name: Keyboards
+  - id: keys.piano
+    name: Piano (acoustic or electric)
+    note: electric pianos live under piano to match OpenMIC/AudioSet "piano" and draft 1
+  - id: keys.piano.acoustic
+    name: Acoustic piano
+    note: grand vs upright not split — not reliably decidable in a mix
+    data: [medleydb, slakh]
+  - id: keys.piano.rhodes
+    name: Rhodes-style electric piano
+    data: [slakh]
+  - id: keys.piano.wurlitzer
+    name: Wurlitzer-style electric piano
+    data: [slakh]
+  - id: keys.piano.fm
+    name: FM electric piano (DX-style)
+    planned: [synthetic]
+  - id: keys.organ
+    name: Organ
+  - id: keys.organ.drawbar
+    name: Drawbar / tonewheel organ
+    data: [slakh]
+  - id: keys.organ.combo
+    name: Transistor combo organ
+    data: [slakh]
+  - id: keys.organ.pipe
+    name: Pipe organ
+    data: [slakh]
+  - id: keys.clavinet
+    name: Clavinet
+    data: [slakh]
+  - id: keys.harpsichord
+    name: Harpsichord
+    data: [slakh]
+  - id: keys.accordion
+    name: Accordion / concertina / bandoneon
+    data: [medleydb, openmic]
+  - id: keys.synth
+    name: Synthesizer
+  - id: keys.synth.pad
+    name: Synth pad
+    data: [slakh]
+  - id: keys.synth.lead
+    name: Synth lead
+    data: [slakh]
+  - id: keys.synth.pluck
+    name: Synth pluck
+    planned: [synthetic]
+  - id: keys.synth.brass
+    name: Synth brass
+    planned: [synthetic]
+
+  # ---------------------------------------------------------------- drums
+  - id: drums
+    name: Drum kit
+  - id: drums.acoustic_kit
+    name: Acoustic drum kit
+    data: [medleydb, slakh]
+  - id: drums.electronic
+    name: Drum machine / electronic drums
+  - id: drums.electronic.tr808
+    name: 808-style drum machine
+    planned: [synthetic]
+  - id: drums.electronic.tr909
+    name: 909-style drum machine
+    planned: [synthetic]
+
+  # ---------------------------------------------------------------- cymbals
+  # Own family (v2): under `percussion` a kit made cymbals unknown, which made the
+  # non-kit `percussion` node observed almost only when positive (label-dependent
+  # missingness). Cannot sit under `drums` (OpenMIC has both `drums` and `cymbals`; the
+  # OpenMIC map must stay an antichain). A drum-kit label implies cymbals (see mappings).
+  - id: cymbals
+    name: Cymbals / hi-hat
+    data: [medleydb, openmic, slakh]
+
+  # ---------------------------------------------------------------- percussion
+  - id: percussion
+    name: Percussion (non-kit)
+  - id: percussion.shaker
+    name: Shaker / maracas / cabasa
+    data: [medleydb]
+  - id: percussion.tambourine
+    name: Tambourine
+    data: [medleydb]
+  - id: percussion.hand_drums
+    name: Hand drums (conga, bongo, tabla, darbuka, ...)
+    data: [medleydb]
+  - id: percussion.claps
+    name: Hand claps
+    data: [medleydb]
+  - id: percussion.mallet
+    name: Mallet percussion
+  - id: percussion.mallet.glockenspiel
+    name: Glockenspiel
+    data: [medleydb, slakh]
+  - id: percussion.mallet.vibraphone
+    name: Vibraphone
+    data: [medleydb, slakh]
+  - id: percussion.mallet.marimba
+    name: Marimba
+    data: [slakh]
+  - id: percussion.mallet.xylophone
+    name: Xylophone
+    data: [slakh]
+
+  # ---------------------------------------------------------------- strings
+  - id: strings
+    name: Strings (non-guitar)
+  - id: strings.bowed
+    name: Bowed strings
+  - id: strings.bowed.violin
+    name: Violin (solo)
+    data: [medleydb, openmic, slakh]
+  - id: strings.bowed.viola
+    name: Viola (solo)
+    data: [medleydb, slakh]
+  - id: strings.bowed.cello
+    name: Cello (solo)
+    data: [medleydb, openmic, slakh]
+  - id: strings.bowed.section
+    name: String section / ensemble
+    data: [medleydb, slakh]
+  - id: strings.plucked
+    name: Plucked strings (non-guitar)
+  - id: strings.plucked.banjo
+    name: Banjo
+    data: [medleydb, openmic]
+  - id: strings.plucked.mandolin
+    name: Mandolin
+    data: [medleydb, openmic]
+  - id: strings.plucked.ukulele
+    name: Ukulele
+    data: [openmic]
+  - id: strings.plucked.harp
+    name: Harp
+    data: [medleydb, slakh]
+  - id: strings.plucked.sitar
+    name: Sitar
+    note: no public training source (MedleyDB examples are all in non-public tracks)
+    planned: [golden]
+
+  # ---------------------------------------------------------------- voice
+  - id: voice
+    name: Voice
+  - id: voice.sung
+    name: Singing
+    note: male/female split removed in v2 (unapproved label axis; pending PRD decision)
+    data: [medleydb]
+  - id: voice.rap
+    name: Rap
+    data: [medleydb]
+  - id: voice.spoken
+    name: Spoken word
+    data: [medleydb]
+  - id: voice.screamed
+    name: Screamed / harsh vocals
+    note: no public training source (MedleyDB examples are all in non-public tracks)
+    planned: [golden]
+  - id: voice.choir
+    name: Choir
+    data: [slakh]
+  - id: voice.beatbox
+    name: Beatboxing
+    note: no public training source
+    planned: [golden]
+
+  # ---------------------------------------------------------------- brass
+  - id: brass
+    name: Brass
+  - id: brass.trumpet
+    name: Trumpet / cornet / flugelhorn
+    data: [medleydb, openmic, slakh]
+  - id: brass.trombone
+    name: Trombone
+    data: [medleydb, openmic, slakh]
+  - id: brass.french_horn
+    name: French horn
+    data: [medleydb, slakh]
+  - id: brass.tuba
+    name: Tuba
+    data: [medleydb, slakh]
+  - id: brass.section
+    name: Mixed brass / horn section
+    data: [medleydb, slakh]
+
+  # ---------------------------------------------------------------- woodwinds
+  - id: woodwinds
+    name: Woodwinds & free reeds
+  - id: woodwinds.saxophone
+    name: Saxophone
+    note: soprano/alto/tenor/baritone not split in v1 — weakly decidable in a mix
+    data: [medleydb, openmic, slakh]
+  - id: woodwinds.clarinet
+    name: Clarinet
+    data: [medleydb, openmic, slakh]
+  - id: woodwinds.flute
+    name: Flute / piccolo
+    data: [medleydb, openmic, slakh]
+  - id: woodwinds.oboe
+    name: Oboe / English horn
+    data: [medleydb, slakh]
+  - id: woodwinds.bassoon
+    name: Bassoon
+    data: [medleydb, slakh]
+  - id: woodwinds.harmonica
+    name: Harmonica
+    data: [medleydb]

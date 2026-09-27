@@ -90,6 +90,16 @@ upload → validate/transcode (ffmpeg, F2) → content-hash dedup (F3)
 
 Rule: no model enters `main` without (a) an eval-harness run archived, (b) license recorded in this table.
 
+### 4.1 Datasets (M1 loaders — licenses as read 2026-09-27)
+
+| Dataset | License | Consequence |
+|---|---|---|
+| MedleyDB 1+2 (audio) | CC BY-NC-SA 4.0, research/non-commercial; terms ask not to republish "in full or in part" ([downloads page](https://medleydb.weebly.com/downloads.html)) | **Models trained on it are non-commercial.** Fine for eval + portfolio; a commercial Phase must retrain without it or get permission. Never commit its audio. |
+| MedleyDB metadata (`marl/medleydb` repo) | MIT | Metadata YAMLs used as test fixtures are OK. |
+| OpenMIC-2018 | CC BY 4.0 (Zenodo 1432913); **individual FMA clips carry their own CC licenses incl. NC/ND** (`license_title` in metadata.csv) | Per-clip license must be filtered before any commercial training. |
+| Slakh2100 | CC BY 4.0 (Zenodo 4599666); `slakh-utils` MIT | OK. |
+| Lakh MIDI, `slakh-generation` patch list, mirdata fixtures | **unverified** | Verify before M2 (render pipeline consumes Lakh MIDI). |
+
 ## 5. Data model (Postgres)
 
 ```

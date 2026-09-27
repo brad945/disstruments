@@ -1,0 +1,414 @@
+# Source-label -> taxonomy-node mappings (companion to taxonomy.yaml).
+#
+# Kept separate from the tree: the tree is the stable, semver'd label-space contract that
+# reports reference; mappings change whenever a dataset is added or a call is revised.
+# Eval reports record the sha256 of BOTH files.
+#
+# Entry grammar (`map` tables):
+#   label: node.id                      positive at node.id
+#   label: [node.a, node.b]             positive at several nodes
+#   label: {node: node.id | [..],       long form
+#           children_unknown: bool,     default true for internal nodes: the source is
+#                                       coarser than our leaves, so descendants become
+#                                       UNKNOWN (masked), not negative. false = "present at
+#                                       this node but none of our children" (known negative)
+#           unknown: [node | "*"]}      extra subtrees to mark unknown ("*" = everything)
+# `ignore` tables: label: {reason: str, unknown: [...], stem_unknown: [...]}
+#   unknown defaults to []; `stem_unknown` masks only the stem carrying the label, not the
+#   track (e.g. a room mic whose content is labeled on the other stems).
+# Unknown subtrees also make their ancestors unknown (unless positive); positives always
+# win over unknown. Labels absent from both tables are surfaced by the loaders (strict
+# mode raises with the full list; non-strict records them and masks everything).
+taxonomy_version: 2.0.0
+
+# ------------------------------------------------------------------------ OpenMIC-2018
+# Total map: all 20 classes, each to exactly one node; no mapped node is an ancestor of
+# another (antichain), so node -> OpenMIC projection is unique. Verified by tests.
+openmic:
+  binarize_threshold: 0.5        # Y_true >= 0.5, as in the official baseline notebook
+  classes:
+    accordion: keys.accordion
+    banjo: strings.plucked.banjo
+    bass: bass
+    cello: strings.bowed.cello
+    clarinet: woodwinds.clarinet
+    cymbals: cymbals
+    drums: drums
+    flute: woodwinds.flute
+    guitar: guitar
+    mallet_percussion: percussion.mallet
+    mandolin: strings.plucked.mandolin
+    organ: keys.organ
+    piano: keys.piano
+    saxophone: woodwinds.saxophone
+    synthesizer: keys.synth
+    trombone: brass.trombone
+    trumpet: brass.trumpet
+    ukulele: strings.plucked.ukulele
+    violin: strings.bowed.violin
+    voice: voice
+
+# ------------------------------------------------------------------------ MedleyDB 1+2
+# Vocabulary = marl/medleydb resources/taxonomy.yaml + labels observed in the real
+# metadata but missing from that file ("woodwind section"). Applied to stem AND raw-track
+# instrument fields (both may be a string or a list). Raw-track labels may only REFINE the
+# stem: a raw label counts as positive only if it resolves to a descendant-or-self of a
+# node the stem's own label maps to (vocalists -> male singer, auxiliary percussion ->
+# tambourine). Otherwise (distorted stem + clean DI raw, string section + cello raw, drum
+# machine + kick raw) the raw's nodes are marked UNKNOWN, never positive.
+medleydb:
+  artist_aliases:                   # applied after normalization (casefold, quotes)
+    "music delta multitracks": "music delta"
+  map:
+    # strings / bowed
+    erhu: {node: strings.bowed, children_unknown: false}
+    dilruba: {node: strings.bowed, children_unknown: false}
+    violin: strings.bowed.violin
+    viola: strings.bowed.viola
+    cello: strings.bowed.cello
+    double bass: bass.upright
+    violin section: strings.bowed.section
+    viola section: strings.bowed.section
+    cello section: strings.bowed.section
+    string section: strings.bowed.section
+    # strings / plucked
+    acoustic guitar: guitar.acoustic
+    slide guitar: guitar
+    banjo: strings.plucked.banjo
+    mandolin: strings.plucked.mandolin
+    ukulele: strings.plucked.ukulele
+    harp: strings.plucked.harp
+    sitar: strings.plucked.sitar
+    guzheng: {node: strings.plucked, children_unknown: false}
+    liuqin: {node: strings.plucked, children_unknown: false}
+    oud: {node: strings.plucked, children_unknown: false}
+    zhongruan: {node: strings.plucked, children_unknown: false}
+    harpsichord: keys.harpsichord
+    # strings / struck
+    piano: keys.piano.acoustic
+    tack piano: keys.piano.acoustic
+    dulcimer: {node: strings, children_unknown: false}
+    yangqin: {node: strings, children_unknown: false}
+    # winds / flutes
+    flute: woodwinds.flute
+    flute section: woodwinds.flute
+    piccolo: woodwinds.flute
+    bamboo flute: woodwinds.flute
+    dizi: woodwinds.flute
+    panpipes: {node: woodwinds, children_unknown: false, unknown: [woodwinds.flute]}
+    recorder: {node: woodwinds, children_unknown: false, unknown: [woodwinds.flute]}
+    # winds / reeds
+    alto saxophone: woodwinds.saxophone
+    baritone saxophone: woodwinds.saxophone
+    tenor saxophone: woodwinds.saxophone
+    soprano saxophone: woodwinds.saxophone
+    clarinet: woodwinds.clarinet
+    bass clarinet: woodwinds.clarinet
+    clarinet section: woodwinds.clarinet
+    oboe: woodwinds.oboe
+    english horn: woodwinds.oboe
+    bassoon: woodwinds.bassoon
+    bagpipe: {node: woodwinds, children_unknown: false}
+    woodwind section: woodwinds
+    # winds / brass
+    trumpet: brass.trumpet
+    cornet: brass.trumpet
+    trumpet section: brass.trumpet
+    trombone: brass.trombone
+    trombone section: brass.trombone
+    french horn: brass.french_horn
+    french horn section: brass.french_horn
+    tuba: brass.tuba
+    euphonium: {node: brass, children_unknown: false}
+    brass section: brass.section
+    horn section: {node: brass.section, unknown: [woodwinds.saxophone]}  # pop "horns" often include sax
+    # winds / free reeds
+    harmonica: woodwinds.harmonica
+    accordion: keys.accordion
+    concertina: keys.accordion
+    bandoneon: keys.accordion
+    harmonium: {node: keys.organ, children_unknown: false}
+    pipe organ: keys.organ.pipe
+    # voices
+    male singer: voice.sung        # male/female leaves removed in taxonomy 2.0.0 (scope)
+    female singer: voice.sung
+    vocalists: voice.sung
+    male rapper: voice.rap
+    female rapper: voice.rap
+    male speaker: voice.spoken
+    female speaker: voice.spoken
+    male screamer: voice.screamed
+    female screamer: voice.screamed
+    choir: voice.choir
+    beatboxing: voice.beatbox
+    # percussion / idiophones
+    high hat: cymbals
+    cymbal: cymbals
+    gong: {node: percussion, children_unknown: false}
+    shaker: percussion.shaker
+    maracas: percussion.shaker
+    cabasa: percussion.shaker
+    rattle: percussion.shaker
+    claps: percussion.claps
+    glockenspiel: percussion.mallet.glockenspiel
+    vibraphone: percussion.mallet.vibraphone
+    marimba: percussion.mallet.marimba
+    xylophone: percussion.mallet.xylophone
+    chimes: {node: percussion, children_unknown: false, unknown: [percussion.mallet]}
+    triangle: {node: percussion, children_unknown: false}
+    sleigh bells: {node: percussion, children_unknown: false}
+    cowbell: {node: percussion, children_unknown: false}
+    guiro: {node: percussion, children_unknown: false}
+    castanet: {node: percussion, children_unknown: false}
+    snaps: {node: percussion, children_unknown: false}
+    # percussion / drums
+    # ASSUMPTION (taxonomy 2.0.0): a full drum kit includes cymbals/hi-hat. Marking cymbals
+    # unknown on kit tracks instead made `cymbals` observed almost only when separately
+    # mic'd (label-dependent missingness, see eval/audit.py). Single kit pieces do not.
+    drum set: [drums.acoustic_kit, cymbals]
+    kick drum: {node: drums.acoustic_kit, unknown: [cymbals]}
+    bass drum: {node: drums.acoustic_kit, unknown: [cymbals]}
+    snare drum: {node: drums.acoustic_kit, unknown: [cymbals]}
+    toms: {node: drums.acoustic_kit, unknown: [cymbals]}
+    timpani: {node: percussion, children_unknown: false}
+    gu: {node: percussion, children_unknown: false}
+    tambourine: percussion.tambourine
+    bongo: percussion.hand_drums
+    conga: percussion.hand_drums
+    darbuka: percussion.hand_drums
+    doumbek: percussion.hand_drums
+    tabla: percussion.hand_drums
+    auxiliary percussion: percussion
+    # electric / amplified + electronic
+    clean electric guitar: guitar.electric.clean
+    distorted electric guitar: guitar.electric.distorted
+    lap steel guitar: guitar.lap_steel
+    electric bass: bass.electric
+    drum machine: {node: drums.electronic, unknown: [cymbals]}
+    electric piano:
+      node: keys.piano
+      children_unknown: false
+      unknown: [keys.piano.rhodes, keys.piano.wurlitzer, keys.piano.fm]
+    electronic organ: keys.organ
+    synthesizer: {node: keys.synth, unknown: [bass.synth]}  # synth stems often carry bass lines
+  ignore:
+    Main System: {reason: "room/PA capture; every instrument in it has its own labeled stem", stem_unknown: ["*"]}
+    Unlabeled: {reason: "unknown content", unknown: ["*"]}
+    sampler: {reason: "could be any instrument", unknown: ["*"]}
+    fx/processed sound: {reason: "processed audio, not an instrument; often synths or treated guitars", unknown: [keys.synth, guitar.electric]}
+    scratches: {reason: "turntable scratching; out of taxonomy scope"}
+    theremin: {reason: "out of taxonomy scope"}
+    melodica: {reason: "out of taxonomy scope; timbrally close to accordion/harmonica", unknown: [keys.accordion, woodwinds.harmonica]}
+    whistle: {reason: "out of taxonomy scope"}
+    crowd: {reason: "audience noise; may contain singing/speech", unknown: [voice]}
+
+# ------------------------------------------------------------------------ Slakh2100
+# Primary key = basename(plugin_name): the Kontakt patch that actually rendered the audio.
+# Slakh picks a random patch from a program GROUP (slakh-generation
+# instr_defs_metadata/komplete_strict.json), so the MIDI program number is NOT a reliable
+# fine label (real metadata: program 22 "Harmonica" rendered by transistor_compact.nkm, an
+# organ; program 33 "finger" bass rendered by a palm-muted Rickenbacker patch).
+# `inst_class` (GM family) is the fallback when a patch is not in `plugins`; the loader
+# surfaces the unknown patch either way.
+slakh:
+  plugins:
+    # Acoustic Piano group
+    ragtime_piano.nkm: keys.piano.acoustic
+    the_giant_hard_and_tough.nkm: keys.piano.acoustic
+    the_giant_modern_studio.nkm: keys.piano.acoustic
+    the_giant_vibrant.nkm: keys.piano.acoustic
+    alicias_keys.nkm: keys.piano.acoustic
+    the_grandeur.nkm: keys.piano.acoustic
+    the_gentleman.nkm: keys.piano.acoustic
+    grand_piano.nkm: keys.piano.acoustic
+    upright_piano.nkm: keys.piano.acoustic
+    concert_grand.nkm: keys.piano.acoustic
+    august_foerster_grand.nkm: keys.piano.acoustic
+    harpsichord.nkm: keys.harpsichord
+    # Electric Piano group
+    scarbee_a_200.nkm: keys.piano.wurlitzer
+    wurly_ep.nkm: keys.piano.wurlitzer
+    scarbee_mark_I.nkm: keys.piano.rhodes
+    scarbee_pianet.nkm: {node: keys.piano, children_unknown: false}   # Hohner Pianet: EP, none of our leaves
+    scarbee_clavinet_full.nkm: keys.clavinet
+    # Chromatic Percussion group
+    celesta.nkm: {node: percussion.mallet, children_unknown: false}
+    glockenspiel.nkm: percussion.mallet.glockenspiel
+    glockenspiel_essential.nkm: percussion.mallet.glockenspiel
+    hybrid_keys_glockenspiel.nkm: percussion.mallet.glockenspiel
+    hybrid_keys_tube_vibraphone.nkm: percussion.mallet.vibraphone
+    marimba.nkm: percussion.mallet.marimba
+    marimba_essential.nkm: percussion.mallet.marimba
+    hybrid_keys_concert_marimba.nkm: percussion.mallet.marimba
+    xylophone.nkm: percussion.mallet.xylophone
+    xylophone_essential.nkm: percussion.mallet.xylophone
+    tubular_bells_metal.nkm: {node: percussion.mallet, children_unknown: false}
+    tubular_bells_wood.nkm: {node: percussion.mallet, children_unknown: false}
+    # Organ group
+    jazz_organ.nkm: keys.organ.drawbar
+    tonewheel_organ_b3.nkm: keys.organ.drawbar
+    tonewheel_organ_c3.nkm: keys.organ.drawbar
+    tonewheel_organ_m3.nkm: keys.organ.drawbar
+    transistor_compact.nkm: keys.organ.combo
+    transistor_continental.nkm: keys.organ.combo
+    organ_kh_grprplenum_manual.nkm: keys.organ.pipe
+    organ_kh_floeten_1_manual.nkm: keys.organ.pipe
+    fever.nkm: keys.organ                     # organ presets of unverified type
+    house_cat.nkm: keys.organ
+    musicology.nkm: keys.organ
+    outta_space.nkm: keys.organ
+    # Guitar groups
+    nylon_guitar.nkm: guitar.acoustic.nylon
+    nylon_guitar2.nkm: guitar.acoustic.nylon
+    AGML2.component: guitar.acoustic.steel    # Ample Guitar M Lite II (steel-string)
+    jazz_guitar.nkm: guitar.electric.clean
+    jazz_guitar2.nkm: guitar.electric.clean
+    jazz_guitar3.nkm: guitar.electric.clean
+    jazz_guitar4.nkm: guitar.electric.clean
+    funk_guitar.nkm: guitar.electric.clean
+    rhythm_rock_guitar.nkm: guitar.electric.distorted
+    solo_guitar.nkm: guitar.electric.distorted
+    elektrik_guitar.nkm: guitar.electric.distorted
+    rock_guitar.nkm: guitar.electric.distorted
+    harmonic_guitar.nkm: guitar.electric.distorted
+    # Bass groups
+    upright_bass.nkm: bass.upright
+    upright_bass2.nkm: bass.upright
+    jazz_upright.nkm: bass.upright
+    classic_bass.nkm: bass.electric
+    funk_bass.nkm: bass.electric
+    pop_bass.nkm: bass.electric
+    # Scarbee sample libraries: fretted, not slap -> slap/fretless known negative; picking
+    # style not asserted.
+    scarbee_pre_bass.nkm: {node: bass.electric, children_unknown: false, unknown: [bass.electric.fingered, bass.electric.picked]}
+    scarbee_mm_bass.nkm: {node: bass.electric, children_unknown: false, unknown: [bass.electric.fingered, bass.electric.picked]}
+    scarbee_jay_bass_both.nkm: {node: bass.electric, children_unknown: false, unknown: [bass.electric.fingered, bass.electric.picked]}
+    scarbee_rickenbacker_bass.nkm: {node: bass.electric, children_unknown: false, unknown: [bass.electric.fingered, bass.electric.picked]}
+    scarbee_jay_bass_slap_both.nkm: bass.electric.slap
+    scarbee_rickenbacker_bass_palm_muted.nkm: {node: bass.electric, children_unknown: false, unknown: [bass.electric.fingered, bass.electric.picked]}   # picked + palm-muted: must not define the picked leaf
+    # Strings groups
+    violin_solo.nkm: strings.bowed.violin
+    viola_solo.nkm: strings.bowed.viola
+    cello_solo.nkm: strings.bowed.cello
+    double_bass_solo.nkm: bass.upright
+    violin_ensemble.nkm: strings.bowed.section
+    viola_ensemble.nkm: strings.bowed.section
+    cello_ensemble.nkm: strings.bowed.section
+    double_bass_ensemble.nkm: {node: strings.bowed.section, unknown: [bass.upright]}
+    string_ensemble.nkm: strings.bowed.section
+    string_ensemble_essential.nkm: strings.bowed.section
+    session_strings_pro_2_ensemble_modern.nkm: strings.bowed.section
+    session_strings_pro_2_ensemble_traditional.nkm: strings.bowed.section
+    harp.nkm: strings.plucked.harp
+    timpani.nkm: {node: percussion, children_unknown: false}
+    choir_a.nkm: voice.choir
+    choir_e.nkm: voice.choir
+    choir_o.nkm: voice.choir
+    # Brass groups
+    trumpet.nkm: brass.trumpet
+    trumpet_1.nkm: brass.trumpet
+    trumpet_2.nkm: brass.trumpet
+    muted_trumpet.nkm: brass.trumpet
+    mute_trumpet.nkm: brass.trumpet
+    flugelhorn.nkm: brass.trumpet
+    trumpet_section.nkm: brass.trumpet
+    trombone.nkm: brass.trombone
+    tenor_trombone.nkm: brass.trombone
+    bass_trombone.nkm: brass.trombone
+    trombone_section.nkm: brass.trombone
+    tuba.nkm: brass.tuba
+    horn_1_essential.nkm: brass.french_horn
+    horn_2_essential.nkm: brass.french_horn
+    session_horns_pro_keyswitch_60s_horns.nkm: {node: brass.section, unknown: [woodwinds.saxophone]}
+    session_horns_pro_keyswitch_generic_section.nkm: {node: brass.section, unknown: [woodwinds.saxophone]}
+    brass_quartet_essential.nkm: brass.section
+    # Reed / Pipe groups
+    alto_sax_vintage_solo.nkm: woodwinds.saxophone
+    alto_saxophone.nkm: woodwinds.saxophone
+    tenor_sax.nkm: woodwinds.saxophone
+    tenor_saxophone.nkm: woodwinds.saxophone
+    baritone_sax_vintage_solo.nkm: woodwinds.saxophone
+    baritone_saxophone.nkm: woodwinds.saxophone
+    saxophone_essential.nkm: woodwinds.saxophone
+    saxophones_essential.nkm: woodwinds.saxophone
+    saxophone_section.nkm: woodwinds.saxophone
+    oboe.nkm: woodwinds.oboe
+    french_oboe.nkm: woodwinds.oboe
+    oboe_essential.nkm: woodwinds.oboe
+    oboes_essential.nkm: woodwinds.oboe
+    english_horn.nkm: woodwinds.oboe
+    bassoon.nkm: woodwinds.bassoon
+    bassoon_combi.nkm: woodwinds.bassoon
+    bassoon_essential.nkm: woodwinds.bassoon
+    bassoons_essential.nkm: woodwinds.bassoon
+    clarinet.nkm: woodwinds.clarinet
+    clarinet_combi.nkm: woodwinds.clarinet
+    clarinet_essential.nkm: woodwinds.clarinet
+    clarinets_essential.nkm: woodwinds.clarinet
+    woodwind_quintet_essential.nkm: woodwinds
+    woodwind_ensemble_essential.nkm: woodwinds
+    flute.nkm: woodwinds.flute
+    flute_essential.nkm: woodwinds.flute
+    flutes_essential.nkm: woodwinds.flute
+    piccolo.nkm: woodwinds.flute
+    # Synth Lead group
+    cheesy_lead.nkm: keys.synth.lead
+    crawling_lead.nkm: keys.synth.lead
+    december_saw.nkm: keys.synth.lead
+    douglas_lead.nkm: keys.synth.lead
+    downforce_saw.nkm: keys.synth.lead
+    guitar_lead.nkm: keys.synth.lead
+    hard_n_dirty.nkm: keys.synth.lead
+    hybrid_lead.nkm: keys.synth.lead
+    mystic_lead.nkm: keys.synth.lead
+    percussive_lead.nkm: keys.synth.lead
+    pimped_analog_saw.nkm: keys.synth.lead
+    poly_detuned_lead.nkm: keys.synth.lead
+    processor_lead.nkm: keys.synth.lead
+    reamped_lead.nkm: keys.synth.lead
+    # Synth Pad group
+    across_the_pacific.nkm: keys.synth.pad
+    ahoy.nkm: keys.synth.pad
+    ambibella.nkm: keys.synth.pad
+    april_pan.nkm: keys.synth.pad
+    arctic_morning.nkm: keys.synth.pad
+    belle_de_jour.nkm: keys.synth.pad
+    cerulean.nkm: keys.synth.pad
+    chrystal.nkm: keys.synth.pad
+    cold_cave.nkm: keys.synth.pad
+    daft.nkm: keys.synth.pad
+    dawn_chorus.nkm: keys.synth.pad
+    drifting_apart.nkm: keys.synth.pad
+    # Drums group
+    funk_kit.nkm: [drums.acoustic_kit, cymbals]
+    pop_kit.nkm: [drums.acoustic_kit, cymbals]
+    garage_kit_lite.nkm: [drums.acoustic_kit, cymbals]
+    session_kit_full.nkm: [drums.acoustic_kit, cymbals]
+    stadium_kit_full.nkm: [drums.acoustic_kit, cymbals]
+    ar_modern_sparkle_kit_full.nkm: [drums.acoustic_kit, cymbals]
+    ar_modern_white_kit_full.nkm: [drums.acoustic_kit, cymbals]
+    street_knowledge_kit.nkm: [drums, cymbals]  # hip-hop kit: acoustic vs machine unclear (drums children unknown)
+  plugins_ignore:
+    hybrid_keys_antique_toy.nkm: {reason: "hybrid toy-piano/synth layer", unknown: [percussion.mallet, keys.synth]}
+    hybrid_keys_futurebells.nkm: {reason: "hybrid synth bells", unknown: [percussion.mallet, keys.synth]}
+    hybrid_keys_hot_tropics.nkm: {reason: "hybrid steel-drum-like layer", unknown: [percussion.mallet, keys.synth]}
+    solo_strings.nkm: {reason: "shared by violin/viola/cello/contrabass groups; instrument ambiguous", unknown: [strings.bowed, bass.upright]}
+  inst_class:                      # fallback only (GM families; exact strings incl. case)
+    Piano: {node: keys, children_unknown: false, unknown: [keys.piano, keys.harpsichord, keys.clavinet]}
+    Organ: keys.organ
+    Guitar: guitar
+    Bass: bass
+    Brass: brass
+    Reed: woodwinds
+    Pipe: woodwinds
+    Synth Lead: keys.synth.lead
+    Synth Pad: keys.synth.pad
+    Drums: [drums, cymbals]
+  inst_class_ignore:
+    Chromatic Percussion: {reason: "GM family mixes mallets, celesta, music box, tubular bells and dulcimer (struck strings)", unknown: [percussion.mallet, strings, keys]}
+    Strings: {reason: "GM family mixes bowed strings, contrabass, harp, timpani", unknown: [strings, bass.upright, percussion]}
+    Strings (continued): {reason: "GM family mixes ensembles, synth strings, choir", unknown: [strings.bowed, voice.choir, keys.synth]}
+    Ethnic: {reason: "GM family mixes sitar, banjo, koto, kalimba, bagpipe, fiddle", unknown: [strings, woodwinds, percussion.mallet]}
+    Percussive: {reason: "GM family mixes agogo, steel drums, taiko, synth drum", unknown: [percussion, drums]}
+    Sound Effects: {reason: "GM synth effects (programs 96-103); not instruments"}
+    Sound effects: {reason: "GM sound effects (programs 119-127); not instruments"}

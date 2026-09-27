@@ -1,0 +1,54 @@
+UUID: 0f12ae105c1dc821c287b74632748b4e
+audio_dir: Track01876/stems
+lmd_midi_dir: lmd_matched/B/B/B/TRBBBBB128F0000002/0f12ae105c1dc821c287b74632748b4e.mid
+midi_dir: Track01876/MIDI
+normalization_factor: -13.0
+normalized: true
+overall_gain: 0.2
+stems:
+  S00:
+    audio_rendered: true
+    inst_class: Guitar
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Acoustic Guitar (steel)
+    midi_saved: true
+    plugin_name: /Library/Audio/Plug-Ins/Components/AGML2.component
+    program_num: 25
+  S01:
+    audio_rendered: true
+    inst_class: Piano
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Electric Piano 1
+    midi_saved: true
+    plugin_name: scarbee_mark_I.nkm
+    program_num: 4
+  S02:
+    audio_rendered: true
+    inst_class: Brass
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Trumpet
+    midi_saved: true
+    plugin_name: trumpet_section.nkm
+    program_num: 56
+  S03:
+    audio_rendered: true
+    inst_class: Strings (continued)
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Choir Aahs
+    midi_saved: true
+    plugin_name: choir_a.nkm
+    program_num: 52
+  S04:
+    audio_rendered: true
+    inst_class: Synth Lead
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Lead 2 (sawtooth)
+    midi_saved: true
+    plugin_name: december_saw.nkm
+    program_num: 81
+target_peak: -1.0

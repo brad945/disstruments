@@ -1,0 +1,11354 @@
+{
+"_about": "Label-only digest of the 196 public MedleyDB v1+v2 track metadata YAMLs (marl/medleydb medleydb/data/Metadata, MIT). Fields: artist, genre, has_bleed, stems.Sxx.instrument, raw-track instruments. No audio. Rebuild: tests/fixtures/ml/make_fixtures.py --medleydb-digest <repo>/medleydb.",
+"source_tracklists": [
+"medleydb/resources/tracklist_v1.txt",
+"medleydb/resources/tracklist_v2.txt"
+],
+"tracks": {
+"AClassicEducation_NightOwl": {
+"artist": "A Classic Education",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S09": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S10": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer"
+]
+},
+"S11": {
+"instrument": "tambourine",
+"raw": [
+"tambourine"
+]
+},
+"S12": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S13": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+}
+}
+},
+"AimeeNorwich_Child": {
+"artist": "Aimee Norwich",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"kick drum",
+"snare drum",
+"snare drum",
+"toms",
+"toms",
+"toms",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"fx/processed sound"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S05": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S06": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S07": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+}
+}
+},
+"AimeeNorwich_Flying": {
+"artist": "Aimee Norwich",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"kick drum",
+"snare drum",
+"snare drum",
+"toms",
+"toms",
+"toms",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "fx/processed sound",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S07": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S08": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S09": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S10": {
+"instrument": "cello",
+"raw": [
+"cello",
+"cello",
+"cello",
+"cello"
+]
+},
+"S11": {
+"instrument": "cello",
+"raw": [
+"cello",
+"cello"
+]
+},
+"S12": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S13": {
+"instrument": "trombone",
+"raw": [
+"trombone"
+]
+},
+"S14": {
+"instrument": "trombone",
+"raw": [
+"trombone"
+]
+},
+"S15": {
+"instrument": "clarinet",
+"raw": [
+"clarinet",
+"clarinet"
+]
+}
+}
+},
+"AlexanderRoss_GoodbyeBolero": {
+"artist": "Alexander Ross",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"high hat",
+"drum set",
+"drum set"
+]
+},
+"S06": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S07": {
+"instrument": "brass section",
+"raw": [
+"trumpet",
+"euphonium"
+]
+},
+"S08": {
+"instrument": "viola section",
+"raw": [
+"viola",
+"viola"
+]
+},
+"S09": {
+"instrument": "harmonica",
+"raw": [
+"harmonica"
+]
+}
+}
+},
+"AlexanderRoss_VelvetCurtain": {
+"artist": "Alexander Ross",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"toms",
+"high hat",
+"drum set",
+"drum set"
+]
+},
+"S06": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S07": {
+"instrument": "brass section",
+"raw": [
+"trumpet",
+"trumpet",
+"euphonium"
+]
+},
+"S08": {
+"instrument": "string section",
+"raw": [
+"string section",
+"string section",
+"cello"
+]
+},
+"S09": {
+"instrument": "vocalists",
+"raw": [
+"vocalists",
+"vocalists",
+"vocalists"
+]
+},
+"S10": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+}
+}
+},
+"Allegria_MendelssohnMovement1": {
+"artist": "Allegria",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S05": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+}
+}
+},
+"AmadeusRedux_MozartAllegro": {
+"artist": "Amadeus Redux",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"AmadeusRedux_SchubertMovement2": {
+"artist": "Amadeus Redux",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+}
+}
+},
+"AmadeusRedux_SchubertMovement3": {
+"artist": "Amadeus Redux",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"AmarLal_Rest": {
+"artist": "Amar Lal",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound"
+]
+}
+}
+},
+"AmarLal_SpringDay1": {
+"artist": "Amar Lal",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar"
+]
+}
+}
+},
+"Auctioneer_OurFutureFaces": {
+"artist": "Auctioneer",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "banjo",
+"raw": [
+"banjo"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"vocalists",
+"vocalists",
+"vocalists",
+"vocalists",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"toms",
+"toms"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "horn section",
+"raw": [
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section"
+]
+},
+"S07": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S09": {
+"instrument": "auxiliary percussion",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"toms",
+"toms",
+"auxiliary percussion",
+"shaker",
+"toms",
+"toms"
+]
+},
+"S10": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"AvaLuna_Waterduct": {
+"artist": "Ava Luna",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "synthesizer",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"synthesizer",
+"fx/processed sound",
+"synthesizer",
+"synthesizer"
+]
+},
+"S03": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"vocalists"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"clean electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S06": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S07": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"BarefootSisters_RedJetta": {
+"artist": "Barefoot Sisters",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "vocalists",
+"raw": [
+"vocalists",
+"vocalists"
+]
+},
+"S02": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"high hat",
+"kick drum",
+"high hat",
+"snare drum",
+"kick drum",
+"snare drum"
+]
+}
+}
+},
+"BigTroubles_Phantom": {
+"artist": "Big Troubles",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"snare drum",
+"snare drum"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S06": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S07": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+}
+}
+},
+"BrandonWebster_DontHearAThing": {
+"artist": "Caitlin Michelle Remmel & Benjamin Hood",
+"genre": "Musical Theatre",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "male speaker",
+"raw": [
+"male speaker"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"BrandonWebster_YesSirICanFly": {
+"artist": "Cameron-Mitchell Ware & Sergi Casanelles",
+"genre": "Musical Theatre",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"CassandraJenkins_PerfectDay": {
+"artist": "Cassandra Jenkins",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "string section",
+"raw": [
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S05": {
+"instrument": "horn section",
+"raw": [
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section",
+"horn section"
+]
+},
+"S06": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S07": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S08": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S09": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+}
+}
+},
+"CatMartino_IPromise": {
+"artist": "Cat Martino",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer",
+"synthesizer"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S04": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine",
+"drum machine"
+]
+},
+"S05": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S06": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer",
+"synthesizer"
+]
+},
+"S08": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S09": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine",
+"drum machine",
+"drum machine"
+]
+},
+"S10": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ",
+"electronic organ",
+"electronic organ",
+"electronic organ",
+"electronic organ"
+]
+},
+"S11": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer"
+]
+},
+"S12": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer"
+]
+}
+}
+},
+"Cayetana_MissThing": {
+"artist": "Cayetana",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer"
+]
+}
+}
+},
+"CelestialShore_DieForUs": {
+"artist": "Celestial Shore",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S04": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"kick drum",
+"snare drum",
+"snare drum"
+]
+},
+"S07": {
+"instrument": "tack piano",
+"raw": [
+"tack piano",
+"tack piano"
+]
+},
+"S08": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S09": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer"
+]
+}
+}
+},
+"ChrisJacoby_BoothShotLincoln": {
+"artist": "Chris Jacoby",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine"
+]
+},
+"S02": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"ChrisJacoby_PigsFoot": {
+"artist": "Chris Jacoby",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "kick drum",
+"raw": [
+"kick drum"
+]
+},
+"S02": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S04": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"ClaraBerryAndWooldog_AirTraffic": {
+"artist": "Clara Berry and Wooldog",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "timpani",
+"raw": [
+"timpani"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "lap steel guitar",
+"raw": [
+"lap steel guitar"
+]
+},
+"S06": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S07": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S08": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"ClaraBerryAndWooldog_Boys": {
+"artist": "Clara Berry and Wooldog",
+"genre": "Singer/Songwriter",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"bass drum",
+"bass drum",
+"snare drum",
+"tambourine",
+"fx/processed sound",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "snare drum",
+"raw": [
+"snare drum",
+"snare drum"
+]
+},
+"S03": {
+"instrument": "brass section",
+"raw": [
+"brass section",
+"brass section"
+]
+},
+"S04": {
+"instrument": "timpani",
+"raw": [
+"timpani",
+"timpani",
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S06": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S07": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S08": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S09": {
+"instrument": "tack piano",
+"raw": [
+"tack piano"
+]
+}
+}
+},
+"ClaraBerryAndWooldog_Stella": {
+"artist": "Clara Berry and Wooldog",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"bass drum",
+"bass drum",
+"snare drum",
+"high hat",
+"toms",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "auxiliary percussion",
+"raw": [
+"fx/processed sound",
+"guiro",
+"cowbell",
+"cowbell"
+]
+},
+"S03": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S06": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S07": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S08": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer"
+]
+}
+}
+},
+"ClaraBerryAndWooldog_TheBadGuys": {
+"artist": "Clara Berry and Wooldog",
+"genre": "Singer/Songwriter",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"fx/processed sound",
+"fx/processed sound"
+]
+}
+}
+},
+"ClaraBerryAndWooldog_WaltzForMyVictims": {
+"artist": "Clara Berry and Wooldog",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S04": {
+"instrument": "glockenspiel",
+"raw": [
+"glockenspiel"
+]
+},
+"S05": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"Creepoid_OldTree": {
+"artist": "Creepoid",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "fx/processed sound",
+"raw": [
+"male singer"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S09": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S10": {
+"instrument": "auxiliary percussion",
+"raw": [
+"sleigh bells",
+"sleigh bells",
+"shaker",
+"shaker",
+"fx/processed sound",
+"tambourine",
+"tambourine"
+]
+}
+}
+},
+"CroqueMadame_Oil": {
+"artist": "Croque Madame",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S03": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"snare drum",
+"snare drum",
+"toms",
+"toms",
+"cymbal",
+"high hat",
+"cymbal",
+"drum set",
+"drum set"
+]
+}
+}
+},
+"CroqueMadame_Pilot": {
+"artist": "Croque Madame",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S03": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"snare drum",
+"snare drum",
+"toms",
+"toms",
+"cymbal",
+"high hat",
+"cymbal",
+"drum set",
+"drum set"
+]
+}
+}
+},
+"DahkaBand_SoldierMan": {
+"artist": "Dahka Band",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass"
+]
+}
+}
+},
+"DeadMilkmen_PrisonersCinema": {
+"artist": "Dead Milkmen",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ"
+]
+},
+"S03": {
+"instrument": "tambourine",
+"raw": [
+"tambourine"
+]
+},
+"S04": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ"
+]
+},
+"S05": {
+"instrument": "shaker",
+"raw": [
+"shaker"
+]
+},
+"S06": {
+"instrument": "glockenspiel",
+"raw": [
+"glockenspiel",
+"glockenspiel"
+]
+},
+"S07": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S08": {
+"instrument": "castanet",
+"raw": [
+"castanet"
+]
+},
+"S09": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S10": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S11": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S12": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S13": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S14": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S15": {
+"instrument": "vocalists",
+"raw": [
+"vocalists",
+"vocalists",
+"vocalists",
+"vocalists",
+"vocalists",
+"vocalists"
+]
+}
+}
+},
+"Debussy_LenfantProdigue": {
+"artist": "NYU",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"DeclareAString_MendelssohnPianoTrio1Movement1": {
+"artist": "Declare A String",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "cello",
+"raw": [
+"cello",
+"cello",
+"cello"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"DeclareAString_MendelssohnPianoTrio1Movement2": {
+"artist": "Declare a String",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "cello",
+"raw": [
+"cello",
+"cello",
+"cello"
+]
+},
+"S04": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"DreamersOfTheGhetto_HeavyLove": {
+"artist": "Dreamers of the Ghetto",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S03": {
+"instrument": "fx/processed sound",
+"raw": [
+"cymbal",
+"cymbal",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S04": {
+"instrument": "auxiliary percussion",
+"raw": [
+"shaker",
+"tambourine"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"toms",
+"toms"
+]
+},
+"S06": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S08": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S09": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+}
+}
+},
+"EthanHein_1930sSynthAndUprightBass": {
+"artist": "Ethan Hein",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S03": {
+"instrument": "fx/processed sound",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S04": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+}
+}
+},
+"EthanHein_BluesForNofi": {
+"artist": "Ethan Hein",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+}
+}
+},
+"EthanHein_GirlOnABridge": {
+"artist": "Ethan Hein",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion",
+"auxiliary percussion"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S03": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S04": {
+"instrument": "string section",
+"raw": [
+"string section",
+"string section"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+}
+}
+},
+"EthanHein_HarmonicaFigure": {
+"artist": "Ethan Hein",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S03": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S04": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "harmonica",
+"raw": [
+"harmonica"
+]
+}
+}
+},
+"FacesOnFilm_WaitingForGa": {
+"artist": "Faces on Film",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"cymbal",
+"cymbal",
+"toms",
+"toms",
+"toms",
+"kick drum"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S08": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone"
+]
+},
+"S09": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S10": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S11": {
+"instrument": "auxiliary percussion",
+"raw": [
+"cabasa"
+]
+}
+}
+},
+"FallingSparks_Improvisation1": {
+"artist": "Falling Sparks",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S02": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+}
+}
+},
+"FallingSparks_Improvisation2": {
+"artist": "Falling Sparks",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S02": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S03": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+}
+}
+},
+"FallingSparks_Improvisation3": {
+"artist": "Falling Sparks",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S02": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+}
+}
+},
+"FallingSparks_PakKlongTalad": {
+"artist": "Falling Sparks",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S04": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+}
+}
+},
+"FamilyBand_Again": {
+"artist": "Family Band",
+"genre": "Singer/Songwriter",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"male singer"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"kick drum",
+"snare drum"
+]
+},
+"S04": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "lap steel guitar",
+"raw": [
+"lap steel guitar",
+"lap steel guitar",
+"lap steel guitar",
+"lap steel guitar",
+"lap steel guitar",
+"lap steel guitar"
+]
+},
+"S08": {
+"instrument": "lap steel guitar",
+"raw": [
+"lap steel guitar",
+"lap steel guitar"
+]
+},
+"S09": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S10": {
+"instrument": "melodica",
+"raw": [
+"melodica",
+"melodica"
+]
+},
+"S11": {
+"instrument": "auxiliary percussion",
+"raw": [
+"shaker",
+"tambourine"
+]
+}
+}
+},
+"FennelCartwright_DearTessie": {
+"artist": "Fennel Cartwright",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+},
+"S03": {
+"instrument": "oboe",
+"raw": [
+"oboe",
+"oboe"
+]
+},
+"S04": {
+"instrument": "clarinet",
+"raw": [
+"clarinet",
+"clarinet"
+]
+},
+"S05": {
+"instrument": "french horn",
+"raw": [
+"french horn",
+"french horn"
+]
+},
+"S06": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+}
+}
+},
+"FennelCartwright_FlowerDrumSong": {
+"artist": "Fennel Cartwright",
+"genre": "Rock",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "french horn",
+"raw": [
+"french horn",
+"french horn"
+]
+},
+"S02": {
+"instrument": "oboe",
+"raw": [
+"oboe",
+"oboe"
+]
+},
+"S03": {
+"instrument": "clarinet",
+"raw": [
+"clarinet",
+"clarinet"
+]
+},
+"S04": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+},
+"S05": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+}
+}
+},
+"FennelCartwright_WinterLake": {
+"artist": "Fennel Cartwright",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+},
+"S02": {
+"instrument": "french horn",
+"raw": [
+"french horn",
+"french horn"
+]
+},
+"S03": {
+"instrument": "clarinet",
+"raw": [
+"clarinet",
+"clarinet"
+]
+},
+"S04": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+},
+"S05": {
+"instrument": "oboe",
+"raw": [
+"oboe",
+"oboe"
+]
+},
+"S06": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+}
+}
+},
+"FilthyBird_IdLikeToKnow": {
+"artist": "Filthy Bird",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S03": {
+"instrument": "tambourine",
+"raw": [
+"tambourine",
+"tambourine"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S08": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S09": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer"
+]
+},
+"S10": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+}
+}
+},
+"FruitCathedral_KeepMeRunnin": {
+"artist": "Fruit Cathedral",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S03": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S04": {
+"instrument": "vocalists",
+"raw": [
+"vocalists",
+"vocalists",
+"vocalists",
+"vocalists",
+"vocalists",
+"vocalists"
+]
+},
+"S05": {
+"instrument": "shaker",
+"raw": [
+"shaker",
+"shaker"
+]
+},
+"S06": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+}
+}
+},
+"Grants_PunchDrunk": {
+"artist": "Grants",
+"genre": "Rap",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "sampler",
+"raw": [
+"sampler",
+"sampler"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "male rapper",
+"raw": [
+"male rapper",
+"male rapper",
+"male rapper"
+]
+},
+"S04": {
+"instrument": "male rapper",
+"raw": [
+"male rapper",
+"male rapper"
+]
+},
+"S05": {
+"instrument": "drum machine",
+"raw": [
+"high hat",
+"kick drum",
+"snare drum",
+"snare drum",
+"snare drum"
+]
+},
+"S06": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S07": {
+"instrument": "male rapper",
+"raw": [
+"male rapper",
+"male rapper"
+]
+},
+"S08": {
+"instrument": "sampler",
+"raw": [
+"vocalists",
+"vocalists",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"vocalists"
+]
+},
+"S09": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S10": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+}
+}
+},
+"Handel_TornamiAVagheggiar": {
+"artist": "NYU",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"HeladoNegro_MitadDelMundo": {
+"artist": "Helado Negro",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S02": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S03": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S04": {
+"instrument": "drum machine",
+"raw": [
+"snare drum",
+"drum machine",
+"drum machine",
+"drum machine",
+"tambourine"
+]
+},
+"S05": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer"
+]
+},
+"S06": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S07": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone",
+"vibraphone"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S09": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S10": {
+"instrument": "tack piano",
+"raw": [
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"synthesizer",
+"synthesizer"
+]
+}
+}
+},
+"HezekiahJones_BorrowedHeart": {
+"artist": "Hezekiah Jones",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"female singer"
+]
+},
+"S03": {
+"instrument": "banjo",
+"raw": [
+"banjo"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+},
+"S06": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"female singer",
+"male singer",
+"female singer",
+"male singer",
+"male singer",
+"female singer",
+"female singer",
+"male singer",
+"female singer"
+]
+},
+"S07": {
+"instrument": "cymbal",
+"raw": [
+"cymbal",
+"cymbal",
+"cymbal",
+"cymbal"
+]
+},
+"S08": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+},
+"S09": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"drum set",
+"snare drum"
+]
+},
+"S10": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S11": {
+"instrument": "violin section",
+"raw": [
+"violin section",
+"lap steel guitar"
+]
+},
+"S12": {
+"instrument": "lap steel guitar",
+"raw": [
+"lap steel guitar",
+"lap steel guitar",
+"lap steel guitar",
+"lap steel guitar"
+]
+}
+}
+},
+"HopAlong_SisterCities": {
+"artist": "Hop Along",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"toms",
+"toms"
+]
+},
+"S05": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer",
+"vibraphone"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S08": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+}
+}
+},
+"HopsNVinyl_ChickenFriedSteak": {
+"artist": "Hops 'n Vinyl",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"kick drum",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S05": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone",
+"vibraphone",
+"vibraphone"
+]
+}
+}
+},
+"HopsNVinyl_HoneyBrown": {
+"artist": "Hops \u2019n Vinyl",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass",
+"double bass"
+]
+}
+}
+},
+"HopsNVinyl_ReignCheck": {
+"artist": "Hops \u2019n Vinyl",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S05": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+}
+}
+},
+"HopsNVinyl_WidowsWalk": {
+"artist": "Hops \u2019n Vinyl",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "soprano saxophone",
+"raw": [
+"soprano saxophone",
+"soprano saxophone",
+"soprano saxophone",
+"soprano saxophone"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S05": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+}
+}
+},
+"InvisibleFamiliars_DisturbingWildlife": {
+"artist": "Invisible Familiars",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S02": {
+"instrument": "claps",
+"raw": [
+"claps",
+"claps"
+]
+},
+"S03": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet",
+"trumpet",
+"trumpet"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"toms",
+"drum set",
+"drum set",
+"drum set",
+"toms",
+"drum set",
+"drum set",
+"kick drum",
+"snare drum",
+"snare drum"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "shaker",
+"raw": [
+"shaker"
+]
+},
+"S07": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S08": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S09": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S10": {
+"instrument": "tack piano",
+"raw": [
+"tack piano"
+]
+}
+}
+},
+"JoelHelander_Definition": {
+"artist": "Joel Helander",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S05": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S06": {
+"instrument": "string section",
+"raw": [
+"string section",
+"string section",
+"string section",
+"string section"
+]
+},
+"S07": {
+"instrument": "chimes",
+"raw": [
+"chimes",
+"chimes"
+]
+},
+"S08": {
+"instrument": "snare drum",
+"raw": [
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum",
+"snare drum"
+]
+},
+"S09": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+},
+"S10": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+},
+"S11": {
+"instrument": "french horn",
+"raw": [
+"french horn"
+]
+},
+"S12": {
+"instrument": "bassoon",
+"raw": [
+"bassoon"
+]
+},
+"S13": {
+"instrument": "horn section",
+"raw": [
+"horn section",
+"horn section"
+]
+},
+"S14": {
+"instrument": "trombone",
+"raw": [
+"trombone",
+"trombone"
+]
+},
+"S15": {
+"instrument": "trumpet",
+"raw": [
+"trumpet",
+"trumpet"
+]
+}
+}
+},
+"JoelHelander_ExcessiveResistancetoChange": {
+"artist": "Joel Helander",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "tack piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano"
+]
+},
+"S02": {
+"instrument": "tack piano",
+"raw": [
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano",
+"tack piano"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "tack piano",
+"raw": [
+"tack piano",
+"tack piano",
+"tack piano"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S06": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"kick drum",
+"snare drum",
+"snare drum",
+"toms",
+"toms",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S07": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+},
+"S08": {
+"instrument": "clarinet",
+"raw": [
+"clarinet",
+"clarinet"
+]
+},
+"S09": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S10": {
+"instrument": "french horn",
+"raw": [
+"french horn"
+]
+},
+"S11": {
+"instrument": "bassoon",
+"raw": [
+"bassoon"
+]
+},
+"S12": {
+"instrument": "horn section",
+"raw": [
+"horn section",
+"horn section"
+]
+},
+"S13": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S14": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S15": {
+"instrument": "violin section",
+"raw": [
+"violin section",
+"violin section"
+]
+}
+}
+},
+"JoelHelander_IntheAtticBedroom": {
+"artist": "Joel Helander",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S04": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S05": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"Karachacha_Volamos": {
+"artist": "Karachacha",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S03": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone",
+"vibraphone"
+]
+},
+"S04": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion",
+"auxiliary percussion"
+]
+},
+"S05": {
+"instrument": "kick drum",
+"raw": [
+"kick drum"
+]
+},
+"S06": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+}
+}
+},
+"KarimDouaidy_Hopscotch": {
+"artist": "Karim Douaidy",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S02": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S03": {
+"instrument": "claps",
+"raw": [
+"claps",
+"claps",
+"claps",
+"claps",
+"claps",
+"claps"
+]
+},
+"S04": {
+"instrument": "darbuka",
+"raw": [
+"darbuka"
+]
+},
+"S05": {
+"instrument": "doumbek",
+"raw": [
+"doumbek"
+]
+},
+"S06": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S07": {
+"instrument": "oud",
+"raw": [
+"oud"
+]
+},
+"S08": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+},
+"S09": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"KarimDouaidy_Yatora": {
+"artist": "Karim Douaidy",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "auxiliary percussion",
+"raw": [
+"darbuka",
+"darbuka",
+"doumbek",
+"doumbek"
+]
+},
+"S02": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S03": {
+"instrument": "oud",
+"raw": [
+"oud"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"Katzn_CharlieKnox": {
+"artist": "Katzn",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion",
+"auxiliary percussion",
+"auxiliary percussion",
+"auxiliary percussion",
+"auxiliary percussion",
+"auxiliary percussion"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "clarinet",
+"raw": [
+"clarinet",
+"clarinet"
+]
+},
+"S05": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S06": {
+"instrument": "cello",
+"raw": [
+"cello",
+"cello"
+]
+}
+}
+},
+"LewisAndClarke_TheSilverSea": {
+"artist": "Lewis And Clarke",
+"genre": "Pop",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S02": {
+"instrument": "string section",
+"raw": [
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S04": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S05": {
+"instrument": "cello",
+"raw": [
+"cello",
+"cello"
+]
+},
+"S06": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer"
+]
+},
+"S07": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S08": {
+"instrument": "cymbal",
+"raw": [
+"cymbal",
+"cymbal",
+"cymbal",
+"cymbal"
+]
+},
+"S09": {
+"instrument": "electric piano",
+"raw": [
+"electric piano",
+"electric piano",
+"electric piano",
+"electric piano",
+"electric piano",
+"electric piano"
+]
+},
+"S10": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+}
+}
+},
+"LittleTybee_TheAlchemist": {
+"artist": "Little Tybee",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S07": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S08": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S09": {
+"instrument": "electric piano",
+"raw": [
+"electric piano",
+"electric piano",
+"electric piano"
+]
+},
+"S10": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin",
+"violin",
+"violin",
+"violin",
+"violin",
+"violin"
+]
+}
+}
+},
+"LizNelson_Coldwar": {
+"artist": "Liz Nelson & Jennifer Davies",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"LizNelson_ImComingHome": {
+"artist": "Liz Nelson",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S03": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S04": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"LizNelson_Rainfall": {
+"artist": "Liz Nelson & Jennifer Davies",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S03": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S04": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+}
+}
+},
+"Lushlife_ToynbeeSuite": {
+"artist": "Lushlife",
+"genre": "Rap",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "brass section",
+"raw": [
+"brass section",
+"brass section"
+]
+},
+"S02": {
+"instrument": "drum machine",
+"raw": [
+"drum machine"
+]
+},
+"S03": {
+"instrument": "claps",
+"raw": [
+"claps"
+]
+},
+"S04": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S05": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S06": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine",
+"drum machine",
+"drum machine",
+"high hat",
+"drum machine",
+"snare drum"
+]
+},
+"S07": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"toms",
+"toms",
+"kick drum",
+"kick drum",
+"kick drum",
+"kick drum",
+"snare drum",
+"snare drum"
+]
+},
+"S08": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S09": {
+"instrument": "glockenspiel",
+"raw": [
+"glockenspiel",
+"fx/processed sound"
+]
+},
+"S10": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S11": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S12": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S13": {
+"instrument": "horn section",
+"raw": [
+"horn section",
+"horn section"
+]
+},
+"S14": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet",
+"trumpet"
+]
+},
+"S15": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S16": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S17": {
+"instrument": "male rapper",
+"raw": [
+"male rapper"
+]
+},
+"S18": {
+"instrument": "male rapper",
+"raw": [
+"male rapper"
+]
+},
+"S19": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S20": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S21": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S22": {
+"instrument": "drum machine",
+"raw": [
+"drum machine"
+]
+},
+"S23": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S24": {
+"instrument": "string section",
+"raw": [
+"string section",
+"string section",
+"string section"
+]
+},
+"S25": {
+"instrument": "scratches",
+"raw": [
+"scratches"
+]
+},
+"S26": {
+"instrument": "male rapper",
+"raw": [
+"male rapper",
+"male rapper",
+"male rapper"
+]
+}
+}
+},
+"MatthewEntwistle_AnEveningWithOliver": {
+"artist": "Matthew Entwistle",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S02": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S03": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S04": {
+"instrument": "bassoon",
+"raw": [
+"bassoon"
+]
+},
+"S05": {
+"instrument": "bongo",
+"raw": [
+"bongo"
+]
+},
+"S06": {
+"instrument": "vocalists",
+"raw": [
+"vocalists"
+]
+},
+"S07": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S08": {
+"instrument": "glockenspiel",
+"raw": [
+"glockenspiel"
+]
+},
+"S09": {
+"instrument": "harp",
+"raw": [
+"harp"
+]
+},
+"S10": {
+"instrument": "french horn section",
+"raw": [
+"french horn section"
+]
+},
+"S11": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S12": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S13": {
+"instrument": "oboe",
+"raw": [
+"oboe"
+]
+},
+"S14": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S15": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S16": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S17": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S18": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S19": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S20": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S21": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S22": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S23": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S24": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+}
+}
+},
+"MatthewEntwistle_DontYouEver": {
+"artist": "Matthew Entwistle",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S03": {
+"instrument": "brass section",
+"raw": [
+"brass section"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S05": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S06": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S07": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MatthewEntwistle_FairerHopes": {
+"artist": "Matthew Entwistle",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "bass drum",
+"raw": [
+"bass drum"
+]
+},
+"S02": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+},
+"S03": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+},
+"S04": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+},
+"S05": {
+"instrument": "clarinet section",
+"raw": [
+"clarinet section"
+]
+},
+"S06": {
+"instrument": "cymbal",
+"raw": [
+"cymbal"
+]
+},
+"S07": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S08": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S09": {
+"instrument": "gong",
+"raw": [
+"gong"
+]
+},
+"S10": {
+"instrument": "harp",
+"raw": [
+"harp"
+]
+},
+"S11": {
+"instrument": "french horn",
+"raw": [
+"french horn"
+]
+},
+"S12": {
+"instrument": "french horn",
+"raw": [
+"french horn"
+]
+},
+"S13": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S14": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S15": {
+"instrument": "string section",
+"raw": [
+"string section"
+]
+},
+"S16": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S17": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S18": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+}
+}
+},
+"MatthewEntwistle_ImpressionsOfSaturn": {
+"artist": "Matthew Entwistle",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S03": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S04": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S05": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S06": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S07": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S08": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S09": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+}
+}
+},
+"MatthewEntwistle_Lontano": {
+"artist": "Matthew Entwistle",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"MatthewEntwistle_ReturnToVenezia": {
+"artist": "Matthew Entwistle",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "viola",
+"raw": [
+"viola",
+"viola"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"MatthewEntwistle_TheArch": {
+"artist": "Matthew Entwistle",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S03": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S04": {
+"instrument": "gong",
+"raw": [
+"gong"
+]
+},
+"S05": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+},
+"S06": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+},
+"S07": {
+"instrument": "flute section",
+"raw": [
+"flute section"
+]
+},
+"S08": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S09": {
+"instrument": "french horn section",
+"raw": [
+"french horn section"
+]
+},
+"S10": {
+"instrument": "bamboo flute",
+"raw": [
+"bamboo flute"
+]
+},
+"S11": {
+"instrument": "piccolo",
+"raw": [
+"piccolo"
+]
+},
+"S12": {
+"instrument": "trombone section",
+"raw": [
+"trombone section"
+]
+},
+"S13": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section"
+]
+},
+"S14": {
+"instrument": "viola section",
+"raw": [
+"viola section"
+]
+},
+"S15": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S16": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S17": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S18": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S19": {
+"instrument": "cymbal",
+"raw": [
+"cymbal"
+]
+}
+}
+},
+"MatthewEntwistle_TheFlaxenField": {
+"artist": "Matthew Entwistle",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S02": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S05": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+}
+}
+},
+"Meaxic_TakeAStep": {
+"artist": "Meaxic",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S02": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"toms",
+"snare drum",
+"snare drum",
+"kick drum",
+"high hat",
+"cymbal",
+"drum set"
+]
+},
+"S06": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S07": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S08": {
+"instrument": "vocalists",
+"raw": [
+"vocalists"
+]
+}
+}
+},
+"Meaxic_YouListen": {
+"artist": "Meaxic",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"vocalists"
+]
+},
+"S03": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "drum set",
+"raw": [
+"high hat",
+"kick drum",
+"snare drum",
+"snare drum",
+"toms",
+"drum set"
+]
+}
+}
+},
+"MichaelKropf_AllGoodThings": {
+"artist": "Michael Kropf",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+}
+}
+},
+"MidnightBlue_HuntingSeason": {
+"artist": "Midnight Blue",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S02": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S06": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S07": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S08": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"MidnightBlue_StarsAreScreaming": {
+"artist": "Midnight Blue",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S06": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S07": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"Mozart_BesterJungling": {
+"artist": "NYU",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"Mozart_DiesBildnis": {
+"artist": "NYU",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"MusicDelta_80sRock": {
+"artist": "Music Delta Multitracks",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_Beatles": {
+"artist": "Music Delta Multitracks",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S08": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"MusicDelta_BebopJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S04": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone"
+]
+},
+"S05": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+}
+}
+},
+"MusicDelta_Beethoven": {
+"artist": "Music Delta Multitracks",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S02": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S03": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S04": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S06": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S07": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S08": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S09": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S10": {
+"instrument": "oboe",
+"raw": [
+"oboe"
+]
+},
+"S11": {
+"instrument": "oboe",
+"raw": [
+"oboe"
+]
+},
+"S12": {
+"instrument": "bassoon",
+"raw": [
+"bassoon"
+]
+},
+"S13": {
+"instrument": "bassoon",
+"raw": [
+"bassoon"
+]
+},
+"S14": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+},
+"S15": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+},
+"S16": {
+"instrument": "french horn",
+"raw": [
+"french horn"
+]
+},
+"S17": {
+"instrument": "french horn",
+"raw": [
+"french horn"
+]
+},
+"S18": {
+"instrument": "timpani",
+"raw": [
+"timpani"
+]
+}
+}
+},
+"MusicDelta_Britpop": {
+"artist": "Music Delta Multitracks",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S08": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"MusicDelta_ChineseChaoZhou": {
+"artist": "Music Delta",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "dizi",
+"raw": [
+"dizi"
+]
+},
+"S02": {
+"instrument": "erhu",
+"raw": [
+"erhu"
+]
+},
+"S03": {
+"instrument": "guzheng",
+"raw": [
+"guzheng"
+]
+},
+"S04": {
+"instrument": "yangqin",
+"raw": [
+"yangqin"
+]
+}
+}
+},
+"MusicDelta_ChineseDrama": {
+"artist": "Music Delta",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "dizi",
+"raw": [
+"dizi"
+]
+},
+"S02": {
+"instrument": "erhu",
+"raw": [
+"erhu"
+]
+},
+"S03": {
+"instrument": "guzheng",
+"raw": [
+"guzheng"
+]
+},
+"S04": {
+"instrument": "yangqin",
+"raw": [
+"yangqin"
+]
+},
+"S05": {
+"instrument": "zhongruan",
+"raw": [
+"zhongruan"
+]
+}
+}
+},
+"MusicDelta_ChineseHenan": {
+"artist": "Music Delta",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "dizi",
+"raw": [
+"dizi"
+]
+},
+"S02": {
+"instrument": "erhu",
+"raw": [
+"erhu"
+]
+},
+"S03": {
+"instrument": "guzheng",
+"raw": [
+"guzheng"
+]
+},
+"S04": {
+"instrument": "liuqin",
+"raw": [
+"liuqin"
+]
+},
+"S05": {
+"instrument": "yangqin",
+"raw": [
+"yangqin"
+]
+}
+}
+},
+"MusicDelta_ChineseJiangNan": {
+"artist": "Music Delta",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "dizi",
+"raw": [
+"dizi"
+]
+},
+"S02": {
+"instrument": "erhu",
+"raw": [
+"erhu"
+]
+},
+"S03": {
+"instrument": "guzheng",
+"raw": [
+"guzheng"
+]
+},
+"S04": {
+"instrument": "yangqin",
+"raw": [
+"yangqin"
+]
+},
+"S05": {
+"instrument": "zhongruan",
+"raw": [
+"zhongruan"
+]
+}
+}
+},
+"MusicDelta_ChineseXinJing": {
+"artist": "Music Delta",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "erhu",
+"raw": [
+"erhu"
+]
+},
+"S02": {
+"instrument": "gu",
+"raw": [
+"gu"
+]
+},
+"S03": {
+"instrument": "liuqin",
+"raw": [
+"liuqin"
+]
+},
+"S04": {
+"instrument": "yangqin",
+"raw": [
+"yangqin"
+]
+},
+"S05": {
+"instrument": "zhongruan",
+"raw": [
+"zhongruan"
+]
+}
+}
+},
+"MusicDelta_ChineseYaoZu": {
+"artist": "Music Delta",
+"genre": "World/Folk",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "dizi",
+"raw": [
+"dizi"
+]
+},
+"S02": {
+"instrument": "erhu",
+"raw": [
+"erhu"
+]
+},
+"S03": {
+"instrument": "guzheng",
+"raw": [
+"guzheng"
+]
+},
+"S04": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion"
+]
+},
+"S05": {
+"instrument": "yangqin",
+"raw": [
+"yangqin"
+]
+}
+}
+},
+"MusicDelta_CoolJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S04": {
+"instrument": "baritone saxophone",
+"raw": [
+"baritone saxophone"
+]
+},
+"S05": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+}
+}
+},
+"MusicDelta_Country1": {
+"artist": "Music Delta Multitracks",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S04": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S05": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_Country2": {
+"artist": "Music Delta Multitracks",
+"genre": "Musical Theatre",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"MusicDelta_Disco": {
+"artist": "Music Delta Multitracks",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_FreeJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S03": {
+"instrument": "bass clarinet",
+"raw": [
+"bass clarinet"
+]
+}
+}
+},
+"MusicDelta_FunkJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "electric piano",
+"raw": [
+"electric piano"
+]
+},
+"S04": {
+"instrument": "alto saxophone",
+"raw": [
+"alto saxophone"
+]
+}
+}
+},
+"MusicDelta_FusionJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "electric piano",
+"raw": [
+"electric piano"
+]
+},
+"S04": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "soprano saxophone",
+"raw": [
+"soprano saxophone"
+]
+},
+"S06": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+}
+}
+},
+"MusicDelta_Gospel": {
+"artist": "Music Delta Multitracks",
+"genre": "Musical Theatre",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "claps",
+"raw": [
+"claps"
+]
+},
+"S06": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"MusicDelta_GriegTrolltog": {
+"artist": "Music Delta Multitracks",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S02": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S03": {
+"instrument": "viola section",
+"raw": [
+"viola section"
+]
+},
+"S04": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S06": {
+"instrument": "flute section",
+"raw": [
+"flute section"
+]
+},
+"S07": {
+"instrument": "piccolo",
+"raw": [
+"piccolo"
+]
+},
+"S08": {
+"instrument": "piccolo",
+"raw": [
+"piccolo"
+]
+},
+"S09": {
+"instrument": "oboe",
+"raw": [
+"oboe"
+]
+},
+"S10": {
+"instrument": "clarinet section",
+"raw": [
+"clarinet section"
+]
+},
+"S11": {
+"instrument": "clarinet section",
+"raw": [
+"clarinet section"
+]
+},
+"S12": {
+"instrument": "brass section",
+"raw": [
+"brass section"
+]
+},
+"S13": {
+"instrument": "brass section",
+"raw": [
+"brass section"
+]
+},
+"S14": {
+"instrument": "brass section",
+"raw": [
+"brass section"
+]
+},
+"S15": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section"
+]
+},
+"S16": {
+"instrument": "tuba",
+"raw": [
+"tuba"
+]
+},
+"S17": {
+"instrument": "timpani",
+"raw": [
+"timpani"
+]
+},
+"S18": {
+"instrument": "timpani",
+"raw": [
+"timpani"
+]
+},
+"S19": {
+"instrument": "cymbal",
+"raw": [
+"cymbal"
+]
+}
+}
+},
+"MusicDelta_Grunge": {
+"artist": "Music Delta Multitracks",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_Hendrix": {
+"artist": "Music Delta Multitracks",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_InTheHalloftheMountainKing": {
+"artist": "Music Delta Multitracks",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S02": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S03": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S04": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S06": {
+"instrument": "piccolo",
+"raw": [
+"piccolo"
+]
+},
+"S07": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S08": {
+"instrument": "bassoon",
+"raw": [
+"bassoon"
+]
+},
+"S09": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+},
+"S10": {
+"instrument": "oboe",
+"raw": [
+"oboe"
+]
+},
+"S11": {
+"instrument": "french horn section",
+"raw": [
+"french horn section"
+]
+},
+"S12": {
+"instrument": "trombone",
+"raw": [
+"trombone"
+]
+},
+"S13": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section"
+]
+},
+"S14": {
+"instrument": "tuba",
+"raw": [
+"tuba"
+]
+},
+"S15": {
+"instrument": "cymbal",
+"raw": [
+"cymbal"
+]
+},
+"S16": {
+"instrument": "toms",
+"raw": [
+"toms"
+]
+},
+"S17": {
+"instrument": "timpani",
+"raw": [
+"timpani"
+]
+}
+}
+},
+"MusicDelta_LatinJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S03": {
+"instrument": "electric piano",
+"raw": [
+"electric piano"
+]
+},
+"S04": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S05": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+}
+}
+},
+"MusicDelta_ModalJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S04": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone"
+]
+},
+"S05": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+}
+}
+},
+"MusicDelta_Pachelbel": {
+"artist": "Music Delta",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S02": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S03": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S04": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+}
+}
+},
+"MusicDelta_Punk": {
+"artist": "Music Delta Multitracks",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_Reggae": {
+"artist": "Music Delta Multitracks",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_Rock": {
+"artist": "Music Delta Multitracks",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"MusicDelta_Rockabilly": {
+"artist": "Music Delta Multitracks",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"MusicDelta_Shadows": {
+"artist": "Music Delta",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+}
+}
+},
+"MusicDelta_SpeedMetal": {
+"artist": "Music Delta",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+}
+}
+},
+"MusicDelta_SwingJazz": {
+"artist": "Music Delta",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S04": {
+"instrument": "clarinet",
+"raw": [
+"clarinet"
+]
+}
+}
+},
+"MusicDelta_Vivaldi": {
+"artist": "Music Delta",
+"genre": "Classical",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S02": {
+"instrument": "viola section",
+"raw": [
+"viola section"
+]
+},
+"S03": {
+"instrument": "cello",
+"raw": [
+"cello"
+]
+},
+"S04": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S05": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+}
+}
+},
+"MusicDelta_Zeppelin": {
+"artist": "Music Delta",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+}
+}
+},
+"MutualBenefit_NotForNothing": {
+"artist": "Mutual Benefit",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S05": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S06": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S07": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S08": {
+"instrument": "violin section",
+"raw": [
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section"
+]
+},
+"S09": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S10": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S11": {
+"instrument": "violin section",
+"raw": [
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section",
+"violin section"
+]
+}
+}
+},
+"NightPanther_Fire": {
+"artist": "Night Panther",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S03": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S04": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"high hat",
+"fx/processed sound"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"drum set",
+"snare drum",
+"toms",
+"toms",
+"drum set"
+]
+},
+"S06": {
+"instrument": "brass section",
+"raw": [
+"brass section",
+"cornet",
+"cornet",
+"brass section",
+"brass section",
+"brass section"
+]
+},
+"S07": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S08": {
+"instrument": "auxiliary percussion",
+"raw": [
+"cymbal",
+"tambourine"
+]
+},
+"S09": {
+"instrument": "string section",
+"raw": [
+"cello",
+"cello",
+"cello",
+"cello",
+"string section",
+"violin section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"string section",
+"violin section"
+]
+},
+"S10": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S11": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S12": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+}
+}
+},
+"PatternIsMovement_SaveMe": {
+"artist": "Pattern Is Movement",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ",
+"electronic organ",
+"electronic organ"
+]
+},
+"S02": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ",
+"electronic organ",
+"electronic organ"
+]
+},
+"S03": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ",
+"electronic organ",
+"electronic organ"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S05": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ",
+"electronic organ"
+]
+},
+"S06": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S07": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S08": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ",
+"electronic organ"
+]
+},
+"S09": {
+"instrument": "electronic organ",
+"raw": [
+"electronic organ",
+"electronic organ",
+"electronic organ"
+]
+}
+}
+},
+"PeterMatthewBauer_YouAlwaysLookForSomeoneLost": {
+"artist": "Peter Matthew Bauer",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"toms",
+"drum set",
+"kick drum",
+"toms"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "auxiliary percussion",
+"raw": [
+"tambourine",
+"auxiliary percussion",
+"chimes"
+]
+},
+"S05": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"male singer",
+"male singer"
+]
+},
+"S06": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+}
+}
+},
+"Phoenix_BrokenPledgeChicagoReel": {
+"artist": "Phoenix",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+}
+}
+},
+"Phoenix_ColliersDaughter": {
+"artist": "Phoenix",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"Phoenix_ElzicsFarewell": {
+"artist": "Phoenix",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"Phoenix_LarkOnTheStrandDrummondCastle": {
+"artist": "Phoenix",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"Phoenix_ScotchMorris": {
+"artist": "Phoenix",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"Phoenix_SeanCaughlinsTheScartaglen": {
+"artist": "Phoenix",
+"genre": "World/Folk",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S05": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"Plasma_GoodShout": {
+"artist": "Plasma",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+}
+}
+},
+"PoliceHearingDepartment_Brahms": {
+"artist": "Police Hearing Department",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "viola",
+"raw": [
+"viola"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"PoliceHearingDepartment_SchumannMovement1": {
+"artist": "Police Hearing Department",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S04": {
+"instrument": "viola",
+"raw": [
+"viola",
+"viola"
+]
+},
+"S05": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+},
+"S06": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"PoliceHearingDepartment_SchumannMovement2": {
+"artist": "Police Hearing Department",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "flute",
+"raw": [
+"flute"
+]
+},
+"S04": {
+"instrument": "viola",
+"raw": [
+"viola",
+"viola"
+]
+},
+"S05": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+},
+"S06": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"PoliceHearingDepartment_VivaldiMovement1": {
+"artist": "Police Hearing Department",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+},
+"S04": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+}
+}
+},
+"PoliceHearingDepartment_VivaldiMovement2": {
+"artist": "Police Hearing Department",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+},
+"S04": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+}
+}
+},
+"PoliceHearingDepartment_VivaldiMovement3": {
+"artist": "Police Hearing Department",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "bassoon",
+"raw": [
+"bassoon",
+"bassoon"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+},
+"S04": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+}
+}
+},
+"PortStWillow_StayEven": {
+"artist": "Port St Willow",
+"genre": "Singer/Songwriter",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S02": {
+"instrument": "cymbal",
+"raw": [
+"cymbal"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"kick drum",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"toms",
+"high hat",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"distorted electric guitar"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"fx/processed sound"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S09": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"tack piano",
+"tack piano"
+]
+},
+"S10": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S11": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+}
+}
+},
+"PurlingHiss_Lolita": {
+"artist": "Purling Hiss",
+"genre": "Rock",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "tambourine",
+"raw": [
+"tambourine",
+"tambourine"
+]
+},
+"S06": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer"
+]
+}
+}
+},
+"QuantumChromos_Circuits": {
+"artist": "Quantum Chromos",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "bass drum",
+"raw": [
+"bass drum",
+"bass drum",
+"bass drum",
+"bass drum",
+"bass drum",
+"bass drum"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "clarinet",
+"raw": [
+"clarinet",
+"clarinet"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S06": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S07": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+}
+}
+},
+"RodrigoBonelli_BalladForLaura": {
+"artist": "Rodrigo Bonelli",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "trumpet",
+"raw": [
+"trumpet"
+]
+},
+"S02": {
+"instrument": "trombone",
+"raw": [
+"trombone"
+]
+},
+"S03": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone"
+]
+},
+"S04": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+},
+"S05": {
+"instrument": "bass clarinet",
+"raw": [
+"bass clarinet"
+]
+},
+"S06": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"snare drum",
+"kick drum",
+"drum set",
+"snare drum",
+"drum set"
+]
+},
+"S07": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"SasquatchConnection_BoomBoxing": {
+"artist": "Sasquatch Connection",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S02": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "trombone section",
+"raw": [
+"trombone section",
+"trombone section"
+]
+},
+"S07": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section",
+"trumpet section"
+]
+}
+}
+},
+"SasquatchConnection_HolyClamsBatman": {
+"artist": "Sasquatch Connection",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S02": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section",
+"trumpet section"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S06": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S07": {
+"instrument": "trombone section",
+"raw": [
+"trombone section",
+"trombone section"
+]
+}
+}
+},
+"SasquatchConnection_Illuminati": {
+"artist": "Sasquatch Connection",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"cymbal",
+"kick drum"
+]
+},
+"S02": {
+"instrument": "horn section",
+"raw": [
+"horn section",
+"horn section",
+"horn section"
+]
+},
+"S03": {
+"instrument": "trombone section",
+"raw": [
+"trombone section",
+"trombone section"
+]
+},
+"S04": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass",
+"double bass",
+"double bass"
+]
+},
+"S05": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S06": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section",
+"trumpet section"
+]
+}
+}
+},
+"SasquatchConnection_Struttin": {
+"artist": "Sasquatch Connection",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "trombone section",
+"raw": [
+"trombone section",
+"trombone section",
+"trombone section"
+]
+},
+"S05": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S06": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section"
+]
+},
+"S07": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set"
+]
+}
+}
+},
+"SasquatchConnection_ThanksALatte": {
+"artist": "Sasquatch Connection",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "trombone section",
+"raw": [
+"trombone section",
+"trombone section"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S05": {
+"instrument": "trumpet section",
+"raw": [
+"trumpet section",
+"trumpet section"
+]
+},
+"S06": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S07": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass",
+"double bass"
+]
+}
+}
+},
+"Schubert_Erstarrung": {
+"artist": "NYU",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"Schumann_Mignon": {
+"artist": "NYU",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"SecretMountains_HighHorse": {
+"artist": "Secret Mountains",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S03": {
+"instrument": "cymbal",
+"raw": [
+"cymbal",
+"cymbal"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"toms",
+"tambourine"
+]
+},
+"S05": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S06": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S07": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S08": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S09": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer"
+]
+},
+"S10": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound"
+]
+}
+}
+},
+"SlowGhost_FirstSnow": {
+"artist": "Slow Ghost",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "electric piano",
+"raw": [
+"electric piano",
+"electric piano"
+]
+}
+}
+},
+"SlowGhost_MidnightGroove": {
+"artist": "Slow Ghost",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "electric piano",
+"raw": [
+"electric piano",
+"electric piano"
+]
+}
+}
+},
+"SlowGhost_Peanut": {
+"artist": "Slow Ghost",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "electric piano",
+"raw": [
+"electric piano",
+"electric piano"
+]
+}
+}
+},
+"SlowGhost_YoureAMystery": {
+"artist": "Slow Ghost",
+"genre": "Jazz",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric piano",
+"raw": [
+"electric piano",
+"electric piano"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+}
+}
+},
+"Snowmine_Curfews": {
+"artist": "Snowmine",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "auxiliary percussion",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound",
+"shaker",
+"tambourine",
+"tambourine"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S04": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone",
+"vibraphone"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"toms",
+"toms",
+"kick drum"
+]
+},
+"S06": {
+"instrument": "sampler",
+"raw": [
+"sampler",
+"sampler"
+]
+},
+"S07": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S08": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"fx/processed sound",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S09": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer",
+"synthesizer"
+]
+},
+"S10": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S11": {
+"instrument": "tack piano",
+"raw": [
+"tack piano",
+"tack piano",
+"tack piano"
+]
+}
+}
+},
+"SongYiJeon_TwoMoons": {
+"artist": "Song Yi Jeon",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"StevenClark_Bounty": {
+"artist": "Steven Clark",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "vocalists",
+"raw": [
+"vocalists",
+"vocalists",
+"vocalists",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S04": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"kick drum",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"toms"
+]
+},
+"S06": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S07": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S09": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S10": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+}
+}
+},
+"StrandOfOaks_Spacestation": {
+"artist": "Strand of Oaks",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"female singer",
+"female singer",
+"male singer"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"kick drum",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"toms",
+"toms"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S05": {
+"instrument": "auxiliary percussion",
+"raw": [
+"shaker",
+"tambourine"
+]
+},
+"S06": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S08": {
+"instrument": "tack piano",
+"raw": [
+"tack piano",
+"tack piano"
+]
+}
+}
+},
+"Sweat_AlmostAlways": {
+"artist": "SWEAT",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S04": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S05": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+}
+}
+},
+"Sweat_Anecdoche": {
+"artist": "SWEAT",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S05": {
+"instrument": "alto saxophone",
+"raw": [
+"alto saxophone",
+"alto saxophone",
+"alto saxophone",
+"alto saxophone"
+]
+},
+"S06": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+},
+"Sweat_Elegy": {
+"artist": "SWEAT",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S04": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S05": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+}
+}
+},
+"Sweat_Mesozoic": {
+"artist": "SWEAT",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S04": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S05": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S06": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S07": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+}
+}
+},
+"Sweat_Sn1572": {
+"artist": "Sweat",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"drum set",
+"drum set",
+"toms",
+"snare drum",
+"drum set",
+"toms",
+"high hat",
+"cymbal",
+"kick drum",
+"kick drum",
+"toms",
+"drum set",
+"kick drum",
+"cymbal",
+"cymbal",
+"snare drum",
+"cymbal",
+"snare drum",
+"toms",
+"high hat",
+"snare drum"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass",
+"electric bass",
+"electric bass"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "electric piano",
+"raw": [
+"electric piano",
+"electric piano",
+"electric piano",
+"electric piano"
+]
+}
+}
+},
+"Sweat_Tact": {
+"artist": "SWEAT",
+"genre": "Jazz",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano",
+"piano"
+]
+},
+"S03": {
+"instrument": "tenor saxophone",
+"raw": [
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone",
+"tenor saxophone"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S06": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+}
+}
+},
+"SweetLights_YouLetMeDown": {
+"artist": "Sweet Lights",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S03": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S04": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "claps",
+"raw": [
+"claps",
+"claps",
+"claps",
+"claps",
+"claps"
+]
+},
+"S06": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"drum machine",
+"drum set",
+"toms",
+"kick drum",
+"kick drum",
+"kick drum",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"snare drum"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S09": {
+"instrument": "piano",
+"raw": [
+"piano"
+]
+},
+"S10": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S11": {
+"instrument": "tack piano",
+"raw": [
+"tack piano"
+]
+},
+"S12": {
+"instrument": "timpani",
+"raw": [
+"timpani",
+"timpani",
+"timpani",
+"timpani",
+"timpani"
+]
+},
+"S13": {
+"instrument": "auxiliary percussion",
+"raw": [
+"cymbal",
+"shaker",
+"tambourine",
+"vibraphone",
+"vibraphone"
+]
+}
+}
+},
+"TablaBreakbeatScience_Animoog": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "distorted electric guitar",
+"raw": [
+"electric bass"
+]
+},
+"S04": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+},
+"S05": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+},
+"S06": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound"
+]
+}
+}
+},
+"TablaBreakbeatScience_CaptainSky": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TablaBreakbeatScience_MiloVsMongo": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S03": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S04": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S05": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S06": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S07": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S08": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S09": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TablaBreakbeatScience_MoodyPlucks": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S03": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S04": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S06": {
+"instrument": "harp",
+"raw": [
+"harp",
+"harp"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S08": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S09": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S10": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+},
+"S11": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TablaBreakbeatScience_PhaseTransition": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S04": {
+"instrument": "accordion",
+"raw": [
+"accordion",
+"accordion"
+]
+},
+"S05": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S06": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S07": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+},
+"S08": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TablaBreakbeatScience_RockSteady": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "accordion",
+"raw": [
+"accordion",
+"accordion"
+]
+},
+"S03": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S04": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+},
+"S05": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TablaBreakbeatScience_Scorpio": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S03": {
+"instrument": "fx/processed sound",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "accordion",
+"raw": [
+"accordion",
+"accordion"
+]
+},
+"S05": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S06": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S07": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TablaBreakbeatScience_Vger": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "auxiliary percussion",
+"raw": [
+"auxiliary percussion",
+"auxiliary percussion"
+]
+},
+"S02": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S03": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S04": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound"
+]
+},
+"S05": {
+"instrument": "accordion",
+"raw": [
+"accordion",
+"accordion"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S08": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S09": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+},
+"S10": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TablaBreakbeatScience_WhoIsIt": {
+"artist": "Tabla Breakbeat Science",
+"genre": "Electronic/Fusion",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum machine",
+"raw": [
+"drum machine",
+"drum machine"
+]
+},
+"S02": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "accordion",
+"raw": [
+"accordion",
+"accordion"
+]
+},
+"S05": {
+"instrument": "mandolin",
+"raw": [
+"mandolin"
+]
+},
+"S06": {
+"instrument": "tabla",
+"raw": [
+"tabla",
+"tabla"
+]
+}
+}
+},
+"TemperedElan_DorothyJeanne": {
+"artist": "Tempered Elan",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+},
+"S03": {
+"instrument": "harp",
+"raw": [
+"harp",
+"harp"
+]
+}
+}
+},
+"TemperedElan_WiseOne": {
+"artist": "Tempered Elan",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "flute",
+"raw": [
+"flute",
+"flute"
+]
+},
+"S03": {
+"instrument": "harp",
+"raw": [
+"harp",
+"harp"
+]
+}
+}
+},
+"TheDistricts_Vermont": {
+"artist": "The Districts",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"tambourine",
+"tambourine",
+"kick drum",
+"kick drum",
+"snare drum",
+"snare drum"
+]
+},
+"S04": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer",
+"synthesizer"
+]
+},
+"S05": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+}
+}
+},
+"TheFranckDuo_FranckViolinSonataInAMajorMovement1": {
+"artist": "The Franck Duo",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"TheFranckDuo_FranckViolinSonataInAMajorMovement2": {
+"artist": "The Franck Duo",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+}
+}
+},
+"TheKitchenettes_Alive": {
+"artist": "The Kitchenettes",
+"genre": "Pop",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "vocalists",
+"raw": [
+"vocalists"
+]
+},
+"S02": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar"
+]
+},
+"S03": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S04": {
+"instrument": "violin",
+"raw": [
+"violin",
+"violin"
+]
+},
+"S05": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+},
+"S06": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S07": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S08": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+}
+}
+},
+"TheNoHoStringOrchestra_ElgarMovement1": {
+"artist": "The NoHo String Orchestra",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S04": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S05": {
+"instrument": "viola section",
+"raw": [
+"viola section"
+]
+},
+"S06": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+}
+}
+},
+"TheNoHoStringOrchestra_ElgarMovement2": {
+"artist": "The NoHo String Orchestra",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+},
+"S04": {
+"instrument": "viola section",
+"raw": [
+"viola section"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S06": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+}
+}
+},
+"TheNoHoStringOrchestra_ElgarMovement3": {
+"artist": "The NoHo String Orchestra",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S02": {
+"instrument": "violin section",
+"raw": [
+"violin section"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "cello section",
+"raw": [
+"cello section"
+]
+},
+"S05": {
+"instrument": "double bass",
+"raw": [
+"double bass"
+]
+},
+"S06": {
+"instrument": "viola section",
+"raw": [
+"viola section"
+]
+}
+}
+},
+"TheScarletBrand_LesFleursDuMal": {
+"artist": "The Scarlet Brand",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "drum set",
+"raw": [
+"kick drum",
+"drum set",
+"snare drum",
+"drum set",
+"drum set",
+"toms",
+"high hat",
+"drum set",
+"drum set"
+]
+},
+"S02": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar"
+]
+},
+"S06": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S07": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S08": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+}
+}
+},
+"TheSoSoGlos_Emergency": {
+"artist": "The So So Glos",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S02": {
+"instrument": "vocalists",
+"raw": [
+"vocalists",
+"vocalists",
+"vocalists",
+"male singer",
+"male singer"
+]
+},
+"S03": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"high hat",
+"kick drum",
+"kick drum",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"snare drum",
+"snare drum",
+"drum set"
+]
+},
+"S04": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S06": {
+"instrument": "auxiliary percussion",
+"raw": [
+"cabasa",
+"shaker",
+"whistle"
+]
+},
+"S07": {
+"instrument": "fx/processed sound",
+"raw": [
+"fx/processed sound",
+"fx/processed sound"
+]
+},
+"S08": {
+"instrument": "synthesizer",
+"raw": [
+"synthesizer"
+]
+},
+"S09": {
+"instrument": "acoustic guitar",
+"raw": [
+"acoustic guitar",
+"acoustic guitar"
+]
+},
+"S10": {
+"instrument": "vibraphone",
+"raw": [
+"vibraphone"
+]
+}
+}
+},
+"TheTonTons_Lush": {
+"artist": "The Ton Tons",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer",
+"male singer",
+"male singer"
+]
+},
+"S02": {
+"instrument": "tambourine",
+"raw": [
+"tambourine"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S06": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S07": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S08": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S09": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S10": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer"
+]
+},
+"S11": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+}
+}
+},
+"TleilaxEnsemble_Late": {
+"artist": "Tleilax Ensemble",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+},
+"S02": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S03": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S05": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"TleilaxEnsemble_MelancholyFlowers": {
+"artist": "Tleilax Ensemble",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "double bass",
+"raw": [
+"double bass",
+"double bass"
+]
+},
+"S02": {
+"instrument": "Main System",
+"raw": [
+"Main System",
+"Main System"
+]
+},
+"S03": {
+"instrument": "violin",
+"raw": [
+"violin"
+]
+},
+"S04": {
+"instrument": "male singer",
+"raw": [
+"male singer"
+]
+},
+"S05": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"Torres_NewSkin": {
+"artist": "Torres",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S02": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S03": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S04": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S05": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S06": {
+"instrument": "electric bass",
+"raw": [
+"electric bass"
+]
+},
+"S07": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S08": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+},
+"S09": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar"
+]
+},
+"S10": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+}
+}
+},
+"TrevorAndTheSoundwaves_AloneAndSad": {
+"artist": "Trevor and the Soundwaves",
+"genre": "Rock",
+"has_bleed": "no",
+"stems": {
+"S01": {
+"instrument": "male singer",
+"raw": [
+"male singer",
+"male singer"
+]
+},
+"S02": {
+"instrument": "drum set",
+"raw": [
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set",
+"drum set"
+]
+},
+"S03": {
+"instrument": "clean electric guitar",
+"raw": [
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar",
+"clean electric guitar"
+]
+},
+"S04": {
+"instrument": "electric bass",
+"raw": [
+"electric bass",
+"electric bass"
+]
+},
+"S05": {
+"instrument": "distorted electric guitar",
+"raw": [
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar",
+"distorted electric guitar"
+]
+}
+}
+},
+"Verdi_IlTrovatore": {
+"artist": "Verdi",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "female singer",
+"raw": [
+"female singer",
+"female singer",
+"female singer",
+"female singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano"
+]
+}
+}
+},
+"Wolf_DieBekherte": {
+"artist": "NYU",
+"genre": "Classical",
+"has_bleed": "yes",
+"stems": {
+"S01": {
+"instrument": "female singer",
+"raw": [
+"female singer"
+]
+},
+"S02": {
+"instrument": "piano",
+"raw": [
+"piano",
+"piano",
+"piano",
+"piano"
+]
+}
+}
+}
+}
+}

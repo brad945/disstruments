@@ -63,7 +63,7 @@ without touching system state.
 ## Concrete numbers to cite
 
 - Draft-1 pipeline: 8 stages per job (transcode, separation, mix tagging, 4 per-stem
-  taggings, attributes); 10/10 tests in fake-ML mode; rate-limit contract tested ON.
+  taggings, attributes); 268 tests in fake-ML mode (after M1); rate-limit contract tested ON.
 - Models in play: Demucs v4 `htdemucs` (84 MB weights, 4 stems), PANNs Cnn14 (327 MB,
   527 AudioSet classes), librosa key/BPM, pyloudnorm LUFS.
 - Real run on M5 (133 s song, warm): separation 11.2 s on MPS (real-time factor
@@ -73,10 +73,16 @@ without touching system state.
 - Stock PANNs on an isolated vocal stem: *Singing* scores only 0.14 (95th pct) → hidden
   by the 0.30 threshold. Uncalibrated scores + fixed thresholds = hidden true
   detections. This is the motivating example for calibration (F30).
-- Taxonomy: ~60 leaves, 3 levels *(pending M1)*. Dataset sizes: OpenMIC 20k clips/20
-  classes; MedleyDB ~196 multitracks; Slakh2100 2100 tracks/34 classes *(loaders
-  pending M1)*.
-- Eval metrics (mAP, per-leaf F1, hierarchical F1, ECE): *(pending M1 baseline run)*.
+- Taxonomy v2.0.0: 64 leaves, 84 nodes, 3 levels, 10 families. Loaders for OpenMIC
+  (20k clips/20 classes), MedleyDB (196 public multitracks; all 330 metadata files load
+  with 0 unmapped labels), Slakh2100 (redux dedup reproduces published 1289/270/151).
+- Harness baselines, MedleyDB pinned test split (29 tracks, 20 artists): prior map_leaf
+  0.142, random 0.218. Random "beats" prior (constant scores give AP = prevalence) but
+  the gate refuses it on calibration + hierarchical F1. Only 15 leaves have ≥3 real test
+  positives, which is why the gate uses an artist-level paired bootstrap.
+- Eval-bug war story: a masking choice let a "has drum kit" score reach AP 0.94 on
+  "non-kit percussion" (label-dependent missingness). Fixed in taxonomy 2.0.0; an audit
+  now catches that class of bug.
 - Budget envelope: ≲$1k total; M1 costs $0.
 
 ## "What would you do differently?"

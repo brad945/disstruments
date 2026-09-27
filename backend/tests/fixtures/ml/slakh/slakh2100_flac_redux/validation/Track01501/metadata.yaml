@@ -1,0 +1,45 @@
+UUID: 52dc589baea0c387807aa964094e0cba
+audio_dir: Track01501/stems
+lmd_midi_dir: lmd_matched/C/C/C/TRCCCCC128F0000003/52dc589baea0c387807aa964094e0cba.mid
+midi_dir: Track01501/MIDI
+normalization_factor: -13.0
+normalized: true
+overall_gain: 0.2
+stems:
+  S00:
+    audio_rendered: true
+    inst_class: Piano
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Electric Piano 1
+    midi_saved: true
+    plugin_name: wurly_ep.nkm
+    program_num: 4
+  S01:
+    audio_rendered: true
+    inst_class: Organ
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Drawbar Organ
+    midi_saved: true
+    plugin_name: tonewheel_organ_b3.nkm
+    program_num: 16
+  S02:
+    audio_rendered: true
+    inst_class: Strings
+    integrated_loudness: -18.0
+    is_drum: false
+    midi_program_name: Violin
+    midi_saved: true
+    plugin_name: violin_solo.nkm
+    program_num: 40
+  S03:
+    audio_rendered: true
+    inst_class: Drums
+    integrated_loudness: -18.0
+    is_drum: true
+    midi_program_name: Drums
+    midi_saved: true
+    plugin_name: stadium_kit_full.nkm
+    program_num: 128
+target_peak: -1.0
