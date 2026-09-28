@@ -98,7 +98,8 @@ Rule: no model enters `main` without (a) an eval-harness run archived, (b) licen
 | MedleyDB metadata (`marl/medleydb` repo) | MIT | Metadata YAMLs used as test fixtures are OK. |
 | OpenMIC-2018 | CC BY 4.0 (Zenodo 1432913); **individual FMA clips carry their own CC licenses incl. NC/ND** (`license_title` in metadata.csv) | Per-clip license must be filtered before any commercial training. |
 | Slakh2100 | CC BY 4.0 (Zenodo 4599666); `slakh-utils` MIT | OK. |
-| Lakh MIDI, `slakh-generation` patch list, mirdata fixtures | **unverified** | Verify before M2 (render pipeline consumes Lakh MIDI). |
+| Lakh MIDI Dataset | CC BY 4.0 ([project page](https://colinraffel.com/projects/lmd/)); cite page + Raffel thesis | OK for M2 renders (attribution). Underlying MIDI files were web-scraped — note in any commercial review. |
+| `slakh-generation` patch list, mirdata fixtures | **unverified** | Test fixtures only. |
 
 ## 5. Data model (Postgres)
 

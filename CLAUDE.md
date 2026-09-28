@@ -19,8 +19,8 @@ Demucs 4-stem separation → PANNs coarse tagging → key/BPM/LUFS → report JS
 dark DAW UI (waveform, instrument lanes, synced stem mixer). Tests pass in fake-ML mode.
 First real run on this Mac done (2026-09-27, `docs/debriefs/phase-1.md` step 3): ~20 s
 end-to-end for a 133 s song, Demucs on MPS. Known: PANNs runs on CPU over the full song
-(7.8 GB peak), and its uncalibrated scores vs fixed F15 thresholds hide true detections
-(motivates F30). `make setup-ml` fetches + checksums PANNs weights.
+(7.8 GB peak), and its scores vs fixed F15 thresholds appear to hide true detections
+(e.g. vocals; confounded by a mono test source — confirm on a real master). `make setup-ml` fetches + checksums PANNs weights.
 
 ## Next up (draft 2 = PRD Amendment A1)
 

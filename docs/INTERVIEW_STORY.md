@@ -70,9 +70,11 @@ without touching system state.
   ≈0.09 → ~20–25 s for a 4-min song, >10× inside the 5-min budget); tagging 8.3 s
   (PANNs, CPU); end-to-end ≈20 s. Peak memory footprint 7.8 GB (full-song SED on CPU
   is ~4 GB of it → chunking follow-up).
-- Stock PANNs on an isolated vocal stem: *Singing* scores only 0.14 (95th pct) → hidden
-  by the 0.30 threshold. Uncalibrated scores + fixed thresholds = hidden true
-  detections. This is the motivating example for calibration (F30).
+- Stock PANNs on an isolated vocal stem: *Singing* scores only 0.14 (95th pct), so the
+  0.30 threshold hides it. Consistent with uncalibrated scores meeting fixed thresholds
+  (confounded by a 22 kHz mono source; confirm on a real master). It motivates a
+  fine-tuned head plus calibration together; temperature scaling alone can't fix one
+  class.
 - Taxonomy v2.0.0: 64 leaves, 84 nodes, 3 levels, 10 families. Loaders for OpenMIC
   (20k clips/20 classes), MedleyDB (196 public multitracks; all 330 metadata files load
   with 0 unmapped labels), Slakh2100 (redux dedup reproduces published 1289/270/151).

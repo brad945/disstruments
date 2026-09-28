@@ -49,6 +49,9 @@ voice ──── lead | backing/harmony | choir
 brass/winds ─ trumpet | trombone | sax | flute | clarinet
 ```
 
+> **Implemented:** `backend/disstruments/ml/taxonomy.yaml` v2.0.0 (64 leaves). It deviates from
+> the sketch above; see `docs/debriefs/m1.md` → Open decisions.
+
 Design rules: every leaf must be (a) *audibly decidable* by an expert from a stem in
 isolation, and (b) *coverable* by at least one data source in §3. Classes failing either
 rule stay at the parent level. The taxonomy is versioned (`taxonomy.yaml`, semver);

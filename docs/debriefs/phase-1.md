@@ -205,11 +205,14 @@ rates, don't just record them.
 A# major (0.99), 117.5 BPM. **No voice and no drums**, on a song with both. Diagnosis on
 the isolated stems: PANNs' 95th-percentile *Singing* score on the **vocals stem** is
 0.14 (max 0.20); on the drums stem *Drum* is 0.11 and even clip-level *Drum machine* is
-only 0.26. The stems are fine — the scores are simply **uncalibrated**, and F15's fixed
-0.30/0.60 thresholds treat them as probabilities. A hard threshold on uncalibrated
+only 0.26. This is consistent with **uncalibrated** scores meeting F15's fixed 0.30/0.60
+thresholds, which treat them as probabilities. There is a confound: the source is a
+22 kHz mono file, and nobody has listened to the stems yet, so confirm on a real master. A hard threshold on uncalibrated
 sigmoid outputs is not "confidence honesty"; it silently hides true detections.
-This is the empirical case for F30 (per-level temperature scaling on a real held-out
-split) — calibration isn't polish, it's what makes the F15 thresholds mean anything.
+This is the empirical case for the fine-tuned head (F29) and calibration (F30) *together*.
+Per-level temperature scaling is one scalar per level, so it can't lift *Singing* on its
+own. A head trained on our taxonomy, calibrated on a real held-out split, is what makes
+the F15 thresholds mean anything.
 Not patched in draft 1 (lowering thresholds by eye would just be uncalibrated in a new
 place); it becomes the first before/after ECE story in M3.
 
