@@ -39,7 +39,7 @@ import numpy as np
 
 from ..taxonomy import Taxonomy, get_taxonomy
 from .base import (DatasetIndex, Record, artist_disjoint_split, assert_no_leakage,
-                   check_unique_ids, load_mappings)
+                   check_unique_ids, load_mappings, unobserved_roots)
 
 NAME = "openmic"
 OPENMIC_CLASSES = ("accordion", "banjo", "bass", "cello", "clarinet", "cymbals", "drums",
@@ -144,6 +144,9 @@ def load(root: Path | str, *, val_fraction: float = 0.0, seed: int = 0,
     tax = taxonomy or get_taxonomy()
     doc, mappings_sha = load_mappings(taxonomy=tax)
     c2n = dict(doc[NAME]["classes"])
+    # `openmic.unobserved` is applied, never ignored. Validation rejects any root with a
+    # class mapped inside it, so it can only mask derived negatives.
+    masked = tax.close_downward(unobserved_roots(doc, NAME, tax))
     thr = float(binarize_threshold if binarize_threshold is not None
                 else doc[NAME].get("binarize_threshold", 0.5))
     root = Path(root)
@@ -195,7 +198,7 @@ def load(root: Path | str, *, val_fraction: float = 0.0, seed: int = 0,
             labels.append(f"{cls}={'1' if is_pos else '0'}")
             (pos_nodes if is_pos else neg_roots).append(c2n[cls])
         positive = tax.close_upward(pos_nodes)
-        negative = tax.close_downward(neg_roots) - positive
+        negative = tax.close_downward(neg_roots) - positive - masked
         audio_path = root / "audio" / key[:3] / f"{key}.ogg"
         artist_id, artist_name = artists.get(key, ("", ""))
         records.append(Record(
@@ -211,7 +214,8 @@ def load(root: Path | str, *, val_fraction: float = 0.0, seed: int = 0,
         assert_no_leakage(NAME, [r for r in records if r.split in ("train", "val", "test")],
                           "official split01 (+ val carve-out)")
     config = {"dataset": NAME, "binarize_threshold": thr, "val_fraction": val_fraction,
-              "seed": seed, "mappings_sha256": mappings_sha}
+              "seed": seed, "unobserved": sorted(unobserved_roots(doc, NAME, tax)),
+              "mappings_sha256": mappings_sha}
     stats = {"n_clips": len(records), "unassigned_in_npz": unassigned,
              "unmapped_classes": unmapped, "sample_key_pickled": pickled_keys, "n_missing_artist": sum(r.artist is None for r in records),
              "n_audio_corrupt_flagged": sum(r.extra["audio_corrupt"] for r in records),

@@ -75,7 +75,7 @@ without touching system state.
   (confounded by a 22 kHz mono source; confirm on a real master). It motivates a
   fine-tuned head plus calibration together; temperature scaling alone can't fix one
   class.
-- Taxonomy v2.0.0: 64 leaves, 84 nodes, 3 levels, 10 families. Loaders for OpenMIC
+- Taxonomy v3.0.0: 65 leaves, 86 nodes, 3 levels, 10 families. Loaders for OpenMIC
   (20k clips/20 classes), MedleyDB (196 public multitracks; all 330 metadata files load
   with 0 unmapped labels), Slakh2100 (redux dedup reproduces published 1289/270/151).
 - Harness baselines, MedleyDB pinned test split (29 tracks, 20 artists): prior map_leaf

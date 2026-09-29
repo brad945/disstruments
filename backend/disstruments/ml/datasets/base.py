@@ -7,6 +7,12 @@ Label semantics (the part that must stay honest):
 - A source label mapped to an internal node (source coarser than our leaves) marks that
   subtree unknown, never negative. Unknown subtrees also make their ancestors unknown
   unless positive (if a child may be present, so may its parent).
+- Dataset-wide `unobserved` subtrees (mappings.yaml, per dataset): a pure observation
+  mask, unobserved on every record and stem of that dataset (`apply_unobserved`). Used
+  where a source cannot label a node honestly at all (taxonomy 3.0.0: cymbals on
+  MedleyDB/Slakh). Validated (`unobserved_roots`) so it can never strip a positive nor
+  create label-dependent missingness: roots must be level-1 (no ancestors to leave
+  observed-only-when-positive) and no rule of that dataset may target a node inside them.
 - Unmapped source labels are never dropped: strict mode raises with the full list;
   non-strict records them on the record and masks every non-positive node, unless the
   loader documents a coarser fallback for that field (Slakh: unknown `plugin_name` falls
@@ -14,6 +20,7 @@ Label semantics (the part that must stay honest):
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import re
@@ -215,6 +222,77 @@ def observed_exhaustive(taxonomy: Taxonomy, positive: frozenset[str],
     return frozenset(n for n in taxonomy.nodes if n not in unknown or n in positive)
 
 
+# Rule tables per dataset section (tables not listed here default to `map` / `ignore`).
+RULE_TABLES = {"openmic": ("classes",),
+               "slakh": ("plugins", "plugins_ignore", "inst_class", "inst_class_ignore")}
+_DEFAULT_RULE_TABLES = ("map", "ignore")
+
+
+def _rule_targets(spec: Any) -> list[str]:
+    """Every node id a map/ignore/classes entry names (node, unknown, stem_unknown)."""
+    if isinstance(spec, str):
+        return [spec]
+    if isinstance(spec, list):
+        return [str(v) for v in spec]
+    if isinstance(spec, dict):
+        out: list[str] = []
+        for key in ("node", "unknown", "stem_unknown"):
+            out += _rule_targets(spec.get(key) or [])
+        return out
+    return []
+
+
+def unobserved_roots(doc: Mapping[str, Any], dataset: str, taxonomy: Taxonomy) -> frozenset[str]:
+    """Validated `<dataset>.unobserved` roots ({node: reason}) from a mappings doc.
+
+    Rules (each violation is an error, all reported at once):
+    - known node, non-empty reason;
+    - level-1 root (parentless): a deeper root would leave its ancestors observed only
+      when positive (`observed_exhaustive` closes unknown upward), i.e. label-dependent
+      missingness the audit cannot see;
+    - no rule table of the dataset may name a node inside an unobserved subtree (as
+      `node`, `unknown` or `stem_unknown`): the mask never strips a positive, so a rule
+      that could produce one there is a contradiction, and a redundant mask is a smell.
+    """
+    section = doc.get(dataset) or {}
+    spec = section.get("unobserved") or {}
+    if not isinstance(spec, dict):
+        raise TaxonomyError(f"invalid mappings: {dataset}.unobserved must be {{node: reason}}")
+    errors = []
+    for n, why in spec.items():
+        if n not in taxonomy:
+            errors.append(f"{dataset}.unobserved[{n!r}]: unknown node")
+            continue
+        if not str(why or "").strip():
+            errors.append(f"{dataset}.unobserved[{n!r}]: needs a reason")
+        if taxonomy.parent(n) is not None:
+            errors.append(f"{dataset}.unobserved[{n!r}]: must be a level-1 node (a deeper root "
+                          f"makes its ancestors observed only when positive)")
+    if not errors and spec:
+        masked = taxonomy.close_downward(spec)
+        for table in RULE_TABLES.get(dataset, _DEFAULT_RULE_TABLES):
+            for label, rule in (section.get(table) or {}).items():
+                hit = sorted({t for t in _rule_targets(rule) if t in masked})
+                if hit:
+                    errors.append(f"{dataset}.{table}[{label!r}] targets {hit}, inside "
+                                  f"{dataset}.unobserved; use an ignore entry instead")
+    if errors:
+        raise TaxonomyError("invalid mappings:\n  " + "\n  ".join(errors))
+    return frozenset(spec)
+
+
+def apply_unobserved(taxonomy: Taxonomy, positive: frozenset[str], unknown_roots: Iterable[str],
+                     unobserved: frozenset[str]) -> tuple[frozenset[str], frozenset[str]]:
+    """(positive, observed) with the dataset-wide `unobserved` subtrees masked.
+
+    A pure observation mask: positives are returned unchanged (positives always win, as
+    for every other unknown root). `unobserved_roots` guarantees no rule of the dataset
+    targets those subtrees, so in practice there are no positives inside them.
+    """
+    pos = frozenset(positive)
+    return pos, observed_exhaustive(taxonomy, pos, set(unknown_roots) | set(unobserved))
+
+
 @lru_cache(maxsize=4)
 def _load_mappings_cached(path: str) -> tuple[dict, str]:
     raw = Path(path).read_bytes()
@@ -222,13 +300,23 @@ def _load_mappings_cached(path: str) -> tuple[dict, str]:
 
 
 def load_mappings(path: Path | str | None = None, taxonomy: Taxonomy | None = None) -> tuple[dict, str]:
-    """(mappings doc, sha256). Checks the declared taxonomy major version."""
+    """(mappings doc, sha256): a private copy. Checks the declared taxonomy major version
+    and validates every dataset section's `unobserved` block (`unobserved_roots`)."""
     doc, sha = _load_mappings_cached(str(path or MAPPINGS_PATH))
     tax = taxonomy or get_taxonomy()
     declared = str(doc.get("taxonomy_version", ""))
     if declared.split(".")[0] != str(tax.major):
         raise TaxonomyError(f"mappings target taxonomy {declared}, loaded taxonomy is {tax.version}")
-    return doc, sha
+    key = (sha, tax.version, tuple(tax.nodes))
+    if key not in _VALIDATED:                  # every dataset section, in one place
+        for name, section in doc.items():
+            if isinstance(section, dict):
+                unobserved_roots(doc, name, tax)
+        _VALIDATED.add(key)
+    return copy.deepcopy(doc), sha             # callers may mutate; the cache must not change
+
+
+_VALIDATED: set[tuple] = set()
 
 
 def collect_unknown(dataset: str, counts: Counter, strict: bool) -> None:

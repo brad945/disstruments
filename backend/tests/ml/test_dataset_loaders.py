@@ -10,6 +10,7 @@ import yaml
 from disstruments.ml.datasets import UnknownLabelsError, load_dataset
 from disstruments.ml.datasets import slakh as slakh_mod
 from disstruments.ml.datasets.base import artist_leakage
+from disstruments.ml.taxonomy import get_taxonomy
 
 FIX = Path(__file__).resolve().parents[1] / "fixtures" / "ml"
 MDB = FIX / "medleydb"
@@ -28,9 +29,10 @@ def test_medleydb_real_track_labels(mdb):
     r = next(x for x in mdb.records if x.item_id == "AClassicEducation_NightOwl")
     assert r.artist == "aclassiceducation" and r.extra["genre"] == "Singer/Songwriter"
     expected = {"bass.electric", "drums.acoustic_kit", "guitar.electric.distorted",
-                "guitar.electric.clean", "voice.sung", "cymbals",
+                "guitar.electric.clean", "voice.sung",
                 "keys.synth", "percussion.tambourine"}
     assert expected <= r.positive
+    assert "cymbals" not in r.observed                                # 3.0.0: OpenMIC-only
     assert r.positive == r.positive | {a for n in r.positive for a in _anc(n)}   # ancestor-closed
     # coarse sources -> unknown, not negative
     for n in ("bass.electric.fingered", "keys.synth.pad", "bass.synth"):
@@ -133,7 +135,9 @@ def test_openmic_partial_label_semantics(om):
     r = next(x for x in om.records if x.item_id == "000046_3840")
     # guitar 1.0, voice 0.8 positive; piano 0.0 negative; everything else unannotated
     assert r.positive == {"guitar", "voice"}
-    assert {"keys.piano", "keys.piano.rhodes", "keys.piano.acoustic"} <= r.negative   # subtree negative
+    assert "keys.piano" in r.negative                                 # acoustic piano leaf
+    # 3.0.0: OpenMIC `piano` is acoustic piano; it says nothing about electric pianos
+    assert not set(get_taxonomy().descendants("keys.electric_piano", include_self=True)) & r.observed
     assert "keys" not in r.observed                                   # parent unknown
     assert "guitar.electric" not in r.observed                        # coarse positive: child unknown
     assert "drums" not in r.observed                                  # not annotated
@@ -217,7 +221,9 @@ def test_slakh_redux_split_and_labels():
     assert "keys" in r.negative
     assert len(r.stems) == 4                                          # unrendered S04 skipped
     assert "guitar.acoustic.steel" in by["Track01876"].positive       # full-path AGML2.component
-    assert {"keys.piano.wurlitzer", "keys.organ.drawbar"} <= by["Track01501"].positive
+    assert {"keys.electric_piano.wurlitzer", "keys.organ.drawbar"} <= by["Track01501"].positive
+    assert "keys.piano" in by["Track01501"].negative                  # EP is not piano (3.0.0)
+    assert not any("cymbals" in r.observed for r in idx.records)      # 3.0.0: OpenMIC-only
     # real Track00001: program 22 "Harmonica" rendered by an organ patch -> organ, not harmonica
     assert "keys.organ.combo" in by["Track00001"].positive
     assert "woodwinds.harmonica" in by["Track00001"].negative

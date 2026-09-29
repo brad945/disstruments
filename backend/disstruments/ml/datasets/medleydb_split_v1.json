@@ -9,6 +9,8 @@
   "test": 0.15
  },
  "taxonomy_version": "2.0.0",
+ "stratified_on_taxonomy": "2.0.0",
+ "known_gaps": "Stratified on taxonomy 2.0.0 and deliberately NOT regenerated for 3.0.0 (split_hash covers only (track, split) and is unchanged). Under 3.0.0 the test split has 0 positives for keys.electric_piano (train 9 / val 1) and for woodwinds.saxophone.{soprano (train 2), alto (train 1 / val 1), baritone (train 1)}; tenor is train 10 / val 4 / test 2. The sax-subtype and e-piano decisions are measurable only on the Slakh test split and the golden set; leaves with `planned: [golden]` next to `data: [medleydb]` in taxonomy.yaml have no MedleyDB test positives. A 3.0.0-stratified pin would be a new file (medleydb_split_v2.json) and needs Bradley's approval.",
  "split_hash": "fba910c7f963460a",
  "counts": {
   "test": 29,

@@ -246,6 +246,21 @@ def _compute(a: EvalArrays, taxonomy: Taxonomy) -> dict[str, Any]:
             "om_ece": om_ece}
 
 
+def _piano_incl_ep(y: np.ndarray, m: np.ndarray, scores: np.ndarray,
+                   nodes: Sequence[str]) -> dict[str, Any]:
+    """Diagnostic `openmic20_piano_incl_ep` (NOT gated, not in `summary`/secondaries): AP of
+    max(keys.piano, keys.electric_piano) against the keys.piano truth. OpenMIC `piano` maps
+    to acoustic keys.piano but its clips may include e-pianos (taxonomy 3.0.0); the gap to
+    per_class_ap["piano"] sizes that label-noise confound. Meaningful on OpenMIC only."""
+    col = {n: j for j, n in enumerate(nodes)}
+    if "keys.piano" not in col or "keys.electric_piano" not in col:
+        return {"ap": None, "skipped": "nodes_missing"}
+    jp, je = col["keys.piano"], col["keys.electric_piano"]
+    s = np.fmax(scores[:, jp], scores[:, je])[:, None]
+    ap, reasons = M.per_class_ap(y[:, [jp]], s, m[:, [jp]])
+    return {"ap": None if np.isnan(ap[0]) else float(ap[0]), "skipped": reasons[0]}
+
+
 def summarize(a: EvalArrays, taxonomy: Taxonomy) -> dict[str, float | None]:
     """The report `summary` block from per-item arrays (used for bootstrap resamples)."""
     return _compute(a, taxonomy)["summary"]
@@ -313,7 +328,10 @@ def evaluate(records: Sequence[Record], preds: Predictions, taxonomy: Taxonomy, 
                         "classwise": c["ece_cw"], "brier": c["brier"],
                         "excluded_columns": len(nodes) - len(c["ece_ok"])},
         "openmic20": {"map": c["summary"]["openmic20_map"], "n_classes": len(c["om_vals"]),
-                      "per_class_ap": c["om"], "ece": c["om_ece"]["ece"], "ece_n": c["om_ece"]["n"]},
+                      "per_class_ap": c["om"], "ece": c["om_ece"]["ece"], "ece_n": c["om_ece"]["n"],
+                      "piano_incl_ep": (_piano_incl_ep(y, m, scores, nodes)
+                                        if {r.dataset for r in records} == {"openmic"}
+                                        else {"ap": None, "skipped": "not_openmic"})},
         "items": {"n_items": len(item_ids), "n_evaluated": len(keep), "n_missing_predictions": len(missing),
                   "n_extra_predictions": extra, "unit": unit, "exclude_bleed": exclude_bleed,
                   "labels_hash": labels_hash([items[k] for k in keep]),   # kept items only

@@ -27,8 +27,8 @@ def _flatten(x):
 
 
 def test_structure(tax):
-    assert tax.version == "2.0.0" and tax.major == 2
-    assert len(tax.leaves()) == 64                      # "~60 leaves"
+    assert tax.version == "3.0.0" and tax.major == 3
+    assert len(tax) == 86 and len(tax.leaves()) == 65   # "~60 leaves"
     assert max(tax.level(n) for n in tax.nodes) == 3
     assert set(tax.roots()) == {"guitar", "bass", "keys", "drums", "cymbals", "percussion",
                                 "strings", "voice", "brass", "woodwinds"}
@@ -42,8 +42,8 @@ def test_queries(tax):
     assert tax.level(n) == 3 and tax.is_leaf(n) and tax.parent(n) == "guitar.electric"
     assert tax.descendants("guitar.acoustic") == ("guitar.acoustic.nylon", "guitar.acoustic.steel")
     assert "guitar.lap_steel" in tax.leaves() and tax.level("guitar.lap_steel") == 2
-    assert tax.close_upward(["keys.piano.rhodes", "voice.rap"]) == {
-        "keys", "keys.piano", "keys.piano.rhodes", "voice", "voice.rap"}
+    assert tax.close_upward(["keys.electric_piano.rhodes", "voice.rap"]) == {
+        "keys", "keys.electric_piano", "keys.electric_piano.rhodes", "voice", "voice.rap"}
     with pytest.raises(KeyError):
         tax.level("guitar.banjo")
 
@@ -103,7 +103,12 @@ def test_leaf_coverage_matches_mappings(tax):
         assert set(info.data) - {"medleydb"} == derived[leaf] - {"medleydb"}, leaf
         assert set(info.data) <= derived[leaf], leaf
         assert info.data or info.planned, leaf
-        assert not (info.data and info.planned), f"{leaf}: planned only where no real source exists"
+        # 3.0.0 amendment (arbiter): `golden` (eval-only) may sit next to `data` when the real
+        # data has no test positives (checked exactly in test_coverage.py); `synthetic`
+        # still only where no real source exists.
+        assert not (info.data and "synthetic" in info.planned), f"{leaf}: synthetic only where no real source exists"
+        if info.data and info.planned:
+            assert info.planned == ("golden",) and info.data == ("medleydb",), leaf
 
 
 def test_openmic_map_total_and_antichain(tax):
@@ -115,7 +120,9 @@ def test_openmic_map_total_and_antichain(tax):
     for n in nodes:
         assert not (set(tax.ancestors(n)) & nodes), f"{n} has a mapped ancestor"
     # projection is total on mapped subtrees and None above them
-    assert openmic.openmic_class_of("keys.piano.rhodes") == "piano"
+    assert openmic.openmic_class_of("keys.piano") == "piano"
+    assert openmic.openmic_class_of("keys.electric_piano.rhodes") is None     # 3.0.0: EP != piano
+    assert openmic.openmic_class_of("woodwinds.saxophone.tenor") == "saxophone"
     assert openmic.openmic_class_of("bass.synth.sub_808") == "bass"
     assert openmic.openmic_class_of("percussion.mallet.marimba") == "mallet_percussion"
     assert openmic.openmic_class_of("keys") is None
@@ -127,11 +134,13 @@ def test_openmic_map_total_and_antichain(tax):
 
 
 def test_project_scores():
-    nodes = ["keys.piano", "keys.piano.rhodes", "guitar.electric.clean", "keys"]
-    s = np.array([[0.2, 0.7, 0.4, 0.9]])
+    nodes = ["keys.piano", "keys.electric_piano.rhodes", "guitar.electric.clean", "keys",
+             "woodwinds.saxophone", "woodwinds.saxophone.alto"]
+    s = np.array([[0.2, 0.7, 0.4, 0.9, 0.3, 0.6]])
     out = openmic.project_scores(s, nodes)
     col = {c: i for i, c in enumerate(openmic.OPENMIC_CLASSES)}
-    assert out[0, col["piano"]] == pytest.approx(0.7)
+    assert out[0, col["piano"]] == pytest.approx(0.2)                   # rhodes does not count
+    assert out[0, col["saxophone"]] == pytest.approx(0.6)               # max over sax subtree
     assert out[0, col["guitar"]] == pytest.approx(0.4)
     assert np.isnan(out[0, col["organ"]])
 
@@ -164,4 +173,4 @@ def test_mapping_validation(tax):
     with pytest.raises(TaxonomyError, match="reason"):
         LabelMap("x", {}, {"foo": {}}, tax)
     doc, sha = load_mappings(taxonomy=tax)
-    assert doc["taxonomy_version"].split(".")[0] == "2" and len(sha) == 64
+    assert doc["taxonomy_version"].split(".")[0] == "3" and len(sha) == 64

@@ -25,7 +25,7 @@ end-to-end for a 133 s song, Demucs on MPS. Known: PANNs runs on CPU over the fu
 ## Next up (draft 2 = PRD Amendment A1)
 
 ML track, in order (milestones in ML_ENGINEERING.md §8):
-1. M1 DONE (branch `draft2-m1`, `docs/debriefs/m1.md`): taxonomy v2.0.0 (64 leaves) +
+1. M1 DONE (branch `draft2-m1`, `docs/debriefs/m1.md`): taxonomy v3.0.0 (65 leaves; Bradley's decisions applied 2026-09-28) +
    MedleyDB/OpenMIC/Slakh loaders + `python -m disstruments.ml.eval` harness. Open
    taxonomy decisions for Bradley listed in the debrief.
 2. M2: synthetic MIDI-render pipeline v1 + frozen-MERT linear probe baseline

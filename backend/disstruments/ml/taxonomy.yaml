@@ -11,17 +11,27 @@
 #            AND >= 1 positive in the public release (tests/ml/test_coverage.py). Per-leaf
 #            example counts: `python -m disstruments.ml.eval coverage`.
 #   planned: sources that do not exist yet (synthetic = M2 render pipeline; golden =
-#            hand-labeled eval-only golden set, PRD §8.2). Only used where no real source
-#            reaches the leaf. `golden` alone = no training source at all (open question).
+#            hand-labeled eval-only golden set, PRD §8.2). `synthetic` only where no real
+#            source reaches the leaf. `golden` alone = no training source at all (open
+#            question). `golden` next to `data` (3.0.0) = the real data is train/val only
+#            (MedleyDB-only leaf with 0 positives in the pinned test split, no Slakh/OpenMIC
+#            source), so the golden set is its only test source.
 #
-# OpenMIC-2018 compatibility: every OpenMIC class maps to exactly one node (mappings.yaml
-# `openmic.classes`); guitar/bass/drums/cymbals/voice are level-1 nodes, the other 15
-# classes sit at level 2-3.
+# OpenMIC-2018 compatibility (PRD F27, projection layer): every OpenMIC class maps to
+# exactly one node (mappings.yaml `openmic.classes`); guitar/bass/drums/cymbals/voice are
+# level-1 nodes, the other 15 classes sit at level 2-3.
 #
 # 2.0.0 (breaking): cymbals moved to level 1; voice.sung.{male,female} merged into
 # voice.sung; bass.electric.picked is synthetic-only.
+# 3.0.0 (breaking; Bradley's decisions 2026-09-28):
+#   - cymbals scored only on OpenMIC (unobserved on every MedleyDB/Slakh record; see
+#     mappings.yaml `unobserved`); a drum kit no longer implies cymbals.
+#   - strings.plucked.sitar and voice.beatbox collapsed into their parents.
+#   - woodwinds.saxophone split into soprano/alto/tenor/baritone.
+#   - electric pianos moved out of keys.piano into keys.electric_piano.{rhodes,wurlitzer,fm};
+#     keys.piano is now the acoustic-piano leaf (grand/upright merged).
 # See disstruments/ml/datasets/openmic.py for the OpenMIC projection.
-version: 2.0.0
+version: 3.0.0
 
 nodes:
   # ---------------------------------------------------------------- guitar
@@ -82,19 +92,22 @@ nodes:
   - id: keys
     name: Keyboards
   - id: keys.piano
-    name: Piano (acoustic or electric)
-    note: electric pianos live under piano to match OpenMIC/AudioSet "piano" and draft 1
-  - id: keys.piano.acoustic
     name: Acoustic piano
-    note: grand vs upright not split — not reliably decidable in a mix
-    data: [medleydb, slakh]
-  - id: keys.piano.rhodes
+    note: >-
+      grand vs upright not split (not reliably decidable in a mix). OpenMIC `piano` maps
+      here, but OpenMIC "piano" clips may include electric pianos (annotators were not
+      asked to distinguish) — a known label-noise confound for OpenMIC piano scores.
+    data: [medleydb, openmic, slakh]
+  - id: keys.electric_piano
+    name: Electric piano
+    note: own group (v3); not under keys.piano and not part of OpenMIC `piano`
+  - id: keys.electric_piano.rhodes
     name: Rhodes-style electric piano
     data: [slakh]
-  - id: keys.piano.wurlitzer
+  - id: keys.electric_piano.wurlitzer
     name: Wurlitzer-style electric piano
     data: [slakh]
-  - id: keys.piano.fm
+  - id: keys.electric_piano.fm
     name: FM electric piano (DX-style)
     planned: [synthetic]
   - id: keys.organ
@@ -151,10 +164,14 @@ nodes:
   # Own family (v2): under `percussion` a kit made cymbals unknown, which made the
   # non-kit `percussion` node observed almost only when positive (label-dependent
   # missingness). Cannot sit under `drums` (OpenMIC has both `drums` and `cymbals`; the
-  # OpenMIC map must stay an antichain). A drum-kit label implies cymbals (see mappings).
+  # OpenMIC map must stay an antichain).
+  # v3: scored ONLY on OpenMIC (human-labelled cymbals). MedleyDB/Slakh cymbal labels are
+  # either absent (inside a kit) or only present when separately mic'd, so they are
+  # dataset-wide unobserved there (mappings.yaml `unobserved`, a pure mask), never
+  # kit-implied; MedleyDB `high hat`/`cymbal` are ignore entries.
   - id: cymbals
     name: Cymbals / hi-hat
-    data: [medleydb, openmic, slakh]
+    data: [openmic]
 
   # ---------------------------------------------------------------- percussion
   - id: percussion
@@ -217,10 +234,8 @@ nodes:
   - id: strings.plucked.harp
     name: Harp
     data: [medleydb, slakh]
-  - id: strings.plucked.sitar
-    name: Sitar
-    note: no public training source (MedleyDB examples are all in non-public tracks)
-    planned: [golden]
+  # v3: sitar collapsed into strings.plucked (no public source; MedleyDB "sitar" maps to
+  # the parent like the other out-of-scope plucked strings).
 
   # ---------------------------------------------------------------- voice
   - id: voice
@@ -235,6 +250,7 @@ nodes:
   - id: voice.spoken
     name: Spoken word
     data: [medleydb]
+    planned: [golden]      # no test positives in medleydb_split_v1
   - id: voice.screamed
     name: Screamed / harsh vocals
     note: no public training source (MedleyDB examples are all in non-public tracks)
@@ -242,10 +258,8 @@ nodes:
   - id: voice.choir
     name: Choir
     data: [slakh]
-  - id: voice.beatbox
-    name: Beatboxing
-    note: no public training source
-    planned: [golden]
+  # v3: beatbox collapsed into voice (no public source; MedleyDB "beatboxing" maps to the
+  # parent, children known negative).
 
   # ---------------------------------------------------------------- brass
   - id: brass
@@ -271,8 +285,22 @@ nodes:
     name: Woodwinds & free reeds
   - id: woodwinds.saxophone
     name: Saxophone
-    note: soprano/alto/tenor/baritone not split in v1 — weakly decidable in a mix
-    data: [medleydb, openmic, slakh]
+    note: >-
+      subtypes restored in v3. OpenMIC `saxophone` and generic Slakh sax patches map here
+      (subtype unknown).
+  - id: woodwinds.saxophone.soprano
+    name: Soprano saxophone
+    data: [medleydb]
+    planned: [golden]      # no test positives in medleydb_split_v1
+  - id: woodwinds.saxophone.alto
+    name: Alto saxophone
+    data: [medleydb, slakh]
+  - id: woodwinds.saxophone.tenor
+    name: Tenor saxophone
+    data: [medleydb, slakh]
+  - id: woodwinds.saxophone.baritone
+    name: Baritone saxophone
+    data: [medleydb, slakh]
   - id: woodwinds.clarinet
     name: Clarinet
     data: [medleydb, openmic, slakh]
@@ -288,3 +316,4 @@ nodes:
   - id: woodwinds.harmonica
     name: Harmonica
     data: [medleydb]
+    planned: [golden]      # no test positives in medleydb_split_v1

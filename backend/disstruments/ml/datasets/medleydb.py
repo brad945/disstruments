@@ -10,9 +10,13 @@ a list. Audio (optional) lives at `<audio_root>/<TrackId>/<mix_filename>` and
 Label rules (see mappings.yaml `medleydb`):
 - Stem labels map to nodes; raw-track labels may only REFINE them (descendant-or-self of
   a node the stem label maps to). A non-refining raw label marks its nodes unknown.
-- `stem_unknown` ignore rules (Main System room mics) mask the stem, not the track.
+- `stem_unknown` ignore rules (Main System room mics; 3.0.0 hi-hat/cymbal stems) mask the
+  stem, not the track. From a raw-track label they apply only when the stem's own label
+  yields no positive (a `drum set` stem with a raw `high hat` track stays fully observed).
 - A stem with no instrument label is unknown content: masks everything (stem and track),
   like the `Unlabeled` label.
+- `medleydb.unobserved` subtrees (3.0.0: cymbals) are unobserved on every track and stem
+  (a pure mask; `high hat`/`cymbal` are ignore entries, so nothing maps there).
 
 Splits: MedleyDB has no official split. Default = the pinned, artist-disjoint split over
 the 196 public v1+v2 tracks (`medleydb_split_v1.json`, genre/per-leaf stratified; see
@@ -32,9 +36,9 @@ from typing import Mapping
 import yaml
 
 from ..taxonomy import Taxonomy, get_taxonomy
-from .base import (ALL, SPLITS, DatasetIndex, LabelMap, Record, StemLabels,
+from .base import (ALL, SPLITS, DatasetIndex, LabelMap, Record, StemLabels, apply_unobserved,
                    artist_disjoint_split, assert_no_leakage, check_unique_ids, collect_unknown,
-                   load_mappings, normalize_artist, observed_exhaustive)
+                   load_mappings, normalize_artist, unobserved_roots)
 
 NAME = "medleydb"
 DEFAULT_FRACTIONS = {"train": 0.70, "val": 0.15, "test": 0.15}
@@ -91,7 +95,11 @@ def _resolve_stem(lmap: LabelMap, tax: Taxonomy, stem: dict):
         r = lmap.resolve([label])
         unknown_labels += r.unknown_labels
         unk |= r.unknown_roots
-        stem_unk |= r.stem_unknown_roots
+        # raw `stem_unknown` applies only when the stem label asserts nothing (a kit stem with
+        # a raw hi-hat track keeps its known negatives) -- except a full mask ("*", e.g. a raw
+        # `Main System` room mic), which always applies: that audio can contain anything.
+        if not base.positive or ALL in r.stem_unknown_roots:
+            stem_unk |= r.stem_unknown_roots
         for n in r.mapped:
             if n in refinable:
                 pos |= tax.close_upward([n])
@@ -124,6 +132,7 @@ def load(metadata_root: Path | str, audio_root: Path | str | None = None, *,
     doc, mappings_sha = load_mappings(taxonomy=tax)
     lmap = LabelMap(NAME, doc[NAME]["map"], doc[NAME].get("ignore"), tax)
     aliases = doc[NAME].get("artist_aliases") or {}
+    masked = unobserved_roots(doc, NAME, tax)
     fractions = dict(fractions or DEFAULT_FRACTIONS)
     if set(fractions) - set(SPLITS):
         raise ValueError(f"fractions keys must be within {SPLITS}")
@@ -157,6 +166,7 @@ def load(metadata_root: Path | str, audio_root: Path | str | None = None, *,
         for stem_id, stem in sorted((meta.get("stems") or {}).items()):
             stem = stem or {}
             pos, unk, stem_unk, labels, unk_labels, nonref = _resolve_stem(lmap, tax, stem)
+            pos, stem_obs = apply_unobserved(tax, pos, unk | stem_unk, masked)
             n_nonrefining += nonref
             n_unlabeled += not _as_list(stem.get("instrument"))
             unknown.update(unk_labels)
@@ -168,10 +178,8 @@ def load(metadata_root: Path | str, audio_root: Path | str | None = None, *,
             if track_dir and meta.get("stem_dir") and stem.get("filename"):
                 p = track_dir / meta["stem_dir"] / stem["filename"]
                 stem_audio = p if p.exists() else None
-            stems.append(StemLabels(str(stem_id), pos,
-                                    observed_exhaustive(tax, pos, unk | stem_unk),
-                                    tuple(labels), stem_audio, bleed))
-        positive = frozenset(track_pos)
+            stems.append(StemLabels(str(stem_id), pos, stem_obs, tuple(labels), stem_audio, bleed))
+        positive, observed = apply_unobserved(tax, frozenset(track_pos), track_unk, masked)
         audio = {}
         if track_dir and meta.get("mix_filename") and (track_dir / meta["mix_filename"]).exists():
             audio["mix"] = track_dir / meta["mix_filename"]
@@ -182,7 +190,7 @@ def load(metadata_root: Path | str, audio_root: Path | str | None = None, *,
             item_id=track_id,
             artist=artist_key(meta.get("artist"), track_id, aliases),
             positive=positive,
-            observed=observed_exhaustive(tax, positive, track_unk),
+            observed=observed,
             source_labels=tuple(dict.fromkeys(track_labels)),
             unknown_labels=tuple(dict.fromkeys(track_unknown)),
             audio=audio, stems=tuple(stems),
@@ -223,6 +231,7 @@ def load(metadata_root: Path | str, audio_root: Path | str | None = None, *,
               "fractions": fractions if generated_split else None,
               "split_file": split_name, "allow_partial_split": allow_partial_split,
               "audio_required": aroot is not None, "strict": strict,
+              "unobserved": sorted(masked),
               "mappings_sha256": mappings_sha}
     stats = {"n_metadata_files": len(files), "n_tracks": len(records),
              "skipped_no_audio": skipped_no_audio, "unknown_labels": dict(unknown),

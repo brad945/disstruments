@@ -80,8 +80,10 @@ def test_medleydb_data_tags_match_real_public_examples(pub, tax):
     assert cov["claims_without_examples"] == []
     assert cov["examples_without_claim"] == []
     s = cov["summary"]
-    assert s["leaves_with_any_positive"] == 35
-    assert s["leaves_test_ge1"] >= 30 and s["leaves_test_ge3"] >= 15
+    # 3.0.0: -1 (cymbals now OpenMIC-only) +3 (saxophone -> 4 subtype leaves) vs 2.0.0's 35.
+    # Test split under the unchanged pin: 31/15 -> 30/14, both drops are cymbals.
+    assert s["leaves_with_any_positive"] == 37
+    assert s["leaves_test_ge1"] == 30 and s["leaves_test_ge3"] == 14
 
 
 def test_every_leaf_has_a_source(tax):
@@ -97,11 +99,10 @@ def test_no_label_dependent_missingness_on_real_metadata(pub, tax):
                            for n, v in flagged.items()}
 
 
-def test_percussion_and_cymbals_now_observed_on_kit_tracks(pub):
+def test_percussion_observed_on_kit_tracks(pub):
     kit = [r for r in pub.records if "drums.acoustic_kit" in r.positive]
     assert len(kit) > 100
     assert sum("percussion" in r.observed for r in kit) / len(kit) > 0.9
-    assert all("cymbals" in r.positive for r in kit if "drum set" in r.source_labels)
 
 
 def _recs(pos_flags, obs_flags, node="percussion"):

@@ -16,14 +16,24 @@
 # `ignore` tables: label: {reason: str, unknown: [...], stem_unknown: [...]}
 #   unknown defaults to []; `stem_unknown` masks only the stem carrying the label, not the
 #   track (e.g. a room mic whose content is labeled on the other stems).
+# `unobserved` (per dataset): {node: reason} subtrees that are UNOBSERVED on every record
+#   and every stem of that dataset. A pure observation mask: it never strips a positive.
+#   Validated at load (datasets/base.py `unobserved_roots`, every section incl. openmic):
+#   roots must be level-1 nodes (a deeper root would leave its ancestors observed only
+#   when positive = label-dependent missingness), and no rule of that dataset may name a
+#   node inside an unobserved subtree (use an `ignore` entry for such source labels).
+#   Under those two rules the mask is label-independent.
 # Unknown subtrees also make their ancestors unknown (unless positive); positives always
 # win over unknown. Labels absent from both tables are surfaced by the loaders (strict
 # mode raises with the full list; non-strict records them and masks everything).
-taxonomy_version: 2.0.0
+taxonomy_version: 3.0.0
 
 # ------------------------------------------------------------------------ OpenMIC-2018
 # Total map: all 20 classes, each to exactly one node; no mapped node is an ancestor of
 # another (antichain), so node -> OpenMIC projection is unique. Verified by tests.
+# `piano` -> keys.piano (acoustic, v3): OpenMIC "piano" clips may include electric pianos
+# (label-noise confound); keys.electric_piano does NOT project to OpenMIC `piano`.
+# `saxophone` -> woodwinds.saxophone (internal in v3): positives leave the subtype unknown.
 openmic:
   binarize_threshold: 0.5        # Y_true >= 0.5, as in the official baseline notebook
   classes:
@@ -59,6 +69,12 @@ openmic:
 medleydb:
   artist_aliases:                   # applied after normalization (casefold, quotes)
     "music delta multitracks": "music delta"
+  unobserved:
+    # Bradley 2026-09-28: cymbals are scored only on OpenMIC. MedleyDB labels cymbals only
+    # when separately mic'd (usually they sit inside "drum set"), so neither "kit implies
+    # cymbals" (v2) nor "absent = negative" is honest. "high hat"/"cymbal" are ignore
+    # entries (nothing may map inside an unobserved subtree).
+    cymbals: "scored only on OpenMIC (taxonomy 3.0.0)"
   map:
     # strings / bowed
     erhu: {node: strings.bowed, children_unknown: false}
@@ -78,15 +94,15 @@ medleydb:
     mandolin: strings.plucked.mandolin
     ukulele: strings.plucked.ukulele
     harp: strings.plucked.harp
-    sitar: strings.plucked.sitar
+    sitar: {node: strings.plucked, children_unknown: false}     # sitar leaf collapsed (3.0.0)
     guzheng: {node: strings.plucked, children_unknown: false}
     liuqin: {node: strings.plucked, children_unknown: false}
     oud: {node: strings.plucked, children_unknown: false}
     zhongruan: {node: strings.plucked, children_unknown: false}
     harpsichord: keys.harpsichord
     # strings / struck
-    piano: keys.piano.acoustic
-    tack piano: keys.piano.acoustic
+    piano: keys.piano
+    tack piano: keys.piano
     dulcimer: {node: strings, children_unknown: false}
     yangqin: {node: strings, children_unknown: false}
     # winds / flutes
@@ -98,10 +114,10 @@ medleydb:
     panpipes: {node: woodwinds, children_unknown: false, unknown: [woodwinds.flute]}
     recorder: {node: woodwinds, children_unknown: false, unknown: [woodwinds.flute]}
     # winds / reeds
-    alto saxophone: woodwinds.saxophone
-    baritone saxophone: woodwinds.saxophone
-    tenor saxophone: woodwinds.saxophone
-    soprano saxophone: woodwinds.saxophone
+    alto saxophone: woodwinds.saxophone.alto
+    baritone saxophone: woodwinds.saxophone.baritone
+    tenor saxophone: woodwinds.saxophone.tenor
+    soprano saxophone: woodwinds.saxophone.soprano
     clarinet: woodwinds.clarinet
     bass clarinet: woodwinds.clarinet
     clarinet section: woodwinds.clarinet
@@ -140,10 +156,8 @@ medleydb:
     male screamer: voice.screamed
     female screamer: voice.screamed
     choir: voice.choir
-    beatboxing: voice.beatbox
+    beatboxing: {node: voice, children_unknown: false}          # beatbox leaf collapsed (3.0.0)
     # percussion / idiophones
-    high hat: cymbals
-    cymbal: cymbals
     gong: {node: percussion, children_unknown: false}
     shaker: percussion.shaker
     maracas: percussion.shaker
@@ -162,14 +176,13 @@ medleydb:
     castanet: {node: percussion, children_unknown: false}
     snaps: {node: percussion, children_unknown: false}
     # percussion / drums
-    # ASSUMPTION (taxonomy 2.0.0): a full drum kit includes cymbals/hi-hat. Marking cymbals
-    # unknown on kit tracks instead made `cymbals` observed almost only when separately
-    # mic'd (label-dependent missingness, see eval/audit.py). Single kit pieces do not.
-    drum set: [drums.acoustic_kit, cymbals]
-    kick drum: {node: drums.acoustic_kit, unknown: [cymbals]}
-    bass drum: {node: drums.acoustic_kit, unknown: [cymbals]}
-    snare drum: {node: drums.acoustic_kit, unknown: [cymbals]}
-    toms: {node: drums.acoustic_kit, unknown: [cymbals]}
+    # 3.0.0: no "kit implies cymbals" (v2 assumption dropped); cymbals is dataset-wide
+    # unobserved here (see `unobserved` above).
+    drum set: drums.acoustic_kit
+    kick drum: drums.acoustic_kit
+    bass drum: drums.acoustic_kit
+    snare drum: drums.acoustic_kit
+    toms: drums.acoustic_kit
     timpani: {node: percussion, children_unknown: false}
     gu: {node: percussion, children_unknown: false}
     tambourine: percussion.tambourine
@@ -184,11 +197,8 @@ medleydb:
     distorted electric guitar: guitar.electric.distorted
     lap steel guitar: guitar.lap_steel
     electric bass: bass.electric
-    drum machine: {node: drums.electronic, unknown: [cymbals]}
-    electric piano:
-      node: keys.piano
-      children_unknown: false
-      unknown: [keys.piano.rhodes, keys.piano.wurlitzer, keys.piano.fm]
+    drum machine: drums.electronic
+    electric piano: keys.electric_piano     # subtype unknown (rhodes/wurlitzer/fm masked)
     electronic organ: keys.organ
     synthesizer: {node: keys.synth, unknown: [bass.synth]}  # synth stems often carry bass lines
   ignore:
@@ -201,6 +211,11 @@ medleydb:
     melodica: {reason: "out of taxonomy scope; timbrally close to accordion/harmonica", unknown: [keys.accordion, woodwinds.harmonica]}
     whistle: {reason: "out of taxonomy scope"}
     crowd: {reason: "audience noise; may contain singing/speech", unknown: [voice]}
+    # 3.0.0: cymbals are unobserved on MedleyDB. A close-mic'd hi-hat/cymbal stem also
+    # picks up the kit / nearby percussion, so those are masked on that stem only (not
+    # "known absent"); as a raw-track label under e.g. `drum set` they change nothing.
+    high hat: {reason: "cymbals scored on OpenMIC only (taxonomy 3.0.0)", stem_unknown: [drums, percussion]}
+    cymbal: {reason: "cymbals scored on OpenMIC only (taxonomy 3.0.0)", stem_unknown: [drums, percussion]}
 
 # ------------------------------------------------------------------------ Slakh2100
 # Primary key = basename(plugin_name): the Kontakt patch that actually rendered the audio.
@@ -211,25 +226,29 @@ medleydb:
 # `inst_class` (GM family) is the fallback when a patch is not in `plugins`; the loader
 # surfaces the unknown patch either way.
 slakh:
+  unobserved:
+    # Bradley 2026-09-28: cymbals are scored only on OpenMIC. Slakh has no cymbal label at
+    # all (only whole-kit patches), so the v2 "kit implies cymbals" rule is dropped.
+    cymbals: "scored only on OpenMIC (taxonomy 3.0.0)"
   plugins:
     # Acoustic Piano group
-    ragtime_piano.nkm: keys.piano.acoustic
-    the_giant_hard_and_tough.nkm: keys.piano.acoustic
-    the_giant_modern_studio.nkm: keys.piano.acoustic
-    the_giant_vibrant.nkm: keys.piano.acoustic
-    alicias_keys.nkm: keys.piano.acoustic
-    the_grandeur.nkm: keys.piano.acoustic
-    the_gentleman.nkm: keys.piano.acoustic
-    grand_piano.nkm: keys.piano.acoustic
-    upright_piano.nkm: keys.piano.acoustic
-    concert_grand.nkm: keys.piano.acoustic
-    august_foerster_grand.nkm: keys.piano.acoustic
+    ragtime_piano.nkm: keys.piano
+    the_giant_hard_and_tough.nkm: keys.piano
+    the_giant_modern_studio.nkm: keys.piano
+    the_giant_vibrant.nkm: keys.piano
+    alicias_keys.nkm: keys.piano
+    the_grandeur.nkm: keys.piano
+    the_gentleman.nkm: keys.piano
+    grand_piano.nkm: keys.piano
+    upright_piano.nkm: keys.piano
+    concert_grand.nkm: keys.piano
+    august_foerster_grand.nkm: keys.piano
     harpsichord.nkm: keys.harpsichord
     # Electric Piano group
-    scarbee_a_200.nkm: keys.piano.wurlitzer
-    wurly_ep.nkm: keys.piano.wurlitzer
-    scarbee_mark_I.nkm: keys.piano.rhodes
-    scarbee_pianet.nkm: {node: keys.piano, children_unknown: false}   # Hohner Pianet: EP, none of our leaves
+    scarbee_a_200.nkm: keys.electric_piano.wurlitzer     # Scarbee A-200 = Wurlitzer 200A
+    wurly_ep.nkm: keys.electric_piano.wurlitzer
+    scarbee_mark_I.nkm: keys.electric_piano.rhodes       # Scarbee Mark I = Rhodes Mark I
+    scarbee_pianet.nkm: {node: keys.electric_piano, children_unknown: false}   # Hohner Pianet: EP, none of our leaves
     scarbee_clavinet_full.nkm: keys.clavinet
     # Chromatic Percussion group
     celesta.nkm: {node: percussion.mallet, children_unknown: false}
@@ -323,12 +342,13 @@ slakh:
     session_horns_pro_keyswitch_generic_section.nkm: {node: brass.section, unknown: [woodwinds.saxophone]}
     brass_quartet_essential.nkm: brass.section
     # Reed / Pipe groups
-    alto_sax_vintage_solo.nkm: woodwinds.saxophone
-    alto_saxophone.nkm: woodwinds.saxophone
-    tenor_sax.nkm: woodwinds.saxophone
-    tenor_saxophone.nkm: woodwinds.saxophone
-    baritone_sax_vintage_solo.nkm: woodwinds.saxophone
-    baritone_saxophone.nkm: woodwinds.saxophone
+    # sax subtype from the patch name; generic/section patches stay coarse (subtype unknown)
+    alto_sax_vintage_solo.nkm: woodwinds.saxophone.alto
+    alto_saxophone.nkm: woodwinds.saxophone.alto
+    tenor_sax.nkm: woodwinds.saxophone.tenor
+    tenor_saxophone.nkm: woodwinds.saxophone.tenor
+    baritone_sax_vintage_solo.nkm: woodwinds.saxophone.baritone
+    baritone_saxophone.nkm: woodwinds.saxophone.baritone
     saxophone_essential.nkm: woodwinds.saxophone
     saxophones_essential.nkm: woodwinds.saxophone
     saxophone_section.nkm: woodwinds.saxophone
@@ -380,21 +400,21 @@ slakh:
     dawn_chorus.nkm: keys.synth.pad
     drifting_apart.nkm: keys.synth.pad
     # Drums group
-    funk_kit.nkm: [drums.acoustic_kit, cymbals]
-    pop_kit.nkm: [drums.acoustic_kit, cymbals]
-    garage_kit_lite.nkm: [drums.acoustic_kit, cymbals]
-    session_kit_full.nkm: [drums.acoustic_kit, cymbals]
-    stadium_kit_full.nkm: [drums.acoustic_kit, cymbals]
-    ar_modern_sparkle_kit_full.nkm: [drums.acoustic_kit, cymbals]
-    ar_modern_white_kit_full.nkm: [drums.acoustic_kit, cymbals]
-    street_knowledge_kit.nkm: [drums, cymbals]  # hip-hop kit: acoustic vs machine unclear (drums children unknown)
+    funk_kit.nkm: drums.acoustic_kit
+    pop_kit.nkm: drums.acoustic_kit
+    garage_kit_lite.nkm: drums.acoustic_kit
+    session_kit_full.nkm: drums.acoustic_kit
+    stadium_kit_full.nkm: drums.acoustic_kit
+    ar_modern_sparkle_kit_full.nkm: drums.acoustic_kit
+    ar_modern_white_kit_full.nkm: drums.acoustic_kit
+    street_knowledge_kit.nkm: drums  # hip-hop kit: acoustic vs machine unclear (drums children unknown)
   plugins_ignore:
     hybrid_keys_antique_toy.nkm: {reason: "hybrid toy-piano/synth layer", unknown: [percussion.mallet, keys.synth]}
     hybrid_keys_futurebells.nkm: {reason: "hybrid synth bells", unknown: [percussion.mallet, keys.synth]}
     hybrid_keys_hot_tropics.nkm: {reason: "hybrid steel-drum-like layer", unknown: [percussion.mallet, keys.synth]}
     solo_strings.nkm: {reason: "shared by violin/viola/cello/contrabass groups; instrument ambiguous", unknown: [strings.bowed, bass.upright]}
   inst_class:                      # fallback only (GM families; exact strings incl. case)
-    Piano: {node: keys, children_unknown: false, unknown: [keys.piano, keys.harpsichord, keys.clavinet]}
+    Piano: {node: keys, children_unknown: false, unknown: [keys.piano, keys.electric_piano, keys.harpsichord, keys.clavinet]}  # GM 0-7 incl. EPs 4-5
     Organ: keys.organ
     Guitar: guitar
     Bass: bass
@@ -403,7 +423,7 @@ slakh:
     Pipe: woodwinds
     Synth Lead: keys.synth.lead
     Synth Pad: keys.synth.pad
-    Drums: [drums, cymbals]
+    Drums: drums
   inst_class_ignore:
     Chromatic Percussion: {reason: "GM family mixes mallets, celesta, music box, tubular bells and dulcimer (struck strings)", unknown: [percussion.mallet, strings, keys]}
     Strings: {reason: "GM family mixes bowed strings, contrabass, harp, timpani", unknown: [strings, bass.upright, percussion]}

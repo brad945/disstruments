@@ -52,7 +52,7 @@ def test_non_refining_raw_label_is_unknown_not_positive(tmp_path, stem, raw, nod
 @pytest.mark.parametrize("stem,raw,node", [
     ("auxiliary percussion", "tambourine", "percussion.tambourine"),
     ("vocalists", "female singer", "voice.sung"),
-    ("drum set", "high hat", "cymbals"),
+    ("woodwind section", "tenor saxophone", "woodwinds.saxophone.tenor"),   # 3.0.0 sax leaves
 ])
 def test_refining_raw_label_is_positive(tmp_path, stem, raw, node):
     _mdb(tmp_path, "A_One", {"S01": (stem, [raw])})
@@ -119,11 +119,12 @@ def test_slakh_gm_chromatic_percussion_fallback_does_not_claim_mallets(tmp_path)
     assert "percussion.mallet" not in r.positive and "percussion.mallet" not in r.observed
 
 
-def test_slakh_kit_implies_cymbals_and_palm_muted_bass_not_picked(tmp_path):
+def test_slakh_kit_does_not_imply_cymbals_and_palm_muted_bass_not_picked(tmp_path):
     _slakh(tmp_path, {"S00": _st("pop_kit.nkm", "Drums"),
                       "S01": _st("scarbee_rickenbacker_bass_palm_muted.nkm", "Bass")})
     r = load_dataset("slakh", tmp_path).records[0]
-    assert {"cymbals", "drums.acoustic_kit"} <= r.positive
+    assert "drums.acoustic_kit" in r.positive
+    assert "cymbals" not in r.positive and "cymbals" not in r.observed   # 3.0.0: OpenMIC-only
     assert "bass.electric.picked" not in r.positive and "bass.electric.picked" not in r.observed
     assert "bass.electric.slap" in r.negative                          # Scarbee: fretted, not slap
 

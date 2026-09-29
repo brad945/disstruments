@@ -221,7 +221,10 @@ existing SWE/system design. Full technical plan: `ML_ENGINEERING.md`.
 ### New features
 
 - **F27 (M):** Hierarchical instrument taxonomy (~60 leaf classes, 3 levels, versioned
-  `taxonomy.yaml`); level 1 stays OpenMIC-compatible so draft-1 results remain valid.
+  `taxonomy.yaml`). OpenMIC compatibility is a projection layer, not a literal level 1:
+  every OpenMIC-20 class maps to exactly one taxonomy node (an antichain), and every eval
+  report includes OpenMIC-20 scores, so draft-1 results remain comparable.
+  *(Wording amended 2026-09-28, approved by Bradley; see `docs/debriefs/m1.md`.)*
 - **F28 (M):** Synthetic training-data pipeline: MIDI → randomized sampler/synth/effects/
   mastering rendering → perfectly labeled clips (target 100k). Provenance logged per clip.
 - **F29 (M):** Fine-tuned recognition model: pretrained music foundation backbone

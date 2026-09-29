@@ -16,6 +16,8 @@ Near-silent stems: a rendered stem whose `integrated_loudness` is below
 effectively inaudible in the mix. Its nodes become UNKNOWN (not positive: a model cannot
 hear it; not negative: it is there). None disables the floor.
 
+`slakh.unobserved` subtrees (3.0.0: cymbals) are unobserved on every track and stem.
+
 Splits: computed from the track id (orig: 1-1500 train, 1501-1875 val, 1876-2100 test)
 plus vendored slakh-utils tables (`slakh_splits.json`), so the directory layout the user
 has does not matter; a layout that matches no known split scheme raises.
@@ -40,8 +42,8 @@ from pathlib import Path
 import yaml
 
 from ..taxonomy import Taxonomy, get_taxonomy
-from .base import (DatasetIndex, LabelMap, Record, StemLabels, check_unique_ids,
-                   collect_unknown, load_mappings, observed_exhaustive)
+from .base import (DatasetIndex, LabelMap, Record, StemLabels, apply_unobserved,
+                   check_unique_ids, collect_unknown, load_mappings, unobserved_roots)
 
 NAME = "slakh"
 SPLIT_MODES = ("redux", "split2", "orig")
@@ -129,6 +131,7 @@ def load(root: Path | str, *, split_mode: str = "redux", include_omitted: bool =
     tax = taxonomy or get_taxonomy()
     doc, mappings_sha = load_mappings(taxonomy=tax)
     pmap, cmap = label_maps(tax)
+    masked = unobserved_roots(doc, NAME, tax)
     root = Path(root)
     tracks = _find_tracks(root)
     if not tracks:
@@ -176,23 +179,21 @@ def load(root: Path | str, *, split_mode: str = "redux", include_omitted: bool =
                 n_quiet += 1                   # inaudible: its nodes are unknown, not positive
                 unk |= res.mapped | res.unknown_roots
                 labels += src + (f"quiet:{lufs:.1f}LUFS",)
-                stems.append(StemLabels(str(stem_id), frozenset(),
-                                        observed_exhaustive(tax, frozenset(), res.mapped | res.unknown_roots),
-                                        src, stem_audio))
+                _, q_obs = apply_unobserved(tax, frozenset(), res.mapped | res.unknown_roots, masked)
+                stems.append(StemLabels(str(stem_id), frozenset(), q_obs, src, stem_audio))
                 continue
-            pos |= res.positive
+            s_pos, s_obs = apply_unobserved(tax, res.positive, res.unknown_roots, masked)
+            pos |= s_pos
             unk |= res.unknown_roots
             labels += src
-            stems.append(StemLabels(str(stem_id), res.positive,
-                                    observed_exhaustive(tax, res.positive, res.unknown_roots),
-                                    src, stem_audio))
-        positive = frozenset(pos)
+            stems.append(StemLabels(str(stem_id), s_pos, s_obs, src, stem_audio))
+        positive, observed = apply_unobserved(tax, frozenset(pos), unk, masked)
         audio = {"mix": a} if (a := _audio(tdir / "mix")) else {}
         audio.update({st.stem_id: st.audio for st in stems if st.audio is not None})
         msd = _MSD.search(str(meta.get("lmd_midi_dir", "")))
         records.append(Record(
             dataset=NAME, item_id=track_id, split=split, artist=None,
-            positive=positive, observed=observed_exhaustive(tax, positive, unk),
+            positive=positive, observed=observed,
             source_labels=tuple(dict.fromkeys(labels)),
             unknown_labels=tuple(dict.fromkeys(unknown_labels)),
             audio=audio, stems=tuple(stems),
@@ -223,6 +224,7 @@ def load(root: Path | str, *, split_mode: str = "redux", include_omitted: bool =
 
     config = {"dataset": NAME, "split_mode": split_mode, "include_omitted": include_omitted,
               "strict": strict, "min_loudness_lufs": min_loudness_lufs,
+              "unobserved": sorted(masked),
               "mappings_sha256": mappings_sha}
     stats = {"n_tracks": len(records), "n_omitted_seen": n_omitted,
              "n_unrendered_stems": n_unrendered, "n_rendered_flag_overrides": n_flag_overrides,

@@ -49,8 +49,10 @@ voice ──── lead | backing/harmony | choir
 brass/winds ─ trumpet | trombone | sax | flute | clarinet
 ```
 
-> **Implemented:** `backend/disstruments/ml/taxonomy.yaml` v2.0.0 (64 leaves). It deviates from
-> the sketch above; see `docs/debriefs/m1.md` → Open decisions.
+> **Implemented:** `backend/disstruments/ml/taxonomy.yaml` v3.0.0 (65 leaves). It deviates from
+> the sketch above; see `docs/debriefs/m1.md` → Resolved decisions. Where a parent is positive
+> and all its children are known-negative (sitar → `strings.plucked`, Pianet → `keys.electric_piano`),
+> that is an implicit "other" bucket, so models must emit internal-node heads, not only leaves.
 
 Design rules: every leaf must be (a) *audibly decidable* by an expert from a stem in
 isolation, and (b) *coverable* by at least one data source in §3. Classes failing either
