@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import re
 import shutil
 import tempfile
+import zipfile
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from starlette.background import BackgroundTask
 
 from .config import settings
 from .db import (LOCAL_USER_ID, Analysis, GenreTag, Job, Song, StageRun, Stem,
@@ -144,6 +148,29 @@ def create_app() -> FastAPI:
             if not stem:
                 raise HTTPException(404, "stem not found")
         return FileResponse(storage_mod.storage.path(stem.object_key), media_type="audio/wav")
+
+    @app.get("/api/v1/songs/{song_id}/stems.zip")
+    def get_stems_zip(song_id: int):
+        """F16: every stem of the latest analysis as one zip (stored, not deflated — wav
+        barely compresses). Same owner rule as single stems (NG7)."""
+        _assert_owner(song_id)
+        with get_session() as s:
+            a = (s.query(Analysis).filter(Analysis.song_id == song_id)
+                 .order_by(Analysis.id.desc()).first())
+            stems = (s.query(Stem).filter(Stem.analysis_id == a.id).order_by(Stem.name).all()
+                     if a else [])
+            song = s.get(Song, song_id)
+        if not stems:
+            raise HTTPException(404, "no stems")
+        fd, tmp_name = tempfile.mkstemp(suffix=".zip")
+        os.close(fd)
+        with zipfile.ZipFile(tmp_name, "w", zipfile.ZIP_STORED) as zf:
+            for st in stems:
+                zf.write(storage_mod.storage.path(st.object_key), arcname=f"{st.name}.wav")
+        slug = re.sub(r"[^\w.-]+", "_", (song.title if song else "") or f"song-{song_id}")
+        return FileResponse(tmp_name, media_type="application/zip",
+                            filename=f"{slug}.stems.zip",
+                            background=BackgroundTask(os.unlink, tmp_name))
 
     @app.get("/api/v1/songs/{song_id}/audio")
     def get_original(song_id: int):

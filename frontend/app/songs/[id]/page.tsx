@@ -197,7 +197,10 @@ function StemMixer({ songId, stems, status }: { songId: number; stems: { name: s
     <div className="panel">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2 style={{ margin: 0 }}>Stems</h2>
-        <button className="btn" onClick={playAll}>{playing ? "⏸ pause all" : "▶ play all (synced)"}</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <a className="btn ghost" href={`/api/v1/songs/${songId}/stems.zip`} download>↓ all stems (.zip)</a>
+          <button className="btn" onClick={playAll}>{playing ? "⏸ pause all" : "▶ play all (synced)"}</button>
+        </div>
       </div>
       {stems.map((s) => (
         <div className="stemrow" key={s.name}>

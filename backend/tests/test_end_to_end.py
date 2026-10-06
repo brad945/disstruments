@@ -37,6 +37,18 @@ def test_stem_download_owner_only(client, wav_file):
     assert len(r.content) > 1000
 
 
+def test_stems_zip(client, wav_file):
+    import io
+    import zipfile
+    sid = client.get("/api/v1/songs").json()[0]["id"]
+    r = client.get(f"/api/v1/songs/{sid}/stems.zip")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"
+    names = sorted(zipfile.ZipFile(io.BytesIO(r.content)).namelist())
+    assert names == ["bass.wav", "drums.wav", "other.wav", "vocals.wav"]
+    assert client.get("/api/v1/songs/999999/stems.zip").status_code == 404
+
+
 def test_dedup_on_reupload(client, wav_file):
     with open(wav_file, "rb") as f:
         r = client.post("/api/v1/songs", files={"file": ("tone.wav", f, "audio/wav")})
