@@ -44,7 +44,10 @@ export default function SongPage() {
   return (
     <div className="container">
       <div className="panel">
-        <h1 style={{ margin: "0 0 4px" }}>{report.song.title}</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <h1 style={{ margin: "0 0 4px" }}>{report.song.title}</h1>
+          <button className="btn ghost" onClick={() => downloadJson(report)}>↓ analysis JSON</button>
+        </div>
         <div style={{ color: "var(--muted)", marginBottom: 14 }}>{report.song.artist || "unknown artist"}</div>
         <div className="cards">
           <Card k="key" v={g.key?.value ?? "—"} c={conf(g.key?.confidence)} />
@@ -101,6 +104,18 @@ export default function SongPage() {
       </div>
     </div>
   );
+}
+
+// F16: full analysis as JSON, built client-side from the report already loaded.
+function downloadJson(report: Report) {
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const slug = (report.song.title || `song-${report.song.id}`).replace(/[^\w.-]+/g, "_");
+  a.href = url;
+  a.download = `${slug}.analysis.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function Card({ k, v, c }: { k: string; v: any; c?: string }) {
