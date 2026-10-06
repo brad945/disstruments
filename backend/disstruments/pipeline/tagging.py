@@ -33,13 +33,35 @@ AUDIOSET_MAP = {
 }
 
 _sed = None  # lazy singleton (model load is slow)
+_sed_device = "cpu"
 
 
 def _get_sed():
-    global _sed
+    """PANNs SED on `settings.device` (auto -> mps > cuda > cpu), CPU fallback.
+
+    panns_inference only honours device="cuda" and silently forces everything else to
+    CPU, so we load on CPU and move the model ourselves. A tiny warm-up inference proves
+    the device works; any failure falls back to CPU rather than failing the stage."""
+    global _sed, _sed_device
     if _sed is None:
+        import torch
         from panns_inference import SoundEventDetection
-        _sed = SoundEventDetection(checkpoint_path=None, device="cpu")
+
+        from .separation import _pick_device
+
+        sed = SoundEventDetection(checkpoint_path=None, device="cpu")
+        device = _pick_device()
+        if device != "cpu":
+            try:
+                sed.model.to(device)
+                sed.device = device
+                sed.inference(np.zeros((1, 32000), dtype=np.float32))
+            except Exception:  # noqa: BLE001 — unsupported op/device: stay correct on CPU
+                sed.model.to("cpu")
+                sed.device = device = "cpu"
+                if hasattr(torch, "mps") and torch.backends.mps.is_available():
+                    torch.mps.empty_cache()
+        _sed, _sed_device = sed, device
     return _sed
 
 

@@ -18,8 +18,8 @@ Draft 1 is built and runs: upload → transcode/dedup → in-process job queue w
 Demucs 4-stem separation → PANNs coarse tagging → key/BPM/LUFS → report JSON → Next.js
 dark DAW UI (waveform, instrument lanes, synced stem mixer). Tests pass in fake-ML mode.
 First real run on this Mac done (2026-09-27, `docs/debriefs/phase-1.md` step 3): ~20 s
-end-to-end for a 133 s song, Demucs on MPS. Known: PANNs runs on CPU over the full song
-(7.8 GB peak), and its scores vs fixed F15 thresholds appear to hide true detections
+end-to-end for a 133 s song, Demucs on MPS. Known: PANNs runs over the full song in one tensor (7.8 GB
+peak on CPU; now follows `DISS_DEVICE` → MPS, ~7× faster, identical scores), and its scores vs fixed F15 thresholds appear to hide true detections
 (e.g. vocals; confounded by a mono test source — confirm on a real master). `make setup-ml` fetches + checksums PANNs weights.
 
 ## Next up (draft 2 = PRD Amendment A1)
