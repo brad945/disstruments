@@ -21,8 +21,10 @@ click through to the report.
 No models yet? `make api-fake` runs the entire app with deterministic fake ML —
 useful for UI work and exactly what the test suite uses.
 
-First real run downloads Demucs weights (~1 GB) and the PANNs checkpoint (~300 MB)
-automatically. On an M-series Mac separation runs on MPS; expect ~1–3 min per song.
+`make setup-ml` also fetches and sha256-verifies the PANNs checkpoints (2 × 327 MB) via
+`backend/scripts/fetch_weights.sh`; Demucs `htdemucs` weights (84 MB) download on first
+run. Measured on an M5 (2026-09-27): a 133 s song takes ~20 s end-to-end, of which
+separation is ~11 s on MPS (`docs/debriefs/phase-1.md`).
 
 ## What's in draft 1 (PRD F-numbers)
 
@@ -33,8 +35,16 @@ automatically. On an M-series Mac separation runs on MPS; expect ~1–3 min per 
 - Rate limiting fully implemented but dormant (F23) — flip `DISS_RATE_LIMITING_ENABLED=1`
 - Cost ledger always on (F24)
 
-Deferred to draft 2: structure (F9), chords (F10), MIDI (F11), library filters UI,
-genre profiles (F19), eval harness CLI (F25).
+## Draft 2 so far (PRD Amendment A1, the ML track)
+
+- Taxonomy v3.0.0, 65 leaf instruments (F27): `backend/disstruments/ml/taxonomy.yaml`
+- MedleyDB / OpenMIC / Slakh loaders + eval harness (F25, instrument stage):
+  `cd backend && .venv/bin/python -m disstruments.ml.eval --help`
+  (subcommands: `taxonomy`, `baseline`, `run`, `compare`, `coverage`, `make-split`)
+- Debrief: `docs/debriefs/m1.md`
+
+Deferred to draft 3: structure (F9), chords (F10), MIDI (F11), library filters UI,
+genre profiles (F19).
 
 ## Layout
 
@@ -47,6 +57,7 @@ backend/disstruments/
   ratelimit.py     token buckets + headers (dormant locally)
   main.py          FastAPI routes (/api/v1)
   pipeline/        transcode → separation → tagging → attributes → runner
+  ml/              taxonomy + mappings, dataset loaders, eval harness (draft 2)
 frontend/app/      Next.js: upload+library page, /songs/[id] report
 ```
 
