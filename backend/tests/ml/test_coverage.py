@@ -81,9 +81,10 @@ def test_medleydb_data_tags_match_real_public_examples(pub, tax):
     assert cov["examples_without_claim"] == []
     s = cov["summary"]
     # 3.0.0: -1 (cymbals now OpenMIC-only) +3 (saxophone -> 4 subtype leaves) vs 2.0.0's 35.
-    # Test split under the unchanged pin: 31/15 -> 30/14, both drops are cymbals.
+    # Default pin is split v2 (taxonomy-v3 stratified, 2026-10-06): 31/17. The frozen v1
+    # pin gave 30/14 under taxonomy v3 (see test_split_v1_legacy_coverage).
     assert s["leaves_with_any_positive"] == 37
-    assert s["leaves_test_ge1"] == 30 and s["leaves_test_ge3"] == 14
+    assert s["leaves_test_ge1"] == 31 and s["leaves_test_ge3"] == 17
 
 
 def test_every_leaf_has_a_source(tax):
@@ -159,3 +160,39 @@ def test_make_split_cli_never_overwrites(mdb_public_root, tmp_path):
     assert artist_leakage(idx.records) == {}
     with pytest.raises(SystemExit):
         cli.main(["make-split", "--root", str(mdb_public_root), "--out", str(out)])
+
+
+def test_split_v1_legacy_coverage(mdb_public_root, tax):
+    """The frozen M1 pin stays loadable by alias and reproduces its numbers."""
+    v1 = load_dataset("medleydb", mdb_public_root, split_file="v1")
+    s = coverage(v1.records, tax, "medleydb")["summary"]
+    assert s["splits"] == {"train": 136, "val": 31, "test": 29}
+    assert s["leaves_test_ge1"] == 30 and s["leaves_test_ge3"] == 14
+
+
+def test_split_v2_covers_required_nodes(pub):
+    """Split v2 (default): artist-disjoint, and electric piano / soprano / alto sax have test
+    positives (baritone's only example is MusicDelta -> train-only, disclosed in known_gaps)."""
+    from disstruments.ml.datasets.medleydb import PINNED_SPLIT_PATH
+    doc = json.loads(PINNED_SPLIT_PATH.read_text())
+    assert pub.config["split_file"] == "medleydb_split_v2.json"
+    assert doc["counts"] == {"test": 32, "train": 136, "val": 28}
+    assert set(doc["require_test"]) == {"keys.electric_piano", "woodwinds.saxophone.soprano",
+                                        "woodwinds.saxophone.alto"}
+    assert "woodwinds.saxophone.baritone" in doc["known_gaps"]
+    test = pub.split("test")
+    for node in doc["require_test"]:
+        assert any(node in r.positive for r in test), node
+    tr = {r.artist for r in pub.split("train")}
+    assert not tr & {r.artist for r in test}
+
+
+def test_stratified_split_respects_fixed_groups():
+    from disstruments.ml.datasets.base import stratified_artist_split
+    items = {f"t{i}": (f"a{i % 10}", [f"leaf{i % 3}"]) for i in range(60)}
+    fr = {"train": 0.7, "val": 0.15, "test": 0.15}
+    a = stratified_artist_split(items, fr, seed=1, n_iter=3000, fixed={"a3": "test", "a7": "val"})
+    assert {a[k] for k, (g, _) in items.items() if g == "a3"} == {"test"}
+    assert {a[k] for k, (g, _) in items.items() if g == "a7"} == {"val"}
+    with pytest.raises(ValueError):
+        stratified_artist_split(items, fr, fixed={"nope": "test"})

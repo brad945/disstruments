@@ -269,7 +269,8 @@ def test_eval_arrays_roundtrip(tmp_path, tax):
 def test_real_digest_cli_prior_vs_random(mdb_public_root, tmp_path):
     """End-to-end on real public metadata with the pinned split: prior/random baselines,
     runs with prior-reference calibration, bootstrap compare."""
-    common = ["--dataset", "medleydb", "--root", str(mdb_public_root), "--split", "test"]
+    common = ["--dataset", "medleydb", "--root", str(mdb_public_root), "--split", "test",
+              "--split-file", "v1"]                     # M1 numbers: frozen legacy pin
     for kind in ("prior", "random"):
         assert cli.main(["baseline", *common, "--kind", kind, "--out", str(tmp_path / f"{kind}.json")]) == 0
         assert cli.main(["run", *common, "--predictions", str(tmp_path / f"{kind}.json"),

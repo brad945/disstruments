@@ -381,7 +381,8 @@ def split_hash(records: Sequence[Record]) -> str:
 
 def stratified_artist_split(items: Mapping[str, tuple[str, Iterable[str]]],
                             fractions: Mapping[str, float], seed: int = 0,
-                            n_iter: int = 20000, min_count: int = 2) -> dict[str, str]:
+                            n_iter: int = 20000, min_count: int = 2,
+                            fixed: Mapping[str, str] | None = None) -> dict[str, str]:
     """Artist-grouped split that also balances strata (genre, per-leaf positives).
 
     `items`: item_id -> (group, strata labels). Whole groups move together, so the result
@@ -392,7 +393,9 @@ def stratified_artist_split(items: Mapping[str, tuple[str, Iterable[str]]],
       + 5 * sum_s ((n_s - frac_s * N) / N)^2          (item counts stay near target)
       + 1 per (f, s) with count_f >= 3 and count_fs == 0 (every split sees every
         stratum that has >= 3 items)
-    Deterministic for (items, fractions, seed, n_iter). Used once to produce a pinned
+    `fixed`: group -> split for groups that must not move (e.g. the only artist carrying a
+    rare leaf, pinned to test); they count toward the balance terms like any other group.
+    Deterministic for (items, fractions, seed, n_iter, fixed). Used once to produce a pinned
     split file; loaders read the pin, they do not re-run this.
     """
     import numpy as np
@@ -419,8 +422,14 @@ def stratified_artist_split(items: Mapping[str, tuple[str, Iterable[str]]],
         dev = (C - frac[:, None] * tot[None, :]) / np.maximum(tot, 1)[None, :]
         return float((w[None, :] * dev ** 2).sum() + ((C == 0) & need[None, :]).sum())
 
+    fixed = dict(fixed or {})
+    bad = sorted(set(fixed) - set(groups)) + sorted(s for s in fixed.values() if s not in splits)
+    if bad:
+        raise ValueError(f"stratified_artist_split: unknown fixed groups/splits {bad}")
     start = artist_disjoint_split({g: int(G[gi[g], -1]) for g in groups}, fractions, seed)
+    start.update(fixed)
     a = np.array([splits.index(start[g]) for g in groups])
+    movable = np.array([g not in fixed for g in groups])
     C = np.zeros((len(splits), G.shape[1]))
     for k in range(len(groups)):
         C[a[k]] += G[k]
@@ -430,7 +439,7 @@ def stratified_artist_split(items: Mapping[str, tuple[str, Iterable[str]]],
         if rng.random() < 0.5:                         # move one group
             k = int(rng.integers(len(groups)))
             src, dst = a[k], int(rng.integers(len(splits)))
-            if dst == src:
+            if dst == src or not movable[k]:
                 continue
             C[src] -= G[k]; C[dst] += G[k]             # noqa: E702
             c = cost(C)
@@ -440,7 +449,7 @@ def stratified_artist_split(items: Mapping[str, tuple[str, Iterable[str]]],
                 C[dst] -= G[k]; C[src] += G[k]         # noqa: E702
         else:                                          # swap two groups
             k, j = (int(x) for x in rng.integers(len(groups), size=2))
-            if a[k] == a[j]:
+            if a[k] == a[j] or not (movable[k] and movable[j]):
                 continue
             sk, sj = a[k], a[j]
             C[sk] += G[j] - G[k]; C[sj] += G[k] - G[j]  # noqa: E702

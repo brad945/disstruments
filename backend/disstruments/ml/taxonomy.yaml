@@ -250,7 +250,7 @@ nodes:
   - id: voice.spoken
     name: Spoken word
     data: [medleydb]
-    planned: [golden]      # no test positives in medleydb_split_v1
+    planned: [golden]      # no test positives in medleydb_split_v2 (default)
   - id: voice.screamed
     name: Screamed / harsh vocals
     note: no public training source (MedleyDB examples are all in non-public tracks)
@@ -291,7 +291,6 @@ nodes:
   - id: woodwinds.saxophone.soprano
     name: Soprano saxophone
     data: [medleydb]
-    planned: [golden]      # no test positives in medleydb_split_v1
   - id: woodwinds.saxophone.alto
     name: Alto saxophone
     data: [medleydb, slakh]
@@ -316,4 +315,4 @@ nodes:
   - id: woodwinds.harmonica
     name: Harmonica
     data: [medleydb]
-    planned: [golden]      # no test positives in medleydb_split_v1
+    planned: [golden]      # no test positives in medleydb_split_v2 (default)

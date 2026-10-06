@@ -610,9 +610,11 @@ def test_rare_sax_leaves_skip_cleanly(pub, tax):
     ids = [i for i, _, _ in label_items(test)]
     s = baseline_predictions("prior", ids, tax, train_records=pub.split("train"))
     res = evaluate(test, Predictions(ids, list(tax.nodes), s, tax.version), tax)
-    for sub in ("soprano", "alto", "baritone"):
-        leaf = f"woodwinds.saxophone.{sub}"
-        assert res["per_node"][leaf]["skipped"] in (SKIP_NO_POSITIVES, SKIP_UNOBSERVED), leaf
+    # split v2 (2026-10-06) puts soprano + alto in test; baritone stays train-only
+    for sub in ("soprano", "alto"):
+        assert res["per_node"][f"woodwinds.saxophone.{sub}"]["skipped"] is None, sub
+    assert res["per_node"]["woodwinds.saxophone.baritone"]["skipped"] in (SKIP_NO_POSITIVES,
+                                                                           SKIP_UNOBSERVED)
 
 
 # ====================================================================== collapse + grep
@@ -758,10 +760,12 @@ def test_n_nonrefining_raw_labels_exact(pub):
     assert pub.stats["n_nonrefining_raw_labels"] == 40
 
 
-def test_split_pin_hash_unchanged_and_gaps_disclosed(pub):
-    """Critic #6: the pin gained disclosure metadata only; split_hash (item, split) is unchanged."""
+def test_split_pin_hash_unchanged_and_gaps_disclosed(mdb_public_root):
+    """Critic #6: the frozen v1 pin gained disclosure metadata only; split_hash is unchanged
+    (v1 is legacy since 2026-10-06 and must keep reproducing M1 numbers)."""
     from disstruments.ml.datasets.base import split_hash
-    doc = json.loads(medleydb.PINNED_SPLIT_PATH.read_text())
+    pub = load_dataset("medleydb", mdb_public_root, split_file="v1")
+    doc = json.loads(medleydb.LEGACY_SPLIT_V1_PATH.read_text())
     assert doc["split_hash"] == "fba910c7f963460a" == split_hash(pub.records)
     assert doc["stratified_on_taxonomy"] == "2.0.0" and "keys.electric_piano" in doc["known_gaps"]
     count = lambda n, sp: sum(n in r.positive for r in pub.split(sp))  # noqa: E731
@@ -777,7 +781,7 @@ def test_golden_planned_exactly_where_no_test_source(pub, tax):
     no_test = {l for l in tax.leaves() if tax.info[l].data == ("medleydb",)
                and not any(l in r.positive for r in pub.split("test"))}
     marked = {l for l in tax.leaves() if tax.info[l].data and "golden" in tax.info[l].planned}
-    assert no_test == marked == {"woodwinds.saxophone.soprano", "woodwinds.harmonica", "voice.spoken"}
+    assert no_test == marked == {"woodwinds.harmonica", "voice.spoken"}   # split v2
 
 
 def test_openmic_piano_incl_ep_diagnostic_not_gated(tax):

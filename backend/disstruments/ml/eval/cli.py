@@ -9,8 +9,9 @@
     python -m disstruments.ml.eval coverage --dataset medleydb --root M
     python -m disstruments.ml.eval make-split --root M --out medleydb_split_vN.json
 
-MedleyDB uses the pinned split (`datasets/medleydb_split_v1.json`) unless
-`--generated-split`; a loaded track set that differs from the pin fails loudly.
+MedleyDB uses the pinned split (`datasets/medleydb_split_v2.json`, taxonomy v3) unless
+`--split-file` (`v1` = the frozen M1 split) or `--generated-split`; a loaded track set
+that differs from the pin fails loudly.
 
 `run` archives `metrics.json` + `summary.md` + `arrays.npz` (per-item labels, masks and
 scores, for `compare`'s paired bootstrap) under
@@ -82,7 +83,8 @@ def _add_dataset_args(p: argparse.ArgumentParser) -> None:
     g.add_argument("--split", default="test", help="train | val | test | all")
     g.add_argument("--audio-root", type=Path, help="medleydb: MEDLEYDB_PATH/Audio (optional)")
     g.add_argument("--split-file", type=Path,
-                   help="medleydb: {track_id: split} JSON (default: packaged medleydb_split_v1.json)")
+                   help="medleydb: {track_id: split} JSON, or `v1` (frozen M1 split) / `v2` "
+                        "(default: packaged medleydb_split_v2.json)")
     g.add_argument("--generated-split", action="store_true",
                    help="medleydb: ignore the pin; seeded artist-disjoint split over the loaded tracks")
     g.add_argument("--allow-partial-split", action="store_true",
@@ -303,7 +305,8 @@ def cmd_make_split(a: argparse.Namespace) -> int:
     from ..datasets.medleydb import make_split
     idx = load_dataset("medleydb", a.root, generated_split=True, seed=a.seed,
                        strict=not a.non_strict)
-    doc = make_split(idx, seed=a.seed, n_iter=a.n_iter)
+    doc = make_split(idx, seed=a.seed, n_iter=a.n_iter, require_test=a.require_test,
+                     version=a.out.stem)
     if a.out.exists():
         raise SystemExit(f"{a.out} exists; pins are never regenerated in place")
     a.out.write_text(json.dumps(doc, indent=1) + "\n")
@@ -361,6 +364,8 @@ def build_parser() -> argparse.ArgumentParser:
     ms.add_argument("--seed", type=int, default=0)
     ms.add_argument("--n-iter", type=int, default=20000)
     ms.add_argument("--non-strict", action="store_true")
+    ms.add_argument("--require-test", action="append", default=[], metavar="NODE",
+                    help="taxonomy node that must have a test positive (repeatable)")
     ms.set_defaults(fn=cmd_make_split)
     return p
 
