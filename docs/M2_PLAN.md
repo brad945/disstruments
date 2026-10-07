@@ -52,7 +52,16 @@ outside the repo under `~/datasets/disstruments-synth/`.
 
 ## 3. Decisions I need from you
 
-> **2026-10-07: Bradley approved D2–D8 as recommended.** D1 (backbone) is still open.
+> **2026-10-07: Bradley approved D2–D8 as recommended. D1: run MERT-95M and CLAP side by
+> side.** Goal stated: eventually a commercial product, or a free public product. So the
+> **shippable path must be licence-clean**:
+> - CLAP (or another permissive backbone) is the production candidate; MERT is the research
+>   comparison only.
+> - Anything trained on NC data (MedleyDB audio, jRhodes3d) or on Lakh-MIDI renders is
+>   research-only. A shippable model retrains on `commercial_clean` clips rendered from
+>   procedural or licensed MIDI.
+> - "Free" doesn't automatically mean non-commercial under CC-BY-NC (ads or a later paid
+>   tier would break it), so treat any public release as commercial.
 
 | # | Fork | Options | My recommendation |
 |---|---|---|---|

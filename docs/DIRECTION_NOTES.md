@@ -26,6 +26,16 @@ Instrumake/Disstruments eventually becomes a **music-education product**: learn 
 - **Design the eval harness for reuse.** Per-part similarity scoring ("your remake vs the original") is the same machinery as model evaluation: per-stem, per-leaf, calibrated. Keep the harness general enough to score a remake as well as a model.
 - **MIDI per part (F11) moves up in value.** It's a recipe ingredient and the "notes/timing" half of remake scoring.
 
+## Licence constraint (Bradley, 2026-10-07)
+The end state is a commercial product or a free public one; either way it must be
+**licence-clean**. That means:
+- **Permissive backbones only** (CLAP/BEATs/PaSST, not MERT).
+- **Training data** limited to CC0 / CC-BY / MIT sources and procedural or licensed MIDI.
+- **NC datasets** (MedleyDB, jRhodes3d) are for evaluation and research only.
+
+Every synthetic clip carries licence ids, so the clean subset can be filtered out at any
+time.
+
 ## Open questions (decide before any amendment)
 - How is remake similarity scored? Embedding distance (e.g. MERT) per stem, symbolic note F1 from MIDI, or both, and how is that shown to a learner?
 - Who is the user: hobbyist producers, music-school students, or both? This decides pricing, curriculum and genre coverage (rock/indie/pop first).
