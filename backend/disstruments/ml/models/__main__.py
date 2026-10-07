@@ -46,8 +46,11 @@ def _matrix(ids: list[str], cache_ids: list[str], emb: np.ndarray) -> np.ndarray
 
 
 def cmd_embed(a) -> int:
-    idx = load_dataset(a.dataset, a.root, **({"audio_root": a.audio_root} if a.audio_root else {}))
-    items = _audio_items(idx.records, a.unit)
+    opts = {"audio_root": a.audio_root} if a.audio_root else {}
+    if a.dataset == "openmic" and a.no_split_leakage_check:
+        opts["check_split_leakage"] = False
+    idx = load_dataset(a.dataset, a.root, **opts)
+    items = _audio_items(idx.split(a.split), a.unit)
     if not items:
         raise SystemExit(f"{a.dataset}: no audio found (unit={a.unit})")
     bb = load_backbone(a.backbone)
@@ -101,7 +104,8 @@ def cmd_probe(a) -> int:
             print(f"skip {spec}: --{ds}-root not given")
             continue
         idx = train_idx if ds == "synthetic" else load_dataset(
-            ds, root, **({"audio_root": a.medleydb_audio_root} if ds == "medleydb" else {}))
+            ds, root, **({"audio_root": a.medleydb_audio_root} if ds == "medleydb" else
+                         {"check_split_leakage": False} if ds == "openmic" else {}))
         recs = idx.split(split)
         ids = [i for i, _, _ in label_items(recs, a.unit)]
         eids, eemb, _ = load_cache(cache_path(a.cache, a.backbone, ds, a.unit))
@@ -125,6 +129,9 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--unit", default="mix", choices=("mix", "stem"))
     e.add_argument("--cache", required=True, type=Path)
     e.add_argument("--batch-size", type=int, default=8)
+    e.add_argument("--split", default="all", help="only embed this split (default: all)")
+    e.add_argument("--no-split-leakage-check", action="store_true",
+                   help="openmic: official split01 has 1 artist (fma:15155) in train and test")
     e.set_defaults(fn=cmd_embed)
     q = sub.add_parser("probe")
     q.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
