@@ -101,3 +101,16 @@ without touching system state.
 - **Honest framing for interviews:** draft 1's tagger is a stock AudioSet model — the
   differentiated work (taxonomy, synthetic data, fine-tuning, calibration) is the
   current milestone, and I'd say exactly that rather than oversell.
+
+## M2 numbers (2026-10-07)
+- Rendered **9,998 labelled clips in 29 min** on a laptop (29 free-licence sources, own
+  synth patches, numpy 808). Pilot renders caught 6 label-noise bugs before training,
+  e.g. silent stems labelled present, and audible cymbals labelled absent.
+- Frozen-backbone linear probes, **trained only on synthetic audio**, scored on **real**
+  OpenMIC clips (9 trained classes, mean AP): prior 0.54, CLAP 0.64, **MERT-95M 0.78**
+  (MERT − CLAP CI [0.09, 0.12]).
+- The licence trade-off in one number: the commercially clean backbone trails the
+  non-commercial one by ~0.13 AP on real music. That's why the roadmap includes
+  fine-tuning and our own pretraining.
+- Found that OpenMIC's official split leaks one artist across train/test (my leakage
+  check caught it).
