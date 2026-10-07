@@ -3,7 +3,8 @@
 Labels are perfect and fully observed: every audible stem was rendered from a known leaf
 and nothing else is in the audio, so positives are the ancestor-closed rendered leaves and
 **every other taxonomy node is a true negative**. The grouping key (`artist`) is the MIDI
-composition, which is also the split key, so the artist-level bootstrap resamples songs.
+artist (Lakh clean_midi `Artist/Title.mid`), which is also the split key: splits are
+artist-disjoint and the bootstrap resamples artists.
 Options:
 - `commercial_only` keeps only clips whose sources *and* MIDI are licence-clean.
 """
@@ -46,7 +47,7 @@ def load(root: Path | str, *, commercial_only: bool = False, strict: bool = True
             for s in lab["stems"])
         records.append(Record(
             dataset=NAME, item_id=lab["clip_id"], split=lab["split"],
-            artist=lab["midi"]["composition"],
+            artist=lab["midi"]["composition"].split("/", 1)[0],   # = split key
             positive=frozenset(tax.close_upward(leaves)), observed=all_nodes,
             source_labels=tuple(s["source_id"] for s in lab["stems"]),
             audio={"mix": cdir / "mix.flac"}, stems=stems,

@@ -167,7 +167,7 @@ def test_build_render_load_evaluate(midi_root, registry_file, tmp_path, tax):
     assert set(tax.leaves()) & r.positive == set(json.loads(
         (out / "clips" / r.item_id / "labels.json").read_text())["positive_leaves"])
     comps = {}
-    for rec in idx.records:                                 # composition-disjoint splits
+    for rec in idx.records:                                 # artist-disjoint splits
         comps.setdefault(rec.artist, set()).add(rec.split)
     assert all(len(v) == 1 for v in comps.values())
     ids = [x.item_id for x in idx.records]

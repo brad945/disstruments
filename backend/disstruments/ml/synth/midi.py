@@ -5,8 +5,8 @@ A MIDI track only tells us its *role* (GM program family / drum channel). We kee
 label is exact. Tracks whose family has no v1 leaf are dropped, not rendered: every audible
 stem has a known label, so every other taxonomy node is a true negative.
 
-Splits are by MIDI *composition* (artist/title for the Lakh clean subset, file md5
-otherwise), so the same song never lands in train and test.
+Splits are by MIDI *artist* (Lakh clean subset is `Artist/Title.N.mid`; other files fall
+back to their md5), so no artist (and therefore no song) lands in both train and test.
 """
 from __future__ import annotations
 
@@ -109,9 +109,16 @@ def composition_key(path: Path, root: Path) -> str:
     return ""
 
 
+def artist_key(composition: str) -> str:
+    """Grouping/split key: the artist part of `artist/title` (artist-disjoint splits, the
+    project-wide rule); a bare md5 key is its own group."""
+    return composition.split("/", 1)[0]
+
+
 def split_of(composition: str, fractions: Mapping[str, float]) -> str:
-    """Deterministic split from a stable hash of the composition key."""
-    u = (zlib.crc32(composition.encode()) & 0xFFFFFFFF) / 2 ** 32
+    """Deterministic split from a stable hash of the composition's *artist*, so splits are
+    artist-disjoint (and therefore also song-disjoint)."""
+    u = (zlib.crc32(artist_key(composition).encode()) & 0xFFFFFFFF) / 2 ** 32
     acc = 0.0
     total = sum(fractions.values())
     for name, f in fractions.items():
