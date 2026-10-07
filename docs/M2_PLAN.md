@@ -52,6 +52,8 @@ outside the repo under `~/datasets/disstruments-synth/`.
 
 ## 3. Decisions I need from you
 
+> **2026-10-07: Bradley approved D2–D8 as recommended.** D1 (backbone) is still open.
+
 | # | Fork | Options | My recommendation |
 |---|---|---|---|
 | **D1** | **Backbone (licence!)** | (a) MERT-95M (CC-BY-**NC**-4.0), (b) MERT-330M (same NC licence, ~3× slower), (c) a commercially clean model: LAION-CLAP (CC0 / Apache-2.0), BEATs (MIT), PaSST (Apache-2.0) | **Run MERT-95M *and* CLAP in the same table.** MERT is the plan and fine for a portfolio, but its NC licence means it can never ship in a paid "remake" product. Having a clean backbone in the ablation from day one keeps that path open and makes a strong portfolio point. MERT-330M waits for M3. |
