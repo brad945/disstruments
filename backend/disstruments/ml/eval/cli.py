@@ -72,6 +72,8 @@ def _loader_opts(a: argparse.Namespace) -> dict[str, Any]:
         opts.update(split_mode=a.slakh_split,
                     min_loudness_lufs=float("-inf") if a.min_loudness_lufs.lower() == "none"
                     else float(a.min_loudness_lufs))
+    elif a.dataset == "synthetic":
+        opts.update(commercial_only=a.commercial_only)
     return opts
 
 
@@ -99,6 +101,8 @@ def _add_dataset_args(p: argparse.ArgumentParser) -> None:
     g.add_argument("--non-strict", action="store_true",
                    help="record unmapped source labels instead of failing (they mask the item)")
     g.add_argument("--unit", default="mix", choices=("mix", "stem"))
+    g.add_argument("--commercial-only", action="store_true",
+                   help="synthetic: only licence-clean clips (sources and MIDI)")
     g.add_argument("--exclude-bleed", action="store_true",
                    help="unit=stem: drop stems of tracks flagged has_bleed (MedleyDB)")
 
