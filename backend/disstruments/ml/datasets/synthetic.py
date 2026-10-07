@@ -41,7 +41,8 @@ def load(root: Path | str, *, commercial_only: bool = False, strict: bool = True
             raise ValueError(f"synthetic {lab['clip_id']}: leaves not in taxonomy {tax.version}: {bad}")
         cdir = f.parent
         stems = tuple(
-            StemLabels(stem_id=s["leaf"], positive=frozenset(tax.close_upward([s["leaf"]])),
+            StemLabels(stem_id=s["leaf"], positive=frozenset(tax.close_upward(
+                [s["leaf"]] + (list(lab.get("implied_leaves") or {}) if s["leaf"].startswith("drums") else []))),
                        observed=all_nodes, source_labels=(s["source_id"],),
                        audio=(cdir / "stems" / f"{s['leaf']}.flac"), bleed=False)
             for s in lab["stems"])

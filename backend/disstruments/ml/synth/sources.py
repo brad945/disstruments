@@ -46,6 +46,8 @@ class Source:
     attribution: str = ""
     download: dict[str, Any] = field(default_factory=dict)
     notes: str = ""
+    weight: float = 1.0                    # relative pick probability among a leaf's sources
+    note_map: dict[int, int] = field(default_factory=dict)   # GM drum note -> source key
 
     def file(self, root: Path) -> Path | None:
         return (root / self.path) if self.path else None
@@ -100,6 +102,8 @@ def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = No
         errs += [f"{sid}: {l} is not a taxonomy leaf" for l in src_leaves if l not in leaves]
         if kind != "synth" and not raw.get("path"):
             errs.append(f"{sid}: {kind} source needs a path")
+        if float(raw.get("weight", 1.0)) <= 0:
+            errs.append(f"{sid}: weight must be > 0")
         progs = {k: tuple(v) for k, v in (raw.get("programs") or {}).items()}
         errs += [f"{sid}: programs key {k} not in its leaves" for k in progs if k not in src_leaves]
         out.append(Source(id=sid, name=raw.get("name", sid), kind=kind,
@@ -107,7 +111,9 @@ def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = No
                           license=lic, commercial_clean=clean, path=raw.get("path"),
                           programs=progs, license_url=raw.get("license_url", ""),
                           attribution=raw.get("attribution", ""),
-                          download=raw.get("download") or {}, notes=raw.get("notes", "")))
+                          download=raw.get("download") or {}, notes=raw.get("notes", ""),
+                          weight=float(raw.get("weight", 1.0)),
+                          note_map={int(k): int(v) for k, v in (raw.get("note_map") or {}).items()}))
     reg = Registry(int(doc.get("version", 1)), r, v1, tuple(out))
     uncovered = [l for l in v1 if not reg.for_leaf(l, commercial_only=True)]
     errs += [f"v1 leaf {l} has no commercially clean source" for l in uncovered]

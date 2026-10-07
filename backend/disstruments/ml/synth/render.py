@@ -17,7 +17,7 @@ import numpy as np
 
 from .engines import Engine
 from .fx import apply_chain, master_chain, stem_chain
-from .midi import Window
+from .midi import CYMBAL_NOTES, Window
 from .sources import Registry
 
 SCHEMA_VERSION = 1
@@ -72,18 +72,21 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         if not cands:
             failures.append({"leaf": part.leaf, "error": "no source"})
             continue
-        src = cands[int(rng.integers(len(cands)))]
+        w = np.array([s.weight for s in cands], dtype=float)
+        src = cands[int(rng.choice(len(cands), p=w / w.sum()))]
         try:
             dry, emeta = engines[src.engine].render(part, src, registry.root, sr, window.duration, rng)
         except Exception as e:  # noqa: BLE001 — one bad source must not kill the clip
             failures.append({"leaf": part.leaf, "source": src.id, "error": f"{type(e).__name__}: {e}"[:300]})
             continue
-        if not np.any(np.abs(dry) > 1e-5):
-            failures.append({"leaf": part.leaf, "source": src.id, "error": "silent render"})
-            continue
         chain = stem_chain(part.leaf or "", rng)
         wet = apply_chain(dry[None, :], sr, chain)[0]
         wet, _ = _gain_to(wet, sr, -20.0)                       # level-match before mixing
+        # A positive label must be audible: measurable loudness AND a real peak after fx
+        # (tiny non-zero renders used to pass and quantize to silence in the FLAC).
+        if _lufs(wet, sr) is None or float(np.max(np.abs(wet))) < 1e-3:
+            failures.append({"leaf": part.leaf, "source": src.id, "error": "silent render"})
+            continue
         mix_gain_db = round(float(rng.uniform(-6, 3)), 2)       # random balance
         wet = wet * np.float32(10 ** (mix_gain_db / 20))
         sf.write(cdir / "stems" / f"{part.leaf}.flac", np.clip(wet, -1, 1), sr, subtype="PCM_16")
@@ -112,11 +115,16 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
     if peak > 0.999:                                            # final safety, recorded
         mix = mix * np.float32(0.999 / peak)
     sf.write(cdir / "mix.flac", mix, sr, subtype="PCM_16")
+    # Kits that play hats/cymbals make the level-1 `cymbals` leaf audible: label it.
+    implied = sorted({"cymbals"} if any(
+        p.is_drum and p.leaf and p.leaf.startswith("drums") and p.leaf in {s["leaf"] for s in stems_meta}
+        and any(n.pitch in CYMBAL_NOTES for n in p.notes) for p in window.parts) else set())
     labels = {
         "schema_version": SCHEMA_VERSION, "clip_id": clip_id, "split": split, "seed": seed,
         "renderer_sha": sha, "taxonomy_version": taxonomy_version, "sample_rate": sr,
         "duration_s": window.duration,
-        "positive_leaves": sorted(s["leaf"] for s in stems_meta),
+        "positive_leaves": sorted({s["leaf"] for s in stems_meta} | set(implied)),
+        "implied_leaves": {l: "hat/cymbal notes in the drum part" for l in implied},
         # Lakh compositions are not cleared, so Lakh renders are never commercially clean
         # (licence-clean end state, docs/DIRECTION_NOTES.md); the sources may still be.
         "sources_commercial_clean": all(s["commercial_clean"] for s in stems_meta),

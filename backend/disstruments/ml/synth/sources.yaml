@@ -1,0 +1,441 @@
+# M2 S0 source registry (docs/M2_PLAN.md §2 S0, §4, §5). Loaded/validated by sources.py.
+# Every source maps to the taxonomy leaves it *truly is*; licences re-read on the download
+# page on 2026-10-07. Archives were sha256-hashed at download, extracted under `root`, then
+# deleted (re-fetch from `download.url` and compare sha256 to reproduce). Git sparse
+# checkouts have no archive: they pin `download.commit` (also in <dir>/.commit; .git removed), sha256: null.
+# Engines (Surge XT, Dexed, sfizz, fluidsynth) are installed separately; synth sources render
+# with OUR OWN / procedurally randomized patches (M2_PLAN D8).
+version: 1
+root: ~/datasets/disstruments-synth/sources   # relative paths below resolve here
+v1_leaves:
+  - guitar.acoustic.nylon
+  - guitar.acoustic.steel
+  - guitar.electric.clean
+  - guitar.electric.distorted
+  - bass.electric.picked
+  - bass.electric.fingered
+  - bass.upright
+  - bass.synth.analog
+  - bass.synth.sub_808
+  - keys.piano
+  - keys.electric_piano.rhodes
+  - keys.electric_piano.fm
+  - keys.organ.drawbar
+  - keys.synth.pad
+  - keys.synth.lead
+  - keys.synth.pluck
+  - drums.acoustic_kit
+  - drums.electronic.tr808
+  - woodwinds.saxophone.tenor
+  - brass.trumpet
+
+sources:
+  # ------------------------------------------------------------------ synth engines
+  - id: surge_xt
+    name: Surge XT (own patches)
+    kind: synth
+    engine: surge_xt
+    leaves: [bass.synth.analog, bass.synth.sub_808, keys.synth.pad, keys.synth.lead,
+             keys.synth.pluck]
+    license: LicenseRef-engine-output
+    license_url: https://surge-synthesizer.github.io/faq/
+    commercial_clean: true
+    attribution: ""
+    notes: "GPL-3.0 engine; FAQ: 'The output of Surge XT is yours' (incl. factory presets). Own/randomized patches per D8; tr808 is rendered by drum808_numpy instead."
+
+  - id: drum808_numpy
+    name: TR-808-style drum synth (ours, numpy)
+    kind: synth
+    engine: drum808
+    leaves: [drums.electronic.tr808]
+    license: LicenseRef-engine-output
+    commercial_clean: true
+    attribution: ""
+    notes: "Our own code (ml/synth/drum808.py): 808-topology voices, no samples; kit params recorded per clip."
+
+  - id: dexed
+    name: Dexed DX7 emulation (own patches)
+    kind: synth
+    engine: dexed
+    leaves: [keys.electric_piano.fm, keys.electric_piano.rhodes]
+    license: LicenseRef-engine-output
+    license_url: https://github.com/asb2m10/dexed/blob/master/LICENSE
+    commercial_clean: true
+    attribution: ""
+    notes: "GPL-3.0 engine (msfa core Apache-2.0); output not covered by GPL. rhodes = FM-MODELLED (D5 ablation: does synth-Rhodes generalize to real Rhodes?). No third-party cartridges."
+
+  # ------------------------------------------------------------------ guitars
+  - id: freepats_spanish_classical
+    name: FreePats Spanish Classical Guitar
+    kind: sfz
+    engine: sfizz
+    path: freepats_spanish_classical/SpanishClassicalGuitar-SFZ+FLAC-20190618/SpanishClassicalGuitar-20190618.sfz
+    leaves: [guitar.acoustic.nylon]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Guitar/acoustic-guitar.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://freepats.zenvoid.org/Guitar/SpanishClassicalGuitar/SpanishClassicalGuitar-SFZ+FLAC-20190618.7z", sha256: 903916921a21662d2237ade7f0e98e55de93cb7b86da219e4e10f4ad385b8f5e, bytes: 4713892}
+    notes: "Small nylon-string set, noise-filtered; single dynamic, few layers."
+
+  - id: freepats_fss_steel
+    name: FreePats FSS Steel-String Acoustic Guitar
+    kind: sfz
+    engine: sfizz
+    path: freepats_fss_steel/FSS-SteelStringGuitar-SFZ-20200521/FSS-SteelStringGuitar-20200521.sfz
+    leaves: [guitar.acoustic.steel]
+    license: GPL-3.0-or-later-with-exception
+    license_url: https://freepats.zenvoid.org/licenses.html#GPL_exception
+    commercial_clean: true
+    attribution: "FS Seagull Steel String Acoustic Guitar by FlameStudios (Gary Campion), FreePats edit"
+    download: {url: "https://freepats.zenvoid.org/Guitar/FSS-SteelStringGuitar/FSS-SteelStringGuitar-SFZ-20200521.tar.xz", sha256: 720b55c5ad4dcfb9f788ab13a0bda834cbfd7b3214df2ca90648c58951e41777, bytes: 13130512}
+    notes: "Seagull steel-string, WAV. GPL+exception covers compositions mixing the sounds; do not redistribute isolated renders as a sample pack."
+
+  # ------------------------------------------------------------------ bass
+  - id: freepats_yr_fingerbass
+    name: FreePats Finger Bass YR (Yamaha RBX)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_yr_fingerbass/FingerBassYR SFZ+FLAC-20190930/FingerBassYR 20190930.sfz"
+    leaves: [bass.electric.fingered]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricGuitar/clean-electric-bass.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/electric-bass-YR/releases/download/2019-09-30/FingerBassYR-SFZ+FLAC-20190930.7z", sha256: 36f87ec9eb086ef25050312522aacf71213c582f46989e0c5a12681304596587, bytes: 3252347}
+    notes: "Yamaha RBX, finger variation (publisher-labelled). Small set; same instrument as freepats_yr_pickedbass."
+
+  - id: freepats_yr_pickedbass
+    name: FreePats Picked Bass YR (Yamaha RBX)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_yr_pickedbass/PickedBassYR SFZ+FLAC-20190930/PickedBassYR 20190930.sfz"
+    leaves: [bass.electric.picked]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricGuitar/clean-electric-bass.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/electric-bass-YR/releases/download/2019-09-30/PickedBassYR-SFZ+FLAC-20190930.7z", sha256: aa7650fc206a7ed83ecafa36a24572e1f4ea041938182b981bf111b99e1b8e85, bytes: 2819607}
+    notes: "Yamaha RBX, pick variation (publisher-labelled). Only picked-bass source downloaded so far (Karoryfer Black&Blue 'blue' picked bass deferred, 1 GB); diversity must come from FX/amp randomization."
+
+  - id: vsco2_contrabass_pizz
+    name: VSCO-2 CE Solo Contrabass (pizzicato)
+    kind: sfz
+    engine: sfizz
+    path: vsco2_ce/ContrabassPizz.sfz
+    leaves: [bass.upright]
+    license: CC0-1.0
+    license_url: https://versilian-studios.com/vsco-community/
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sgossner/VSCO-2-CE.git", ref: SFZ, commit: 6dd651d55dde97fd4028699be9d4481f26917891, sparse: ["/ContrabassPizz.sfz", "/LICENSE", "/Strings/Solo Contrabass/Pizz/"], sha256: null, bytes: null}
+    notes: "Orchestral solo double bass, pizzicato. sfz uses backslash default_path (Strings\\Solo Contrabass\\Pizz\\); sfizz normalizes it. Classical-style pizz, not jazz/rockabilly slap."
+
+  # ------------------------------------------------------------------ electric guitar
+  - id: freepats_fsbs_clean
+    name: FreePats Electric Guitar FSBS (clean)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_fsbs_clean/EGuitarFSBS-clean SFZ+FLAC-20260807/EGuitarFSBS-clean bridge 20260807.sfz"
+    leaves: [guitar.electric.clean]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricGuitar/clean-electric-guitar.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/electric-guitar-FSBS-clean/releases/download/2026-08-07/EGuitarFSBS-clean-SFZ+FLAC-20260807.7z", sha256: a929a3cbfc8289e325be56dab49f5fd560bbc3995c40b69f8f05caee380e8be3, bytes: 123736791}
+    notes: "Fender (basic) DI through amp/effects rack, clean; bridge pickup mapping. SAME guitar + performances as freepats_fsbs_dist2 (only processing differs)."
+
+  - id: freepats_fsbs_dist2
+    name: FreePats Electric Guitar FSBS (dist2)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_fsbs_dist2/EGuitarFSBS-dist2 SFZ+FLAC-20220911/EGuitarFSBS-dist2 bridge 20220911.sfz"
+    leaves: [guitar.electric.distorted]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricGuitar/distorted-electric-guitar.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/electric-guitar-FSBS-dist2/releases/download/2022-09-11/EGuitarFSBS-dist2-SFZ+FLAC-20220911.7z", sha256: fee513712e10b31c78e45c7263c2860882c8e462d1733a7876a0d97d14303f4c, bytes: 135646700}
+    notes: "Same Fender as fsbs_clean, processed through amp/effects to distorted/overdriven. Renderer should also distort CLEAN sources via pedalboard for more distorted-leaf diversity."
+
+  # ------------------------------------------------------------------ keys
+  - id: freepats_upright_kw
+    name: FreePats Upright Piano KW (Kawai upright)
+    kind: sfz
+    engine: sfizz
+    path: freepats_upright_kw/UprightPianoKW-SFZ+FLAC-20220221/UprightPianoKW-20220221.sfz
+    leaves: [keys.piano]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://freepats.zenvoid.org/Piano/UprightPianoKW/UprightPianoKW-SFZ+FLAC-20220221.7z", sha256: 3a66da3b25a2fd9499d90bcf09f1aee4431825796e249361b48af59b1201e703, bytes: 33294287}
+    notes: "Kawai upright in a living room, Zoom H1 at player position (roomy). Salamander Grand (CC-BY-3.0, 742 MB) deferred for bandwidth."
+
+  - id: freepats_fm_piano1
+    name: FreePats FM Synthesized Piano 1 (DX7 E.Piano 1)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_fm_piano1/FM-Piano1 SFZ+FLAC-20190916/FM-Piano1 20190916.sfz"
+    leaves: [keys.electric_piano.fm]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricPiano/synthesized-piano.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/fm-piano1/releases/download/2019-09-16/FM-Piano1-SFZ+FLAC-20190916.7z", sha256: fa308cead617211b29f500db2f962f34e18c9cd55a94ae9176e1d63babeab083, bytes: 24932509}
+    notes: "Hexter (DX7 emulator) rendering of the classic DX7 'E. Piano 1' patch."
+
+  - id: freepats_fm_piano2
+    name: FreePats FM Synthesized Piano 2 (bright DX EP)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_fm_piano2/FM-Piano2 SFZ+FLAC-20161112/FM-Piano2 20161112.sfz"
+    leaves: [keys.electric_piano.fm]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricPiano/synthesized-piano.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/fm-piano2/releases/download/2016-11-12/FM-Piano2-SFZ+FLAC-20161112.7z", sha256: 4e11a442fa9b6b5322e5dfa4eb24abdfc8713bb9a7ec33c99baab1f92967aaaa, bytes: 9080973}
+    notes: "Hexter, bright DX7-style EP variation; single velocity (v80)."
+
+  - id: freepats_drawbar_organ
+    name: FreePats Drawbar Organ Emulation
+    kind: sfz
+    engine: sfizz
+    path: freepats_drawbar_organ/DrawbarOrganEmulation-SFZ-20190712/DrawbarOrganEmulation-20190712.sfz
+    leaves: [keys.organ.drawbar]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Organ/electric-organ.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://freepats.zenvoid.org/Organ/DrawbarOrganEmulation/DrawbarOrganEmulation-SFZ-20190712.tar.xz", sha256: e2da18b0a4d13be7020037e18e4a719387433357e7603d0773990e794dcf5d0f, bytes: 6042972}
+    notes: "setBfree (Hammond emulator) renders, GM #17 drawbar voicing; consider rotary/chorus FX in renderer for realism."
+
+  - id: freepats_percussive_organ
+    name: FreePats Percussive Organ Emulation
+    kind: sfz
+    engine: sfizz
+    path: freepats_percussive_organ/PercussiveOrganEmulation-SFZ-20190715/PercussiveOrganEmulation-20190715.sfz
+    leaves: [keys.organ.drawbar]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Organ/electric-organ.html
+    commercial_clean: true
+    attribution: "Strix SoundFont Team (CC0; credit optional)"
+    download: {url: "https://freepats.zenvoid.org/Organ/PercussiveOrganEmulation/PercussiveOrganEmulation-SFZ-20190715.tar.xz", sha256: c4841f2e7f352692cf14a85a96bd1f40a9ea7a9e2a9ce3512606885d000978c8, bytes: 12423412}
+    notes: "setBfree Hammond with percussion (GM #18-style); still a tonewheel organ, so drawbar leaf."
+
+  # ------------------------------------------------------------------ brass
+  - id: vsco2_trumpet_sus
+    name: VSCO-2 CE Trumpet (sustain, non-vibrato)
+    kind: sfz
+    engine: sfizz
+    path: vsco2_ce/TrumpetSus.sfz
+    leaves: [brass.trumpet]
+    license: CC0-1.0
+    license_url: https://versilian-studios.com/vsco-community/
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sgossner/VSCO-2-CE.git", ref: SFZ, commit: 6dd651d55dde97fd4028699be9d4481f26917891, sparse: ["/TrumpetSus.sfz", "/TrumpetSusVib.sfz", "/TrumpetStac.sfz", "/LICENSE", "/Brass/Trumpet/"], sha256: null, bytes: null}
+    notes: "Classical solo trumpet; sibling sfz files TrumpetSusVib.sfz / TrumpetStac.sfz (same samples dir) for articulation randomization."
+
+  - id: vsco2_trumpet_susvib
+    name: VSCO-2 CE Trumpet (sustain, vibrato)
+    kind: sfz
+    engine: sfizz
+    path: vsco2_ce/TrumpetSusVib.sfz
+    leaves: [brass.trumpet]
+    license: CC0-1.0
+    license_url: https://versilian-studios.com/vsco-community/
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sgossner/VSCO-2-CE.git", ref: SFZ, commit: 6dd651d55dde97fd4028699be9d4481f26917891, sparse: ["/TrumpetSus.sfz", "/TrumpetSusVib.sfz", "/TrumpetStac.sfz", "/LICENSE", "/Brass/Trumpet/"], sha256: null, bytes: null}
+    notes: "Same player/instrument as vsco2_trumpet_sus (articulation variant, not a new timbre)."
+
+  - id: vsco2_trumpet_stac
+    name: VSCO-2 CE Trumpet (staccato)
+    kind: sfz
+    engine: sfizz
+    path: vsco2_ce/TrumpetStac.sfz
+    leaves: [brass.trumpet]
+    license: CC0-1.0
+    license_url: https://versilian-studios.com/vsco-community/
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sgossner/VSCO-2-CE.git", ref: SFZ, commit: 6dd651d55dde97fd4028699be9d4481f26917891, sparse: ["/TrumpetSus.sfz", "/TrumpetSusVib.sfz", "/TrumpetStac.sfz", "/LICENSE", "/Brass/Trumpet/"], sha256: null, bytes: null}
+    notes: "Same player/instrument as vsco2_trumpet_sus (articulation variant)."
+
+  - id: freepats_rock_organ
+    name: FreePats Rock Organ Emulation
+    kind: sfz
+    engine: sfizz
+    path: freepats_rock_organ/RockOrganEmulation-SFZ-20190715/RockOrganEmulation-20190715.sfz
+    leaves: [keys.organ.drawbar]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Organ/electric-organ.html
+    commercial_clean: true
+    attribution: "Strix SoundFont Team (CC0; credit optional)"
+    download: {url: "https://freepats.zenvoid.org/Organ/RockOrganEmulation/RockOrganEmulation-SFZ-20190715.tar.xz", sha256: 07321d9498dc31982c44ea9483919df3f426e3d392a15bb2947b0e3fe247f718, bytes: 12576272}
+    notes: "setBfree Hammond, classic-rock registration. All three FreePats organs are setBfree renders (one engine, three voicings)."
+
+  - id: jrhodes3d_mono
+    name: jRhodes3d (1977 Rhodes Mark I Stage 73), mono
+    kind: sfz
+    engine: sfizz
+    path: jrhodes3d/jRhodes3d-mono.sfz
+    leaves: [keys.electric_piano.rhodes]
+    license: CC-BY-NC-4.0
+    license_url: https://github.com/sfzinstruments/jlearman.jRhodes3d/blob/master/LICENSE
+    commercial_clean: false
+    attribution: "jRhodes3d samples by Jeff Learman (jjlearman@gmail.com), CC BY-NC 4.0"
+    download: {url: "https://github.com/sfzinstruments/jlearman.jRhodes3d.git", ref: master, commit: aea5b8d3e11e2f7102593789a4e0a0e41b30271a, sparse: ["/LICENSE", "/README.md", "/jRhodes3d-mono.sfz", "/jRhodes3d-mono-no-xfade.sfz", "/jRhodes3d-mono/"], sha256: null, bytes: null}
+    notes: "TIER 2 / research-only. Real Rhodes, 5 velocity layers, DI from harp, EQ'd (treble boost, mid scoop). LICENSE: samples CC BY-NC 4.0 for distribution, CC0 'for musicians making music'; sfz header says CC-BY-SA - we take the strictest (NC). Author offers commercial licences on request. Stereo/vibrato variants not downloaded."
+
+  # ------------------------------------------------------------------ synths (sampled, CC0)
+  - id: freepats_synth_bass1
+    name: FreePats Synth Bass 1 (ZynAddSubFX)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_synth_bass1/SynthBass1 SFZ+FLAC-20190723/SynthBass1 20190723.sfz"
+    leaves: [bass.synth.analog]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Synthesizer/synth-bass.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/synth-bass-1/releases/download/2019-07-23/SynthBass1-SFZ+FLAC-20190723.7z", sha256: b3988a78286292200d7fa8d2bbe708a80bb02b28d519f8a7d0c66df7e894f07b, bytes: 748547}
+    notes: "GM #39 Synth Bass 1 from ZynAddSubFX subtractive; analog-style by construction (listening audit). Tiny set; Surge XT is the main source."
+
+  - id: freepats_synth_square_lead
+    name: FreePats Synth Lead Square (ZynAddSubFX)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_synth_square_lead/SynthSquare SFZ+FLAC-20200512/SynthSquare 20200512.sfz"
+    leaves: [keys.synth.lead]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Synthesizer/synth-lead.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/synth-square/releases/download/2020-05-12/SynthSquare-SFZ+FLAC-20200512.7z", sha256: 0d9fba485b3f542d3730a242f213174febc791598fd62ddad144c05d5bb8aa4c, bytes: 7276902}
+    notes: "GM #81 square lead; a non-Surge engine for synth-lead diversity."
+
+  - id: freepats_new_age_pad
+    name: FreePats Synth Pad New Age (ZynAddSubFX)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_new_age_pad/NewAge SFZ+FLAC-20190730/NewAge 20190730.sfz"
+    leaves: [keys.synth.pad]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Synthesizer/synth-pad.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/new-age/releases/download/2019-07-30/NewAge-SFZ+FLAC-20190730.7z", sha256: 355c686eecaac4d9857a8aecf9962eee7bb6d69bd48c55608f47185da63f5d9e, bytes: 4480005}
+    notes: "GM #89 'new age' pad (has a bell-like attack component)."
+
+  - id: freepats_sweep_pad
+    name: FreePats Synth Pad Sweep (ZynAddSubFX)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_sweep_pad/SweepPad SFZ+FLAC-20190813/SweepPad 20190813.sfz"
+    leaves: [keys.synth.pad]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Synthesizer/synth-pad.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/sweep-pad/releases/download/2019-08-13/SweepPad-SFZ+FLAC-20190813.7z", sha256: b0b3f334dd89d90507142da76f129a6e43369dda92c1a02f4fcdf7af13b05d49, bytes: 2990559}
+    notes: "GM #96 sweep pad (filter sweep)."
+
+  # ------------------------------------------------------------------ drums
+  - id: freepats_muldjord_kit
+    name: MuldjordKit (FreePats stereo SFZ edit)
+    kind: sfz
+    engine: sfizz
+    # The kit does not use the GM drum map (kick=48, snare=50, ...). GM note -> kit key:
+    note_map: {35: 48, 36: 48, 37: 65, 38: 50, 40: 51, 41: 64, 43: 63, 45: 62, 47: 62,
+               48: 61, 50: 61, 42: 52, 44: 52, 46: 53, 51: 54, 53: 55, 59: 56, 49: 58,
+               57: 59, 55: 58, 52: 60}
+    path: "freepats_muldjord_kit/MuldjordKit SFZ+FLAC-20201018/MuldjordKit 20201018.sfz"
+    leaves: [drums.acoustic_kit]
+    license: CC-BY-4.0
+    license_url: https://freepats.zenvoid.org/Percussion/acoustic-drum-kit.html
+    commercial_clean: true
+    attribution: "MuldjordKit by Lars Muldjord (DrumGizmo), CC BY 4.0; stereo SFZ edition by FreePats (roberto@zenvoid.org)"
+    download: {url: "https://github.com/freepats/muldjordkit/releases/download/2020-10-18/MuldjordKit-SFZ+FLAC-20201018.7z", sha256: 89261006296a9a4d93dfda2c1c5a3925215e24329f408c2c8bc1bcf6ea123c8f, bytes: 165026479}
+    notes: "GM drum map, velocity layers + randomized round robins; stereo mixdown of the 16-mic original. Includes cymbals (labels: drums.acoustic_kit only, cymbals are not a separate v1 leaf). Only acoustic kit downloaded (Big Rusty / SM Drums deferred)."
+
+  # ------------------------------------------------------------------ woodwinds
+  - id: freepats_tenor_sax
+    name: FreePats Tenor Saxophone (VCSL samples)
+    kind: sfz
+    engine: sfizz
+    path: freepats_tenor_sax/TenorSaxophone-SFZ+FLAC-20200717/TenorSaxophone-20200717.sfz
+    leaves: [woodwinds.saxophone.tenor]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/Reed/saxophone.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://freepats.zenvoid.org/Reed/TenorSaxophone/TenorSaxophone-SFZ+FLAC-20200717.tar.gz", sha256: ce3bac2d54ac964fc4b4d54cd20cc62135c9ccbedcf5954cd7e1046ad2a31066, bytes: 32204648}
+    notes: "Built from VCSL tenor sax recordings (Versilian, CC0), edited: faster attack, infinite sustain loops. Same recordings as VCSL tenor (not downloaded separately)."
+
+  - id: mtg_tenor_sax
+    name: MTG Solo Saxophones - Tenor
+    kind: sfz
+    engine: sfizz
+    path: "mtg_solosax/MTG Solo Saxophones/MTG Tenor Sax.sfz"
+    leaves: [woodwinds.saxophone.tenor]
+    license: CC-BY-4.0
+    license_url: https://github.com/sfzinstruments/MTG.SoloSax/blob/master/LICENSE
+    commercial_clean: true
+    attribution: "MTG Solo Saxophones: samples by MTG (Music Technology Group, UPF) via freesound.org, SFZ programming by kinwie; CC BY 4.0"
+    download: {url: "https://github.com/sfzinstruments/MTG.SoloSax.git", ref: master, commit: b494d256549b3d088fdec176ce82867f8a1f58b2, sparse: ["/LICENSE", "/README.md", "/MTG Solo Saxophones/MTG Tenor Sax.sfz", "/MTG Solo Saxophones/MTG Tenor Sax (NL).sfz", "/MTG Solo Saxophones/Data/", "/MTG Solo Saxophones/Samples/ten_*"], sha256: null, bytes: null}
+    notes: "Different player/instrument from VCSL tenor; 2 velocity layers, 3 RR via neighbour keys, looped (the '(NL)' sfz = non-looped variant). ARIA-extension opcodes (CC labels) - sfizz should ignore the unsupported ones; check render."
+
+  # ------------------------------------------------------------------ tier-2 diversity
+  - id: karoryfer_emilyguitar
+    name: Karoryfer Emilyguitar (Epiphone, DI)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_emilyguitar/Emilyguitar/emily_basic.sfz
+    leaves: [guitar.electric.clean]
+    license: CC0-1.0
+    license_url: https://shop.karoryfer.com/pages/free-samples
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.emilyguitar/releases/download/v1.001/Karoryfer.Emilyguitar.v1.001.zip", sha256: ffef3b28972763820bee73660a25cf47ea6e13b184342fd5d325a5631598cacb, bytes: 103484350}
+    notes: "Epiphone 'Emily the Strange', flatwounds, recorded DIRECT (both pickups, knobs on 10): renderer must add a clean amp/cab sim. 4 vel x 3 RR + release/noise samples. Siblings: emily_clean.sfz (no release samples), emily_chords*.sfz (keyswitched barre chords). Can also feed guitar.electric.distorted via pedalboard distortion."
+
+  # ------------------------------------------------------------------ GM fallback (secondary)
+  - id: fluidr3_gm
+    name: FluidR3 GM2-2 SoundFont (MuseScore mirror)
+    kind: sf2
+    engine: fluidsynth
+    path: "fluidr3_gm/FluidR3 GM2-2.SF2"
+    weight: 0.15            # GM fallback: one bank covering 17 leaves must not dominate
+    # bank 0 = melodic programs (0-based GM numbers); drums.* entries are bank 128 kits.
+    leaves: [keys.piano, keys.electric_piano.rhodes, keys.organ.drawbar, guitar.acoustic.nylon,
+             guitar.acoustic.steel, guitar.electric.clean, guitar.electric.distorted,
+             bass.upright, bass.electric.fingered, bass.electric.picked, bass.synth.analog,
+             keys.synth.lead, keys.synth.pad, brass.trumpet, woodwinds.saxophone.tenor,
+             drums.acoustic_kit, drums.electronic.tr808]
+    programs:
+      keys.piano: [0, 1]                       # Yamaha Grand Piano, Bright Yamaha Grand
+      keys.electric_piano.rhodes: [4]          # "Rhodes EP" (5 "Legend EP 2" left out: FM-vs-tine unclear)
+      keys.organ.drawbar: [16, 17, 18]         # DrawbarOrgan, Percussive Organ, Rock Organ
+      guitar.acoustic.nylon: [24]
+      guitar.acoustic.steel: [25]
+      guitar.electric.clean: [26, 27]          # Jazz Guitar, Clean Guitar (28 palm-muted excluded)
+      guitar.electric.distorted: [29, 30]      # Overdrive, Distortion
+      bass.upright: [32]                       # Acoustic Bass
+      bass.electric.fingered: [33]
+      bass.electric.picked: [34]
+      bass.synth.analog: [38]                  # Synth Bass 1
+      keys.synth.lead: [80, 81]                # Square Lead, Saw Wave
+      keys.synth.pad: [89]                     # Warm Pad
+      brass.trumpet: [56]
+      woodwinds.saxophone.tenor: [66]
+      drums.acoustic_kit: [0, 8, 16, 32, 40]   # bank 128: Standard, Room, Power, Jazz, Brush
+      drums.electronic.tr808: [25]             # bank 128: TR-808
+    license: MIT
+    license_url: https://ftp.osuosl.org/pub/musescore/soundfont/MuseScore_General/MuseScore_General_License.md
+    commercial_clean: true
+    attribution: "Fluid (R3) SoundFont, Copyright (c) 2000-2002, 2008 Frank Wen; MIT licence (GM2 2.2 edit by 'Church Organist' for MuseScore)"
+    download: {url: "https://ftp.osuosl.org/pub/musescore/soundfont/fluid-soundfont.tar.gz", sha256: c815769e44d86f1507b946a6c48c997c7f650699aea1ec4b11ba66e3415c26b9, bytes: 130294103}
+    notes: "GM fallback / secondary only (non-target accompaniment, or low-weight extra timbre). Bundled readme says 'Released to Public Domain 12/25/01'; Frank Wen re-released under MIT in 2008. Some samples have unknown upstream origin (M2_PLAN §6 licence-debt risk)."

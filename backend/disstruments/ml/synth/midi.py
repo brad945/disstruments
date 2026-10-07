@@ -59,6 +59,15 @@ PROGRAM_HINTS: dict[int, tuple[str, ...]] = {
 }
 
 
+# GM drum notes that belong to a drum *kit*. Other GM percussion (tambourine 54, cowbell 56,
+# hand clap 39, bongos/congas 60-68, shakers 69/70/82, ...) are separate taxonomy leaves
+# (percussion.*), so they are dropped from kit parts instead of being rendered unlabelled.
+KIT_NOTES = frozenset({35, 36, 37, 38, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+                       53, 55, 57, 59})
+# Hi-hats and cymbals: rendering any of these makes the level-1 `cymbals` leaf audible.
+CYMBAL_NOTES = frozenset({42, 44, 46, 49, 51, 52, 53, 55, 57, 59})
+
+
 def role_of(program: int, is_drum: bool) -> str | None:
     if is_drum:
         return "drums"
@@ -156,7 +165,8 @@ def load_windows(path: Path, root: Path, *, window_s: float = 10.0, hop_s: float
                 continue
             notes = [Note(n.pitch, max(0.0, n.start - t), min(window_s, n.end - t), n.velocity)
                      for n in inst.notes if n.end > t and n.start < t + window_s]
-            notes = [n for n in notes if n.end - n.start > 0.01]
+            notes = [n for n in notes if n.end - n.start > 0.01
+                     and (not inst.is_drum or n.pitch in KIT_NOTES)]
             if len(notes) >= min_notes_per_part:
                 parts.append(Part(k, inst.program, inst.is_drum, role, notes,
                                   gm_name=pretty_midi.program_to_instrument_name(inst.program)

@@ -75,6 +75,38 @@ class FakeEngine:
         return out, {"engine": "fake", "timbre_k": k}
 
 
+_KEYRANGE: dict[str, tuple[int, int]] = {}
+
+
+def sfz_key_range(path: Path) -> tuple[int, int] | None:
+    """Min/max MIDI key any region of an SFZ responds to (lokey/hikey/key, incl. #include)."""
+    import re
+    k = str(path)
+    if k not in _KEYRANGE:
+        keys: list[int] = []
+        seen: set[Path] = set()
+
+        def scan(p: Path) -> None:
+            if p in seen or not p.exists():
+                return
+            seen.add(p)
+            txt = p.read_text(errors="ignore")
+            for m in re.finditer(r"\b(?:lokey|hikey|key)=(\d+)", txt):
+                keys.append(int(m.group(1)))
+            for m in re.finditer(r'#include\s+"([^"]+)"', txt):
+                scan(p.parent / m.group(1))
+        scan(Path(path))
+        _KEYRANGE[k] = (min(keys), max(keys)) if keys else (0, 127)
+    lo, hi = _KEYRANGE[k]
+    return None if (lo, hi) == (0, 127) else (lo, hi)
+
+
+def fit_octaves(pitches: list[int], lo: int, hi: int) -> int:
+    """Octave shift that puts the most notes inside [lo, hi] (ties: smallest |shift|)."""
+    best = max(range(-4, 5), key=lambda o: (sum(lo <= p + 12 * o <= hi for p in pitches), -abs(o)))
+    return 12 * best
+
+
 class SfizzEngine:
     name = "sfizz"
 
@@ -83,16 +115,29 @@ class SfizzEngine:
             or str(Path.home() / "datasets/disstruments-synth/tools/sfizz/build/library/bin/sfizz_render")
 
     def render(self, part, source, root, sr, duration, rng):
+        from dataclasses import replace
         part = _jitter_velocity(part, rng)
+        shift, dropped = 0, 0
+        if part.is_drum and source.note_map:          # kit with its own key layout
+            notes = [replace(n, pitch=source.note_map[n.pitch]) for n in part.notes
+                     if n.pitch in source.note_map]
+            dropped = len(part.notes) - len(notes)
+            part = replace(part, notes=notes, is_drum=False)   # keys are now literal
+        elif not part.is_drum:
+            rng_keys = sfz_key_range(source.file(root))
+            if rng_keys:
+                shift = fit_octaves([n.pitch for n in part.notes], *rng_keys)
         with tempfile.TemporaryDirectory() as td:
-            mid = notes_to_midi(part.notes, part.program, part.is_drum, Path(td) / "p.mid")
+            mid = notes_to_midi(part.notes, part.program, part.is_drum, Path(td) / "p.mid",
+                                pitch_shift=shift)
             wav = Path(td) / "out.wav"
             subprocess.run([self.binary, "--sfz", str(source.file(root)), "--midi", str(mid),
                             "--wav", str(wav), "-s", str(sr)],
                            check=True, capture_output=True, timeout=120)
             audio = _read_mono(wav, sr)
         return _fit(audio, int(sr * duration)), {"engine": "sfizz", "sfz": source.path,
-                                                 "velocity_jitter": 12}
+                                                 "velocity_jitter": 12, "octave_shift": shift // 12,
+                                                 "dropped_unmapped_notes": dropped}
 
 
 class FluidSynthEngine:
