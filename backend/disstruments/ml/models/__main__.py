@@ -62,12 +62,19 @@ def cmd_probe(a) -> int:
     tax = Taxonomy.load()
     nodes = list(tax.nodes)
     train_idx = load_dataset("synthetic", a.train_root, commercial_only=a.commercial_only)
-    cids, emb, cmeta = load_cache(cache_path(a.cache, a.backbone, "synthetic", a.unit))
+    units = [u.strip() for u in a.train_units.split(",") if u.strip()]
+    caches = {u: load_cache(cache_path(a.cache, a.backbone, "synthetic", u)) for u in units}
+    cmeta = caches[units[0]][2]
 
     def xy(records):
-        items = label_items(records, a.unit)
-        ids, y, m = label_matrices(items, tax)
-        return ids, _matrix(ids, cids, emb), y, m
+        """Training rows from every requested unit (D6: mixes and isolated stems)."""
+        parts = []
+        for u in units:
+            cids, emb, _ = caches[u]
+            ids, y, m = label_matrices(label_items(records, u), tax)
+            parts.append((_matrix(ids, cids, emb), y, m))
+        return (None, np.concatenate([p[0] for p in parts]), np.concatenate([p[1] for p in parts]),
+                np.concatenate([p[2] for p in parts]))
 
     _, X, Y, Mk = xy(train_idx.split("train"))
     _, Xv, Yv, Mv = xy(train_idx.split("val"))
@@ -75,7 +82,9 @@ def cmd_probe(a) -> int:
     probe = LinearProbe(X.shape[1], X.shape[2], len(nodes), cfg).fit(X, Y, Mk, Xv, Yv, Mv)
     train_hash = hashlib.sha256("\n".join(sorted(r.item_id for r in train_idx.split("train")))
                                 .encode()).hexdigest()[:16]
+    tag = "" if units == ["mix"] else "_" + "+".join(units)
     meta = {"model": f"{a.backbone}+linear_probe", "backbone": cmeta["hf_id"],
+            "train_units": units,
             "backbone_license": cmeta["license"],
             "commercial_clean": bool(cmeta["commercial_clean"] and a.commercial_only),
             "train": {"dataset": "synthetic", "root_name": Path(a.train_root).name,
@@ -84,7 +93,7 @@ def cmd_probe(a) -> int:
             "probe": {"layer_weights": probe.layer_weights(), "epochs_run": len(probe.history),
                       "best_val_map": max(h["val_map"] for h in probe.history)}}
     a.out.mkdir(parents=True, exist_ok=True)
-    probe.save(a.out / f"{a.backbone}_probe.pt", extra=meta)
+    probe.save(a.out / f"{a.backbone}{tag}_probe.pt", extra=meta)
     for spec in a.eval:
         ds, split = spec.split(":")
         root = a.train_root if ds == "synthetic" else getattr(a, f"{ds}_root")
@@ -99,7 +108,7 @@ def cmd_probe(a) -> int:
         have = set(eids)
         ids = [i for i in ids if i in have]
         scores = probe.predict(_matrix(ids, eids, eemb))
-        p = save_predictions(a.out / f"{a.backbone}_{ds}_{split}.npz", ids, nodes, scores,
+        p = save_predictions(a.out / f"{a.backbone}{tag}_{ds}_{split}_{a.unit}.npz", ids, nodes, scores,
                              tax.version, dataset=ds, meta=meta)
         print(f"wrote {p} ({len(ids)} items; best synthetic val mAP {meta['probe']['best_val_map']:.3f})")
     return 0
@@ -121,7 +130,8 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
     q.add_argument("--train-root", required=True, type=Path)
     q.add_argument("--cache", required=True, type=Path)
-    q.add_argument("--unit", default="mix", choices=("mix", "stem"))
+    q.add_argument("--unit", default="mix", choices=("mix", "stem"), help="evaluation unit")
+    q.add_argument("--train-units", default="mix", help="comma list: mix,stem (D6)")
     q.add_argument("--eval", nargs="*", default=["synthetic:test"],
                    help="dataset:split pairs, e.g. synthetic:test openmic:test medleydb:test")
     q.add_argument("--openmic-root", type=Path)
