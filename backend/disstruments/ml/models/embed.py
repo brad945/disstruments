@@ -42,32 +42,54 @@ def _device() -> str:
 
 
 def load_backbone(name: str, device: str | None = None) -> Backbone:
+    """Loads from the local HF cache when the weights are there (`local_files_only`):
+    transformers otherwise tries to fetch alternative weight files (e.g. a safetensors
+    conversion) before loading, which stalls on a slow link."""
+    from pathlib import Path as _P
+
     import torch
+
+    hf_ids = {"mert95m": "m-a-p/MERT-v1-95M", "clap": "laion/larger_clap_music"}
+    cached = name in hf_ids and any(
+        (_P.home() / ".cache/huggingface/hub" / ("models--" + hf_ids[name].replace("/", "--"))
+         / "snapshots").glob("*/config.json"))
+    lfo = {"local_files_only": True} if cached else {}
 
     dev = device or _device()
     if name == "mert95m":
         from transformers import AutoModel, Wav2Vec2FeatureExtractor
         hf = "m-a-p/MERT-v1-95M"
-        model = AutoModel.from_pretrained(hf, trust_remote_code=True).to(dev).eval()
-        fe = Wav2Vec2FeatureExtractor.from_pretrained(hf, trust_remote_code=True)
+        model = AutoModel.from_pretrained(hf, trust_remote_code=True, **lfo).to(dev).eval()
+        fe = Wav2Vec2FeatureExtractor.from_pretrained(hf, trust_remote_code=True, **lfo)
+
+        # Recent transformers no longer return hidden_states for MERT's remote code, so
+        # capture them with hooks: encoder input (after pos-conv + layernorm, as HuBERT's
+        # hidden_states[0]) plus each of the 12 transformer layers -> 13 x 768.
+        captured: list = []
+        enc = model.encoder
+        enc.layers[0].register_forward_pre_hook(lambda mod, args: captured.append(args[0]))
+        for layer in enc.layers:
+            layer.register_forward_hook(lambda mod, args, out: captured.append(
+                out[0] if isinstance(out, tuple) else out))
 
         @torch.no_grad()
         def embed(batch):
+            captured.clear()
             x = fe([b for b in batch], sampling_rate=24000, return_tensors="pt", padding=True)
-            out = model(**{k: v.to(dev) for k, v in x.items()}, output_hidden_states=True)
-            hs = torch.stack(out.hidden_states, dim=1)          # (B, L, T, D)
+            model(**{k: v.to(dev) for k, v in x.items()})
+            hs = torch.stack(captured, dim=1)                   # (B, 13, T, D)
             return hs.mean(dim=2).float().cpu().numpy()
 
         return Backbone("mert95m", hf, 24000, "CC-BY-NC-4.0", False, embed)
     if name == "clap":
         from transformers import ClapModel, ClapProcessor
         hf = "laion/larger_clap_music"
-        model = ClapModel.from_pretrained(hf).to(dev).eval()
-        proc = ClapProcessor.from_pretrained(hf)
+        model = ClapModel.from_pretrained(hf, use_safetensors=False, **lfo).to(dev).eval()
+        proc = ClapProcessor.from_pretrained(hf, **lfo)
 
         @torch.no_grad()
         def embed(batch):
-            x = proc(audios=[b for b in batch], sampling_rate=48000, return_tensors="pt")
+            x = proc(audio=[b for b in batch], sampling_rate=48000, return_tensors="pt")
             x = {k: v.to(dev) for k, v in x.items()}
             a = model.audio_model(**x, output_hidden_states=True)
             layers = [h.flatten(2).mean(dim=-1) if h.dim() == 4 else h.mean(dim=1)
