@@ -28,7 +28,15 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--commercial-only", action="store_true")
     b.add_argument("--fake", action="store_true", help="fake engine for every source (dry run)")
     b.add_argument("--limit-files", type=int)
+    au = sub.add_parser("audition", help="dry examples per source -> local HTML listening page")
+    au.add_argument("--midi-root", required=True, type=Path)
+    au.add_argument("--out", required=True, type=Path)
+    au.add_argument("--n", type=int, default=3)
     a = p.parse_args(argv)
+    if a.cmd == "audition":
+        from .audition import build_audition
+        print(build_audition(a.midi_root, a.out, n=a.n))
+        return 0
     if a.cmd == "sources":
         reg = load_registry(a.registry, root=a.sources_root)
         missing = [x.id for x in reg.sources if x.path and not x.file(reg.root).exists()]
