@@ -185,3 +185,37 @@ def test_distortion_never_on_clean_guitar():
         assert all(c["plugin"] != "Distortion"
                    for c in stem_chain("guitar.electric.clean", rng))
         assert stem_chain("guitar.electric.distorted", np.random.default_rng(seed))[0]["plugin"] == "Distortion"
+
+
+# ------------------------------------------------------------------- engines without plugins
+def test_parse_display_values():
+    from disstruments.ml.synth.patches import _parse
+    assert _parse("300.6 ms") == 300.6 and _parse("1.20 s") == 1200.0
+    assert _parse("1.5 kHz") == 1500.0 and _parse("-3.00 dB") == -3.0 and _parse("Off") is None
+
+
+def test_set_nearest_snaps_to_valid_value():
+    from disstruments.ml.synth import patches
+
+    class P:
+        valid_values = ["0.0 ms", "10.0 ms", "250.0 ms", "1.01 s"]
+
+    class Plug:
+        name = "fakeplug"
+        parameters = {"atk": P()}
+
+    pl = Plug()
+    assert patches.set_nearest(pl, "atk", 900.0) == "1.01 s" and pl.atk == "1.01 s"
+    assert patches.set_nearest(pl, "atk", 200.0) == "250.0 ms"
+
+
+def test_drum808_deterministic_and_routes_gm_notes():
+    from disstruments.ml.synth.drum808 import Drum808Engine
+    notes = [M.Note(36, 0.0, 0.1, 110), M.Note(42, 0.5, 0.6, 80), M.Note(38, 1.0, 1.1, 100),
+             M.Note(99, 1.5, 1.6, 100)]
+    part = M.Part(0, 0, True, "drums", notes, leaf="drums.electronic.tr808")
+    a1, m1 = Drum808Engine().render(part, None, Path("."), 16000, 2.0, np.random.default_rng(3))
+    a2, m2 = Drum808Engine().render(part, None, Path("."), 16000, 2.0, np.random.default_rng(3))
+    assert np.array_equal(a1, a2) and m1 == m2
+    assert m1["skipped_notes"] == 1 and len(a1) == 32000 and np.abs(a1).max() > 0.05
+    assert set(m1["kit"]) >= {"kick", "snare", "hat_closed", "clap"}

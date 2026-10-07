@@ -21,6 +21,7 @@ from typing import Any, Protocol
 
 import numpy as np
 
+from .drum808 import Drum808Engine
 from .midi import Part, notes_to_midi
 from .sources import Source
 
@@ -116,25 +117,29 @@ class FluidSynthEngine:
 
 
 class VST3Engine:
-    """pedalboard-hosted synth. Patches come from `patches.make_patch(engine, leaf, rng)`;
-    the plugin's complete parameter dict after patching is recorded."""
+    """pedalboard-hosted synth with *one plugin instance per leaf*. Surge renames some
+    parameters when the oscillator type changes, so restoring an init state by name is
+    unreliable; instead each leaf's recipe always sets the same parameter keys on its own
+    instance, so patches can never leak across leaves (or across renders of one leaf).
+    Patches come from `patches.make_patch`; the plugin's complete parameter dict after
+    patching is recorded."""
 
     def __init__(self, name: str, plugin_path: str):
         self.name, self.plugin_path = name, plugin_path
-        self._plugin = None
+        self._plugins: dict[str, Any] = {}
 
-    def _load(self):
-        if self._plugin is None:
+    def _load(self, leaf: str):
+        if leaf not in self._plugins:
             import pedalboard
-            self._plugin = pedalboard.load_plugin(self.plugin_path)
-        return self._plugin
+            self._plugins[leaf] = pedalboard.load_plugin(self.plugin_path)
+        return self._plugins[leaf]
 
     def render(self, part, source, root, sr, duration, rng):
         import mido
 
         from .patches import make_patch
 
-        plugin = self._load()
+        plugin = self._load(part.leaf or "")
         plugin.reset()
         patch = make_patch(self.name, part.leaf or "", rng, plugin)
         pitch_shift = int(patch.get("_transpose", 0))
@@ -146,8 +151,7 @@ class VST3Engine:
         audio = plugin(msgs, duration=duration, sample_rate=sr, num_channels=2)
         params = {k: _param_value(v) for k, v in plugin.parameters.items()}
         return _fit(np.asarray(audio).mean(axis=0), int(sr * duration)), {
-            "engine": self.name, "patch_recipe": {k: v for k, v in patch.items()},
-            "synth_parameters": params}
+            "engine": self.name, "patch_recipe": dict(patch), "synth_parameters": params}
 
 
 def _param_value(p) -> Any:
@@ -162,4 +166,4 @@ def default_engines() -> dict[str, Engine]:
     return {"sfizz": SfizzEngine(), "fluidsynth": FluidSynthEngine(),
             "surge_xt": VST3Engine("surge_xt", os.environ.get("DISS_SURGE_VST3", str(plug / "Surge XT.vst3"))),
             "dexed": VST3Engine("dexed", os.environ.get("DISS_DEXED_VST3", str(plug / "Dexed.vst3"))),
-            "fake": FakeEngine()}
+            "drum808": Drum808Engine(), "fake": FakeEngine()}
