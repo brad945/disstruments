@@ -247,3 +247,19 @@ existing SWE/system design. Full technical plan: `ML_ENGINEERING.md`.
 - Risk #1 (taxonomy too coarse) is retired — it's now the roadmap, not a risk.
 - Open question 2 is resolved (yes, fine-grained subclasses; funded with real effort).
 - Budget accepted: ≲$1k total compute (mostly optional), per ML_ENGINEERING.md §8.
+
+## Amendment A2: Training our own models (approved by Bradley, 2026-10-07)
+
+**Decision:** the ML track goes beyond adapting pretrained backbones. This is Bradley's
+ML-heavy intro project, and the end product must be licence-clean (commercial or free
+public use).
+
+- **F29 extended:** the ablation ladder gains a **from-scratch rung**: a small task model
+  trained from random init on our renders + real data, compared against the MERT/CLAP
+  rungs. MERT stays research-only (CC-BY-NC weights); CLAP is the production candidate.
+- **F34 (S, new):** self-supervised pretraining of our own small audio encoder (M6) on
+  licence-clean audio and our renders. It's the fully owned backbone for a shippable model.
+  Compute spend is approved per run, under the ≲$1k envelope.
+- Data rule: shippable models train only on `commercial_clean` clips (CC0 / CC-BY / MIT
+  sources, procedural or licensed MIDI). NC datasets (MedleyDB, Lakh-MIDI renders,
+  jRhodes3d) are evaluation/research only. See `docs/DIRECTION_NOTES.md`.

@@ -114,6 +114,13 @@ phasiness, and spectral holes at train time. Measured as an ablation (§6).
 2. Frozen backbone + 2-layer MLP head
 3. **LoRA adapters on top transformer blocks** (expected sweet spot; trains on M5/one A10)
 4. Full fine-tune (ceiling; rented GPU, ~$100s)
+5. **From scratch** *(Amendment A2)*: a small task model (5–30M-param CNN/transformer on
+   log-mel), randomly initialized and trained on our renders + real data. It answers
+   "how much does pretraining buy for fine-grained instruments?" and is licence-clean by
+   construction.
+
+Backbones run side by side: MERT-95M (research only, CC-BY-NC weights) and CLAP
+(CC0/Apache, the production candidate); see `docs/M2_PLAN.md` D1.
 
 Each rung reported with mAP / per-leaf F1 / params trained / GPU-hours — the ablation
 table *is* the portfolio artifact.
@@ -173,6 +180,7 @@ produced it. Training runs tracked (W&B or a local MLflow) with config-hash repr
 | M3 | Full ablation ladder (LoRA), 100k clips, 60 leaves, calibration | ~$100–400 GPU rent |
 | M4 | Domain-adaptation study + separation-artifact aug + golden-set acceptance | ~$100 |
 | M5 | ONNX serving swap in the app; draft-2 report shows leaf-level instruments | $0 |
+| M6 *(A2)* | Self-supervised pretraining of our own small audio encoder (5–50M params) on licence-clean audio + our renders; fine-tune and compare to CLAP/MERT. The shippable, fully-owned backbone. | ~$50–500 GPU rent (approve before spend) |
 
 Total: well under $1k, most of it optional. Compute is not the bottleneck; the render
 pipeline and evaluation rigor are where the engineering hours go.
