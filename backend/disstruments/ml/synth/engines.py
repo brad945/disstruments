@@ -75,30 +75,47 @@ class FakeEngine:
         return out, {"engine": "fake", "timbre_k": k}
 
 
-_KEYRANGE: dict[str, tuple[int, int]] = {}
+_KEYRANGE: dict[str, tuple[int, int] | None] = {}
 
 
-def sfz_key_range(path: Path) -> tuple[int, int] | None:
-    """Min/max MIDI key any region of an SFZ responds to (lokey/hikey/key, incl. #include)."""
-    import re
-    k = str(path)
-    if k not in _KEYRANGE:
-        keys: list[int] = []
-        seen: set[Path] = set()
+def probe_key_range(binary: str, sfz: Path, sr: int = 22050, cache: Path | None = None,
+                    thresh: float = 0.05) -> tuple[int, int] | None:
+    """Playable key range of an SFZ, *measured*: render a chromatic sweep (MIDI 21-108,
+    one 0.25 s note every 0.35 s) and keep the keys whose window peak reaches `thresh` of
+    the loudest note. SFZ files hide regions behind #include / #define / default_path in
+    many dialects, so measuring beats parsing. Cached in memory and in `cache` (json)."""
+    import json as _json
+    import soundfile as sf
 
-        def scan(p: Path) -> None:
-            if p in seen or not p.exists():
-                return
-            seen.add(p)
-            txt = p.read_text(errors="ignore")
-            for m in re.finditer(r"\b(?:lokey|hikey|key)=(\d+)", txt):
-                keys.append(int(m.group(1)))
-            for m in re.finditer(r'#include\s+"([^"]+)"', txt):
-                scan(p.parent / m.group(1))
-        scan(Path(path))
-        _KEYRANGE[k] = (min(keys), max(keys)) if keys else (0, 127)
-    lo, hi = _KEYRANGE[k]
-    return None if (lo, hi) == (0, 127) else (lo, hi)
+    from .midi import Note
+    key = str(sfz)
+    if key in _KEYRANGE:
+        return _KEYRANGE[key]
+    disk = {}
+    if cache and cache.exists():
+        disk = _json.loads(cache.read_text())
+        if key in disk:
+            _KEYRANGE[key] = tuple(disk[key]) if disk[key] else None
+            return _KEYRANGE[key]
+    pitches = list(range(21, 109))
+    step = 0.35
+    notes = [Note(p, k * step, k * step + 0.25, 110) for k, p in enumerate(pitches)]
+    with tempfile.TemporaryDirectory() as td:
+        mid = notes_to_midi(notes, 0, False, Path(td) / "sweep.mid")
+        wav = Path(td) / "sweep.wav"
+        subprocess.run([binary, "--sfz", str(sfz), "--midi", str(mid), "--wav", str(wav),
+                        "-s", str(sr)], check=True, capture_output=True, timeout=300)
+        a, _ = sf.read(str(wav), always_2d=True)
+    a = np.abs(a).max(axis=1)
+    peaks = np.array([a[int(k * step * sr): int((k * step + 0.25) * sr)].max(initial=0.0)
+                      for k in range(len(pitches))])
+    ok = [p for p, v in zip(pitches, peaks) if peaks.max() > 0 and v >= thresh * peaks.max()]
+    rng_ = (min(ok), max(ok)) if ok else None
+    _KEYRANGE[key] = rng_
+    if cache:
+        disk[key] = list(rng_) if rng_ else None
+        cache.write_text(_json.dumps(disk, indent=1))
+    return rng_
 
 
 def fit_octaves(pitches: list[int], lo: int, hi: int) -> int:
@@ -124,7 +141,8 @@ class SfizzEngine:
             dropped = len(part.notes) - len(notes)
             part = replace(part, notes=notes, is_drum=False)   # keys are now literal
         elif not part.is_drum:
-            rng_keys = sfz_key_range(source.file(root))
+            rng_keys = probe_key_range(self.binary, source.file(root),
+                                       cache=Path(root) / ".key_ranges.json")
             if rng_keys:
                 shift = fit_octaves([n.pitch for n in part.notes], *rng_keys)
         with tempfile.TemporaryDirectory() as td:

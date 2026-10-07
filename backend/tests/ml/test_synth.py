@@ -219,3 +219,10 @@ def test_drum808_deterministic_and_routes_gm_notes():
     assert np.array_equal(a1, a2) and m1 == m2
     assert m1["skipped_notes"] == 1 and len(a1) == 32000 and np.abs(a1).max() > 0.05
     assert set(m1["kit"]) >= {"kick", "snare", "hat_closed", "clap"}
+
+
+def test_fit_octaves_prefers_in_range_and_small_shift():
+    from disstruments.ml.synth.engines import fit_octaves
+    assert fit_octaves([60, 62, 64], 44, 76) == 0
+    assert fit_octaves([30, 32, 35], 44, 76) == 24
+    assert fit_octaves([90, 95], 26, 46) == -48
