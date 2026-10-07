@@ -112,7 +112,11 @@ def voice(name: str, p: dict[str, float], vel: float, sr: int, rng) -> np.ndarra
         x = x * _env(n, sr, p["decay"])
     else:
         return np.zeros(1, np.float32)
-    return (vel * np.asarray(x, np.float32))
+    x = np.asarray(x, np.float32)
+    f = min(len(x), int(sr * 0.005))                  # 5 ms fade: no click at the cut
+    if f > 1:
+        x[-f:] *= np.linspace(1.0, 0.0, f, dtype=np.float32)
+    return vel * x
 
 
 class Drum808Engine:

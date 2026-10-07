@@ -57,7 +57,7 @@ sources:
     name: Dexed DX7 emulation (own patches)
     kind: synth
     engine: dexed
-    leaves: [keys.electric_piano.fm, keys.electric_piano.rhodes]
+    leaves: []   # disabled 2026-10-07: Bradley's audit (FM recipe sounds like wind chimes)
     license: LicenseRef-engine-output
     license_url: https://github.com/asb2m10/dexed/blob/master/LICENSE
     commercial_clean: true
@@ -380,7 +380,7 @@ sources:
     kind: sfz
     engine: sfizz
     path: "mtg_solosax/MTG Solo Saxophones/MTG Tenor Sax.sfz"
-    leaves: [woodwinds.saxophone.tenor]
+    leaves: []   # disabled 2026-10-07: audit (static at start, mostly silent)
     license: CC-BY-4.0
     license_url: https://github.com/sfzinstruments/MTG.SoloSax/blob/master/LICENSE
     commercial_clean: true
@@ -413,7 +413,7 @@ sources:
     leaves: [keys.piano, keys.electric_piano.rhodes, keys.organ.drawbar, guitar.acoustic.nylon,
              guitar.acoustic.steel, guitar.electric.clean, guitar.electric.distorted,
              bass.upright, bass.electric.fingered, bass.electric.picked, bass.synth.analog,
-             keys.synth.lead, keys.synth.pad, brass.trumpet, woodwinds.saxophone.tenor,
+             keys.synth.lead, brass.trumpet, woodwinds.saxophone.tenor,
              drums.acoustic_kit, drums.electronic.tr808]
     programs:
       keys.piano: [0, 1]                       # Yamaha Grand Piano, Bright Yamaha Grand
@@ -428,7 +428,7 @@ sources:
       bass.electric.picked: [34]
       bass.synth.analog: [38]                  # Synth Bass 1
       keys.synth.lead: [80, 81]                # Square Lead, Saw Wave
-      keys.synth.pad: [89]                     # Warm Pad
+      # keys.synth.pad: [89] removed 2026-10-07: audit says it sounds like strings
       brass.trumpet: [56]
       woodwinds.saxophone.tenor: [66]
       drums.acoustic_kit: [0, 8, 16, 32, 40]   # bank 128: Standard, Room, Power, Jazz, Brush
