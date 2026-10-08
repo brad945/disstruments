@@ -50,3 +50,23 @@ def test_probe_learns_separable_labels():
     assert acc > 0.9
     w = p.layer_weights()
     assert w[2] == max(w)                         # learned the informative layer
+
+
+def test_scratch_cnn_learns_toy_task():
+    from disstruments.ml.models import scratch as S
+    rng = np.random.default_rng(0)
+    n, F, T = 160, 128, 64
+    X = rng.standard_normal((n, F, T)).astype(np.float16) * 0.1
+    Y = np.zeros((n, 2), bool)
+    Y[: n // 2, 0] = True
+    X[: n // 2, 20:30, :] += 2.0                       # class 0 = energy in a band
+    Y[:, 1] = ~Y[:, 0]
+    M = np.ones_like(Y)
+    cfg = S.ScratchConfig(epochs=6, batch_size=32, crop_frames=48, channels=(8, 16), patience=6)
+    model, hist = S.train(X[::2], Y[::2], M[::2], X[1::2], Y[1::2], M[1::2], cfg, device="cpu", log=lambda *_: None)
+    s = S.predict(model, X[1::2], "cpu")
+    # Ranking, not threshold: after a handful of steps BatchNorm running stats haven't
+    # converged, so probabilities sit near 0.5 even when the ranking is perfect.
+    yv = Y[1::2, 0]
+    assert s[yv, 0].min() > s[~yv, 0].max()
+    assert S.n_params(model) > 0 and len(hist) >= 1
