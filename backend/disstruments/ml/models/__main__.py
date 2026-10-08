@@ -187,13 +187,29 @@ def cmd_calibrate(a) -> int:
     col = {n: k for k, n in enumerate(fp.nodes)}
     order = [col[n] for n in tax.nodes]
     S = fp.scores[[pos[i] for i in ids]][:, order]
-    levels = [tax.level(n) for n in tax.nodes]
+    # Per-level temperatures do not commute with the harness's max-propagation (parent =
+    # max(children)), so they can change rankings (seen in M3: mAP dropped). A single
+    # global temperature is monotone for every node and commutes with the max.
+    levels = [0 if a.global_temperature else tax.level(n) for n in tax.nodes]
+    trained = None
+    if a.trained_only:
+        # Only nodes the model was trained on carry meaningful scores; fitting on the
+        # others drags temperatures to the bound (seen in M3: CLAP level-1 T -> 20).
+        from ..synth.sources import load_registry
+        reg = load_registry(taxonomy=tax)
+        trained = set(tax.close_upward(list(reg.v1_leaves) + ["cymbals"]))
+        m = m & np.array([n in trained for n in tax.nodes])[None, :]
     temps = fit_temperatures(S, y, m, levels)
     ap = load_predictions(a.apply)
     acol = [{n: k for k, n in enumerate(ap.nodes)}[n] for n in tax.nodes]
     cal = apply_temperatures(ap.scores[:, acol], levels, temps)
+    if trained is not None:                       # untrained nodes keep raw scores
+        keep = np.array([n not in trained for n in tax.nodes])
+        cal[:, keep] = ap.scores[:, acol][:, keep]
     meta = dict(ap.meta)
-    meta["calibration"] = {"method": "temperature_per_level", "fit_dataset": a.fit_dataset,
+    meta["calibration"] = {"method": "temperature_global" if a.global_temperature else "temperature_per_level",
+                           "trained_only": a.trained_only,
+                           "fit_dataset": a.fit_dataset,
                            "fit_split": a.fit_split, "n_fit": len(ids),
                            "temperatures": {str(k): v for k, v in temps.items()}}
     p = save_predictions(a.out, ap.item_ids, list(tax.nodes), cal, tax.version,
@@ -312,6 +328,10 @@ def main(argv: list[str] | None = None) -> int:
     cb.add_argument("--fit-split", required=True)
     cb.add_argument("--apply", required=True, type=Path)
     cb.add_argument("--out", required=True, type=Path)
+    cb.add_argument("--global-temperature", action="store_true",
+                    help="one temperature for all levels (commutes with max-propagation)")
+    cb.add_argument("--trained-only", action="store_true",
+                    help="fit/apply only on nodes covered by the v1 training leaves")
     cb.set_defaults(fn=cmd_calibrate)
     a = p.parse_args(argv)
     return a.fn(a)

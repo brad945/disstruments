@@ -89,3 +89,17 @@ def test_temperature_scaling_fixes_overconfidence_and_keeps_ranking():
     # a level with no observed labels keeps T = 1
     t2 = fit_temperatures(s, y, np.zeros_like(m), node_levels=[1, 2])
     assert all(t["T"] == 1.0 and not t["fitted"] for t in t2.values())
+
+
+def test_global_temperature_commutes_with_max_propagation():
+    """Per-level temperatures can reorder parents vs children after max-propagation;
+    one global temperature cannot (monotone transform of every score)."""
+    from disstruments.ml.models.calibrate import apply_temperatures
+    from disstruments.ml.taxonomy import Taxonomy
+    tax = Taxonomy.load()
+    rng = np.random.default_rng(1)
+    s = rng.uniform(0.01, 0.99, size=(50, len(tax)))
+    g = {0: {"T": 2.7}}
+    a = tax.max_propagate(apply_temperatures(s, [0] * len(tax), g))
+    b = apply_temperatures(tax.max_propagate(s), [0] * len(tax), g)
+    assert np.allclose(a, b)
