@@ -27,6 +27,8 @@ class ProbeConfig:
     patience: int = 15
     max_pos_weight: float = 20.0
     seed: int = 0
+    hidden: int = 0           # 0 = linear probe (rung 1); >0 = 2-layer MLP head (rung 2)
+    dropout: float = 0.2
 
 
 def _val_map(y: np.ndarray, s: np.ndarray, m: np.ndarray) -> float:
@@ -42,7 +44,9 @@ class LinearProbe:
         torch.manual_seed(cfg.seed)
         self.cfg = cfg
         self.layer_logits = torch.zeros(n_layers, requires_grad=True)
-        self.head = torch.nn.Linear(dim, n_out)
+        self.head = (torch.nn.Linear(dim, n_out) if cfg.hidden <= 0 else torch.nn.Sequential(
+            torch.nn.Linear(dim, cfg.hidden), torch.nn.GELU(), torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.hidden, n_out)))
         self.mu = torch.zeros(n_layers, dim)
         self.sd = torch.ones(n_layers, dim)
         self.history: list[dict] = []
@@ -74,6 +78,7 @@ class LinearProbe:
         Xvt = torch.from_numpy(Xv.astype(np.float32))
         best, best_state, bad = -1.0, None, 0
         for ep in range(cfg.epochs):
+            self.head.train()
             perm = torch.randperm(len(Xt), generator=g)
             tot = 0.0
             for k in range(0, len(Xt), cfg.batch_size):
@@ -85,6 +90,7 @@ class LinearProbe:
                 l.backward()
                 opt.step()
                 tot += float(l) * len(i)
+            self.head.eval()
             with torch.no_grad():
                 sv = torch.sigmoid(self.logits(Xvt)).numpy()
             v = _val_map(Yv, sv, Mv)
@@ -105,6 +111,7 @@ class LinearProbe:
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         import torch
+        self.head.eval()
         with torch.no_grad():
             return torch.sigmoid(self.logits(torch.from_numpy(X.astype(np.float32)))).numpy()
 

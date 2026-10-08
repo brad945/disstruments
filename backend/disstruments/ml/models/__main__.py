@@ -81,12 +81,13 @@ def cmd_probe(a) -> int:
 
     _, X, Y, Mk = xy(train_idx.split("train"))
     _, Xv, Yv, Mv = xy(train_idx.split("val"))
-    cfg = ProbeConfig(seed=a.seed)
+    cfg = ProbeConfig(seed=a.seed, hidden=a.hidden, lr=a.lr if a.lr else (1e-3 if a.hidden else 1e-2))
     probe = LinearProbe(X.shape[1], X.shape[2], len(nodes), cfg).fit(X, Y, Mk, Xv, Yv, Mv)
     train_hash = hashlib.sha256("\n".join(sorted(r.item_id for r in train_idx.split("train")))
                                 .encode()).hexdigest()[:16]
-    tag = "" if units == ["mix"] else "_" + "+".join(units)
-    meta = {"model": f"{a.backbone}+linear_probe", "backbone": cmeta["hf_id"],
+    tag = ("" if units == ["mix"] else "_" + "+".join(units)) + (f"_mlp{a.hidden}" if a.hidden else "")
+    meta = {"model": f"{a.backbone}+" + (f"mlp{a.hidden}" if a.hidden else "linear_probe"),
+            "backbone": cmeta["hf_id"],
             "train_units": units,
             "backbone_license": cmeta["license"],
             "commercial_clean": bool(cmeta["commercial_clean"] and a.commercial_only),
@@ -146,6 +147,8 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--medleydb-audio-root", type=Path)
     q.add_argument("--commercial-only", action="store_true")
     q.add_argument("--seed", type=int, default=0)
+    q.add_argument("--hidden", type=int, default=0, help="MLP head width (0 = linear probe)")
+    q.add_argument("--lr", type=float, default=0.0)
     q.add_argument("--out", required=True, type=Path)
     q.set_defaults(fn=cmd_probe)
     a = p.parse_args(argv)
