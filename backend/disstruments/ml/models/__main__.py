@@ -170,6 +170,38 @@ def cmd_scratch(a) -> int:
     return 0
 
 
+def cmd_calibrate(a) -> int:
+    """C1: fit per-level temperatures on one predictions file (+ its labels), apply them
+    to another predictions file."""
+    import json as _json
+
+    from ..eval.predictions import load_predictions
+    from .calibrate import apply_temperatures, fit_temperatures
+    tax = Taxonomy.load()
+    opts = {"check_split_leakage": False} if a.fit_dataset == "openmic" else {}
+    fit_idx = load_dataset(a.fit_dataset, a.fit_root, **opts)
+    fp = load_predictions(a.fit_predictions)
+    items = [it for it in label_items(fit_idx.split(a.fit_split), "mix") if it[0] in set(fp.item_ids)]
+    ids, y, m = label_matrices(items, tax)
+    pos = {i: k for k, i in enumerate(fp.item_ids)}
+    col = {n: k for k, n in enumerate(fp.nodes)}
+    order = [col[n] for n in tax.nodes]
+    S = fp.scores[[pos[i] for i in ids]][:, order]
+    levels = [tax.level(n) for n in tax.nodes]
+    temps = fit_temperatures(S, y, m, levels)
+    ap = load_predictions(a.apply)
+    acol = [{n: k for k, n in enumerate(ap.nodes)}[n] for n in tax.nodes]
+    cal = apply_temperatures(ap.scores[:, acol], levels, temps)
+    meta = dict(ap.meta)
+    meta["calibration"] = {"method": "temperature_per_level", "fit_dataset": a.fit_dataset,
+                           "fit_split": a.fit_split, "n_fit": len(ids),
+                           "temperatures": {str(k): v for k, v in temps.items()}}
+    p = save_predictions(a.out, ap.item_ids, list(tax.nodes), cal, tax.version,
+                         dataset=ap.dataset, meta=meta)
+    print(f"wrote {p}; T per level: " + _json.dumps({k: round(v["T"], 3) for k, v in temps.items()}))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m disstruments.ml.models")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -219,6 +251,14 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)
+    cb = sub.add_parser("calibrate", help="M3 C1: per-level temperature scaling")
+    cb.add_argument("--fit-predictions", required=True, type=Path)
+    cb.add_argument("--fit-dataset", required=True)
+    cb.add_argument("--fit-root", required=True, type=Path)
+    cb.add_argument("--fit-split", required=True)
+    cb.add_argument("--apply", required=True, type=Path)
+    cb.add_argument("--out", required=True, type=Path)
+    cb.set_defaults(fn=cmd_calibrate)
     a = p.parse_args(argv)
     return a.fn(a)
 

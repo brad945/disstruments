@@ -70,3 +70,22 @@ def test_scratch_cnn_learns_toy_task():
     yv = Y[1::2, 0]
     assert s[yv, 0].min() > s[~yv, 0].max()
     assert S.n_params(model) > 0 and len(hist) >= 1
+
+
+def test_temperature_scaling_fixes_overconfidence_and_keeps_ranking():
+    from disstruments.ml.models.calibrate import apply_temperatures, fit_temperatures
+    rng = np.random.default_rng(0)
+    n = 4000
+    true_p = rng.uniform(0.05, 0.95, size=(n, 2))
+    y = rng.random((n, 2)) < true_p
+    z = np.log(true_p / (1 - true_p)) * 3.0          # 3x overconfident logits
+    s = 1 / (1 + np.exp(-z))
+    m = np.ones_like(y)
+    temps = fit_temperatures(s, y, m, node_levels=[1, 2])
+    assert all(abs(t["T"] - 3.0) < 0.4 for t in temps.values())
+    cal = apply_temperatures(s, [1, 2], temps)
+    assert np.all(np.argsort(cal[:, 0]) == np.argsort(s[:, 0]))      # ranking unchanged
+    assert np.abs(cal - true_p).mean() < np.abs(s - true_p).mean() / 2
+    # a level with no observed labels keeps T = 1
+    t2 = fit_temperatures(s, y, np.zeros_like(m), node_levels=[1, 2])
+    assert all(t["T"] == 1.0 and not t["fitted"] for t in t2.values())
