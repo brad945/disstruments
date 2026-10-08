@@ -202,6 +202,47 @@ def cmd_calibrate(a) -> int:
     return 0
 
 
+def cmd_lora(a) -> int:
+    """Rung R3: LoRA + layer-weighted head, trained on synthetic audio end to end."""
+    from . import lora as L
+    from .embed import _device
+    tax = Taxonomy.load()
+    nodes = list(tax.nodes)
+    idx = load_dataset("synthetic", a.train_root, commercial_only=a.commercial_only)
+
+    def xy(split, limit=None):
+        recs = idx.split(split)[:limit] if limit else idx.split(split)
+        ids, y, m = label_matrices(label_items(recs, "mix"), tax)
+        by = {r.item_id: r.audio["mix"] for r in recs}
+        return [by[i] for i in ids], y, m
+
+    P, Y, Mk = xy("train", a.limit)
+    Pv, Yv, Mv = xy("val", a.limit and max(8, a.limit // 4))
+    cfg = L.LoraConfigM3(seed=a.seed, epochs=a.epochs, rank=a.rank)
+    dev = a.device or _device()
+    bb = L.Backbone(a.backbone, dev)
+    a.out.mkdir(parents=True, exist_ok=True)
+    head, hist, n_lora = L.train(bb, P, Y, Mk, Pv, Yv, Mv, cfg, ckpt=a.out / f"{a.backbone}_lora_r{a.rank}.pt")
+    meta = {"model": f"{a.backbone}+lora_r{a.rank}", "n_lora_params": n_lora,
+            "backbone_license": "CC-BY-NC-4.0" if a.backbone == "mert95m" else "Apache-2.0",
+            "commercial_clean": a.backbone == "clap" and a.commercial_only,
+            "best_val_map": max(h["val_map"] for h in hist), "history": hist,
+            "train": {"dataset": "synthetic", "n_train": len(P), "n_val": len(Pv)}}
+    for spec in a.eval:
+        ds, split = spec.split(":")
+        root = a.train_root if ds == "synthetic" else getattr(a, f"{ds}_root")
+        if root is None:
+            continue
+        eidx = idx if ds == "synthetic" else load_dataset(
+            ds, root, **({"check_split_leakage": False} if ds == "openmic" else {}))
+        recs = [r for r in eidx.split(split) if "mix" in r.audio][: a.limit or None]
+        scores = L.predict(bb, head, [r.audio["mix"] for r in recs])
+        p = save_predictions(a.out / f"{a.backbone}_lora_r{a.rank}_{ds}_{split}_mix.npz",
+                             [r.item_id for r in recs], nodes, scores, tax.version, dataset=ds, meta=meta)
+        print(f"wrote {p} ({len(recs)} items)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m disstruments.ml.models")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -251,6 +292,19 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)
+    lr = sub.add_parser("lora", help="M3 R3: LoRA fine-tune + head on synthetic audio")
+    lr.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
+    lr.add_argument("--train-root", required=True, type=Path)
+    lr.add_argument("--eval", nargs="*", default=["synthetic:test"])
+    lr.add_argument("--openmic-root", type=Path)
+    lr.add_argument("--epochs", type=int, default=3)
+    lr.add_argument("--rank", type=int, default=8)
+    lr.add_argument("--seed", type=int, default=0)
+    lr.add_argument("--limit", type=int, help="smoke test: use only N train clips")
+    lr.add_argument("--device")
+    lr.add_argument("--commercial-only", action="store_true")
+    lr.add_argument("--out", required=True, type=Path)
+    lr.set_defaults(fn=cmd_lora)
     cb = sub.add_parser("calibrate", help="M3 C1: per-level temperature scaling")
     cb.add_argument("--fit-predictions", required=True, type=Path)
     cb.add_argument("--fit-dataset", required=True)
