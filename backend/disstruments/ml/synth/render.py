@@ -53,7 +53,7 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
                 commercial_only: bool = False, taxonomy_version: str = "",
                 sha: str = "", midi_clean: bool = False,
                 midi_license: str = "CC-BY-4.0 (Lakh MIDI compilation; compositions not cleared)",
-                ) -> dict[str, Any] | None:
+                save_stems: bool = True) -> dict[str, Any] | None:
     """Render one clip. Returns the labels dict (also written to disk), or None when no
     part could be rendered (e.g. every source failed or was silent)."""
     import soundfile as sf
@@ -89,7 +89,8 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
             continue
         mix_gain_db = round(float(rng.uniform(-6, 3)), 2)       # random balance
         wet = wet * np.float32(10 ** (mix_gain_db / 20))
-        sf.write(cdir / "stems" / f"{part.leaf}.flac", np.clip(wet, -1, 1), sr, subtype="PCM_16")
+        if save_stems:          # disk: stems are kept for a subset of clips only (v2)
+            sf.write(cdir / "stems" / f"{part.leaf}.flac", np.clip(wet, -1, 1), sr, subtype="PCM_16")
         stem_audio.append(wet)
         stems_meta.append({
             "leaf": part.leaf, "source_id": src.id, "source_license": src.license,
@@ -123,6 +124,7 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         "schema_version": SCHEMA_VERSION, "clip_id": clip_id, "split": split, "seed": seed,
         "renderer_sha": sha, "taxonomy_version": taxonomy_version, "sample_rate": sr,
         "duration_s": window.duration,
+        "stems_saved": save_stems,
         "positive_leaves": sorted({s["leaf"] for s in stems_meta} | set(implied)),
         "implied_leaves": {l: "hat/cymbal notes in the drum part" for l in implied},
         # Lakh compositions are not cleared, so Lakh renders are never commercially clean

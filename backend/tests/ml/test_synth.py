@@ -226,3 +226,16 @@ def test_fit_octaves_prefers_in_range_and_small_shift():
     assert fit_octaves([60, 62, 64], 44, 76) == 0
     assert fit_octaves([30, 32, 35], 44, 76) == 24
     assert fit_octaves([90, 95], 26, 46) == -48
+
+
+def test_stem_fraction_saves_subset_but_labels_complete(midi_root, registry_file, tmp_path):
+    from disstruments.ml.datasets import load_dataset
+    from disstruments.ml.synth.build import build
+    out = tmp_path / "s"
+    build(midi_root, out, 12, seed=2, sr=16000, registry_path=str(registry_file), fake=True,
+          stem_fraction=0.0, windows_per_file=4)
+    labs = [json.loads(p.read_text()) for p in (out / "clips").glob("*/labels.json")]
+    assert labs and all(not l["stems_saved"] and l["stems"] for l in labs)
+    assert not any((out / "clips").glob("*/stems/*.flac"))
+    idx = load_dataset("synthetic", out)
+    assert all(s.audio is None for r in idx.records for s in r.stems)

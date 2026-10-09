@@ -28,6 +28,9 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--commercial-only", action="store_true")
     b.add_argument("--fake", action="store_true", help="fake engine for every source (dry run)")
     b.add_argument("--limit-files", type=int)
+    b.add_argument("--windows-per-file", type=int, default=2)
+    b.add_argument("--stem-fraction", type=float, default=1.0,
+                   help="save stem audio for this fraction of clips (labels always complete)")
     au = sub.add_parser("audition", help="dry examples per source -> local HTML listening page")
     au.add_argument("--midi-root", required=True, type=Path)
     au.add_argument("--out", required=True, type=Path)
@@ -54,7 +57,8 @@ def main(argv: list[str] | None = None) -> int:
     from .build import build
     m = build(a.midi_root, a.out, a.n_clips, seed=a.seed, sr=a.sr, workers=a.workers,
               registry_path=a.registry, sources_root=a.sources_root,
-              commercial_only=a.commercial_only, fake=a.fake, limit_files=a.limit_files)
+              commercial_only=a.commercial_only, fake=a.fake, limit_files=a.limit_files,
+              windows_per_file=a.windows_per_file, stem_fraction=a.stem_fraction)
     print(json.dumps({k: m[k] for k in ("n_rendered", "splits", "timing_s", "stem_failures")}, indent=1))
     return 0
 

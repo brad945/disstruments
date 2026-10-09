@@ -44,7 +44,8 @@ def load(root: Path | str, *, commercial_only: bool = False, strict: bool = True
             StemLabels(stem_id=s["leaf"], positive=frozenset(tax.close_upward(
                 [s["leaf"]] + (list(lab.get("implied_leaves") or {}) if s["leaf"].startswith("drums") else []))),
                        observed=all_nodes, source_labels=(s["source_id"],),
-                       audio=(cdir / "stems" / f"{s['leaf']}.flac"), bleed=False)
+                       audio=(cdir / "stems" / f"{s['leaf']}.flac") if lab.get("stems_saved", True) else None,
+                       bleed=False)
             for s in lab["stems"])
         records.append(Record(
             dataset=NAME, item_id=lab["clip_id"], split=lab["split"],

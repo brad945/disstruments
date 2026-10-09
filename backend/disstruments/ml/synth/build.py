@@ -60,27 +60,33 @@ def _init_worker(registry_path: str | None, sources_root: str | None, fake: bool
 
 
 def _render_one(args: tuple) -> dict | None:
-    w, split, clip_seed, out, sr, commercial_only, tax_version, sha = args
+    w, split, clip_seed, out, sr, commercial_only, tax_version, sha, save_stems = args
     reg, eng = _WORKER["reg"], _WORKER["eng"]
     if "fake" in eng and len(eng) == 1:                  # dry run: route everything to fake
         from dataclasses import replace
         reg = replace(reg, sources=tuple(replace(s, engine="fake") for s in reg.sources))
     return render_clip(w, reg, eng, seed=clip_seed, out_dir=Path(out), sr=sr, split=split,
-                       commercial_only=commercial_only, taxonomy_version=tax_version, sha=sha)
+                       commercial_only=commercial_only, taxonomy_version=tax_version, sha=sha,
+                       save_stems=save_stems)
 
 
 def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 44100,
           workers: int = 1, registry_path: str | None = None, sources_root: str | None = None,
-          commercial_only: bool = False, fake: bool = False, limit_files: int | None = None) -> dict:
+          commercial_only: bool = False, fake: bool = False, limit_files: int | None = None,
+          windows_per_file: int = 2, stem_fraction: float = 1.0) -> dict:
     tax = Taxonomy.load()
     reg = load_registry(registry_path, tax, root=sources_root)
     files = sorted(midi_root.rglob("*.mid"))[: limit_files or None]
     t0 = time.monotonic()
-    plan = plan_windows(files, midi_root, reg.v1_leaves, n_clips, seed)
+    plan = plan_windows(files, midi_root, reg.v1_leaves, n_clips, seed,
+                        windows_per_file=windows_per_file)
     t_plan = time.monotonic() - t0
     out.mkdir(parents=True, exist_ok=True)
     sha = renderer_sha()
-    jobs = [(w, sp, cs, str(out), sr, commercial_only, tax.version, sha) for w, sp, cs in plan]
+    # Stems are saved for a deterministic subset (stable hash of the clip seed) to save disk;
+    # labels.json always describes every stem.
+    jobs = [(w, sp, cs, str(out), sr, commercial_only, tax.version, sha,
+             (cs % 1000) < stem_fraction * 1000) for w, sp, cs in plan]
     t1 = time.monotonic()
     results: list[dict | None] = []
     if workers <= 1:
@@ -98,6 +104,7 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
         "seed": seed, "sr": sr, "n_requested": n_clips, "n_planned": len(plan),
         "n_rendered": len(ok), "renderer_sha": sha, "taxonomy_version": tax.version,
         "commercial_only": commercial_only, "fake": fake, "fractions": FRACTIONS,
+        "windows_per_file": windows_per_file, "stem_fraction": stem_fraction,
         "splits": dict(Counter(r["split"] for r in ok)),
         "leaf_counts": dict(sorted(leaf_counts.items())),
         "source_counts": dict(sorted(src_counts.items())),
