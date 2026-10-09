@@ -183,7 +183,7 @@ def cmd_scratch(a) -> int:
     for spec in a.eval:
         ds, split = spec.split(":")
         f = a.cache / "mels" / f"{ds}_{split}_mix.npz"
-        if not f.exists():
+        if not (f.exists() or f.with_suffix(".npy").exists()):
             print(f"skip {spec}: no mel cache {f.name}")
             continue
         ids, Xe = S.load_mel_cache(f)
