@@ -116,7 +116,61 @@ sources:
     commercial_clean: true
     attribution: ""
     download: {url: "https://github.com/freepats/electric-bass-YR/releases/download/2019-09-30/PickedBassYR-SFZ+FLAC-20190930.7z", sha256: aa7650fc206a7ed83ecafa36a24572e1f4ea041938182b981bf111b99e1b8e85, bytes: 2819607}
-    notes: "Yamaha RBX, pick variation (publisher-labelled). Only picked-bass source downloaded so far (Karoryfer Black&Blue 'blue' picked bass deferred, 1 GB); diversity must come from FX/amp randomization."
+    notes: "Yamaha RBX, pick variation (publisher-labelled). Second picked bass added in M4 L3 (karoryfer_bb_babyblue)."
+
+  # M4 L3 (2026-10-09). Licences re-read: GitHub repo LICENSE (CC0 1.0) + Karoryfer
+  # shop "free" pages ("All free sample libraries use Creative Commons Zero").
+  - id: karoryfer_growlybass
+    name: Karoryfer Growlybass (Squier Jazz Bass, DI)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_growlybass/Growlybass/growlybass_dirty.sfz
+    leaves: []   # UNMAPPED: no source says fingers or pick (M4 L3 rule: skip unless documented)
+    license: CC0-1.0
+    license_url: https://github.com/sfzinstruments/karoryfer.growlybass/blob/master/LICENSE
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.growlybass/releases/download/v1.002/Karoryfer.Growlybass.v1.002.zip", sha256: b92dca75494fa39d6e8d8b8addaabfe70c5aaa59b5f9a0f624be6de51a2374bc, bytes: 167454256}
+    notes: "Squier Jazz, EADG (+ low E down to C#), roundwounds, recorded DIRECT (both pickups, knobs on 10). 'dirty' = sustains + release samples (the basic mapping, NOT distortion). Shop page: 'strings get plucked hard and rattle against the frets ... aggressive rock or punk'. Readme lists 'pick scrapes' (a noise articulation) - hints at a pick but no statement of plucking technique, so not mapped to fingered/picked. Ask Bradley (or by ear) before assigning a leaf. ALSO octave: growlybass_dirty.sfz renders 12 semitones LOW (pyin) - needs a note_offset=-12 copy like the B&B basses before mapping."
+
+  - id: karoryfer_swagbass
+    name: Karoryfer Swagbass (Ibanez BTB, flatwounds, DI)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_swagbass/Swagbass/swagbass.sfz
+    leaves: []   # UNMAPPED: no source says fingers or pick
+    license: CC0-1.0
+    license_url: https://github.com/sfzinstruments/karoryfer.swagbass/blob/master/LICENSE
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.swagbass/releases/download/v1.001/Karoryfer.Swagbass.v1.001.zip", sha256: 4b4db964413be99a597da246651961e1c4dbb0004db49daccd11387c5f9a535a, bytes: 144579232}
+    notes: "Ex-Ibanez BTB-400QM, fifths tuning CGDA (+ low C down to A), dead D'Addario Chrome flatwounds, recorded DIRECT (neck pickup, flat EQ, no FX). 3 vel x 4 RR + release + noises ('noise_fingering' = fret-hand noise, not plucking technique). Shop page: 'great bass for hip-hop, pop and R&B'. Technique undocumented -> not mapped. If ever mapped: swagbass.sfz puts NOISE samples on high keys (78-84), so its probed range top (83) is polluted - use swagbass_clean.sfz or a noise-free copy. Octave mapping is at sounding pitch (pyin-checked), no offset needed."
+
+  - id: karoryfer_bb_darkblack
+    name: Karoryfer Black And Blue Basses - Darkblack (Washburn AB-95, fingers)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_black_and_blue/Programs/diss_05-darkblack_pluck.sfz   # sed-patched, see download.post_extract
+    leaves: [bass.electric.fingered]
+    license: CC0-1.0
+    license_url: https://shop.karoryfer.com/pages/free-black-and-blue-basses
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.black-and-blue-basses/releases/download/v1.002/Black_And_Blue_Basses_1002.zip", sha256: cf77fc782abf996826fe75cfd948d356968de7c8b967c471c6a433835d2b4f55, bytes: 1008690586, post_extract: 'Programs/diss_05-darkblack_pluck.sfz = copy of 05-darkblack_pluck.sfz with note_offset=-12 inserted after the first <control> line (samples are mapped one octave above sounding pitch: key 35 = B0 31 Hz, pyin-checked)'}
+    notes: "User guide: 'dark black Washburn AB-95 ... played with the fingers and recorded using the neck pickup' (5-string, hollowbody). Program 05 = plain plucks only (no keyswitches; ghost/staccato/behind-the-bridge are separate programs 07-11). 4 velocity layers x 4 RR. CC-gated unison layers stay at their defaults. Repo LICENSE = CC0 1.0. The original program maps samples one octave ABOVE sounding pitch (key 35 plays B0 = 31 Hz); without the note_offset=-12 patch (sfizz sign: -12 moves the playable range DOWN an octave; measured range 35-76 -> 23-64, pyin error 0), GM bass lines rendered 12 semitones low unless fit_octaves happened to lift them (measured with pyin), making register a source-identity cue vs the sounding-pitch YR basses."
+
+  - id: karoryfer_bb_babyblue
+    name: Karoryfer Black And Blue Basses - Babyblue (Thunderbird-style, pick)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_black_and_blue/Programs/diss_03-babyblue_all.sfz   # sed-patched, see download.post_extract
+    leaves: [bass.electric.picked]
+    license: CC0-1.0
+    license_url: https://shop.karoryfer.com/pages/free-black-and-blue-basses
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.black-and-blue-basses/releases/download/v1.002/Black_And_Blue_Basses_1002.zip", sha256: cf77fc782abf996826fe75cfd948d356968de7c8b967c471c6a433835d2b4f55, bytes: 1008690586, post_extract: 'Programs/diss_03-babyblue_all.sfz = copy of 03-babyblue_all.sfz with note_offset=-12 inserted after the first <control> line (samples are mapped one octave above sounding pitch: key 35 = B0 31 Hz, pyin-checked)'}
+    notes: "User guide: 'baby blue Thunderbird-shaped parts bass ... pick and bridge pickup' (5-string, solidbody). Program 03 'Babyblue normal - picked notes' (2 velocity layers; set_cc23=127 selects the regular low string). Same download as karoryfer_bb_darkblack; a second picked-bass instrument besides the YR RBX. Same octave mapping as darkblack, same note_offset=-12 patch (range 21-63 after patch)."
 
   - id: vsco2_contrabass_pizz
     name: VSCO-2 CE Solo Contrabass (pizzicato)
@@ -158,6 +212,71 @@ sources:
     download: {url: "https://github.com/freepats/electric-guitar-FSBS-dist2/releases/download/2022-09-11/EGuitarFSBS-dist2-SFZ+FLAC-20220911.7z", sha256: fee513712e10b31c78e45c7263c2860882c8e462d1733a7876a0d97d14303f4c, bytes: 135646700}
     notes: "Same Fender as fsbs_clean, processed through amp/effects to distorted/overdriven. Renderer should also distort CLEAN sources via pedalboard for more distorted-leaf diversity."
 
+  - id: freepats_fsbs_dist1
+    name: FreePats Electric Guitar FSBS (dist1)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_fsbs_dist1/EGuitarFSBS-dist1 SFZ+FLAC-20220911/EGuitarFSBS-dist1 bridge 20220911.sfz"
+    leaves: [guitar.electric.distorted]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricGuitar/distorted-electric-guitar.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/electric-guitar-FSBS-dist1/releases/download/2022-09-11/EGuitarFSBS-dist1-SFZ+FLAC-20220911.7z", sha256: 86715a19fc8da8e9145203be9457d99476c0fe896a64f2adf21e184519302b14, bytes: 314238934}
+    notes: "M4 L3. 'Distorted #1': same Fender DI performances as fsbs_clean/dist2/direct, a different amp/effects chain (distorted, overdriven). Adds processing diversity, NOT instrument diversity. Bridge mapping."
+
+  - id: freepats_fsbs_direct
+    name: FreePats Electric Guitar FSBS (direct / unprocessed DI)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_fsbs_direct/EGuitarFSBS-direct SFZ+FLAC-20220911/EGuitarFSBS-direct bridge 20220911.sfz"
+    leaves: [guitar.electric.clean]
+    license: CC0-1.0
+    license_url: https://freepats.zenvoid.org/ElectricGuitar/clean-electric-guitar.html
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/freepats/electric-guitar-FSBS-direct/releases/download/2022-09-11/EGuitarFSBS-direct-SFZ+FLAC-20220911.7z", sha256: 7ab2a4551bb8847342d6fd10cc56e0642fcaf43f3be8d665269c4dc9bfbbd599, bytes: 77076723}
+    notes: "M4 L3. RAW DI of the same Fender as fsbs_clean ('not expected to be used stand-alone, the output should be connected to a guitar amplifier'): renderer must add a clean amp/cab sim (L2). Unprocessed, so it is also the right input for our own pedalboard distortion. Same performances as the other FSBS sources."
+
+  - id: karoryfer_shinyguitar
+    name: Karoryfer Shinyguitar (archtop, pickup DI)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_shinyguitar/Shinyguitar/Programs/diss_main.sfz   # sed-patched copy of main.sfz, see download.post_extract
+    leaves: [guitar.electric.clean]
+    license: CC0-1.0
+    license_url: https://github.com/sfzinstruments/karoryfer.shinyguitar/blob/master/LICENSE
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.shinyguitar/releases/download/v1.002/Karoryfer.Shinyguitar.v1.002.zip", sha256: 23cf4030cbf9ce9e2c84d7cbb1c022fbca124bfff0ad118a14eda7cf6c921d7b, bytes: 368411844, post_extract: 'Shinyguitar/Programs/diss_main.sfz = copy of main.sfz with default_path=$sample_dir/ replaced by default_path=../Samples/ and the two *_noises.sfz #include lines deleted ($sample_dir is defined only in the Sforzando bank XML - without it sfizz loads 0 regions = silence; noise regions on keys 12-27 would pollute the probed key range)'}
+    notes: "M4 L3. Black ARCHTOP (jazz-box) guitar; shop page: 'sampled both the direct output from the pickup, and the acoustic sound recorded with a microphone'. CC100 blend 0=pickup..127=mic; main.sfz default set_cc100=0 -> renders are ALL PICKUP, DI (amp-less): renderer must add a clean amp/cab sim. Default tone set_cc101=127 (lpf open-ish). Archtop timbre is jazzier than a solidbody; shop says 'suitable for pop, EDM, hip-hop, funk, indie'. Mic-blend renders (cc100>0) would drift toward an acoustic sound - do NOT use them for this leaf."
+
+  - id: karoryfer_bg_green
+    name: Karoryfer Black And Green Guitars - Green (Gretsch Anniversary hollowbody)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_black_and_green/Programs/04-green_twang.sfz
+    leaves: [guitar.electric.clean]
+    license: CC0-1.0
+    license_url: https://github.com/sfzinstruments/karoryfer.black-and-green-guitars/blob/main/LICENSE
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.black-and-green-guitars/releases/download/v1.000/Karoryfer_Black_And_Green_Guitars_1000.zip", sha256: ba95221d32fb6386c5d0a0799b93904fd55520aca017c5f121da290075c140c0, bytes: 481838512}
+    notes: "M4 L3. Gretsch Anniversary hollowbody electric; shop page: 'more indie rock than anything else, with twangy plucks'. Program 04 = plain 'twang' plucks (+ release samples); feedback layers gated by CC29 (default 0 = off), tailpiece-bend variants by CC118 (default off). Recording chain (DI vs amp/mic) is NOT documented anywhere (readme, shop page, bank XML, GUI); the feedback samples imply an amp for those, so do not assume DI. Sample paths are literal (no $sample_dir define needed)."
+
+  - id: karoryfer_bg_black
+    name: Karoryfer Black And Green Guitars - Black (Hofner Club hollowbody)
+    kind: sfz
+    engine: sfizz
+    path: karoryfer_black_and_green/Programs/07-black_twang.sfz
+    leaves: [guitar.electric.clean]
+    license: CC0-1.0
+    license_url: https://github.com/sfzinstruments/karoryfer.black-and-green-guitars/blob/main/LICENSE
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.black-and-green-guitars/releases/download/v1.000/Karoryfer_Black_And_Green_Guitars_1000.zip", sha256: ba95221d32fb6386c5d0a0799b93904fd55520aca017c5f121da290075c140c0, bytes: 481838512}
+    notes: "M4 L3. Hofner Club hollowbody electric (same download as karoryfer_bg_green). Program 07 = plain 'twang' plucks; behind-the-bridge (09) and staccato (08) programs not used. Same CC29 feedback gating / undocumented recording chain as karoryfer_bg_green."
+
   # ------------------------------------------------------------------ keys
   - id: freepats_upright_kw
     name: FreePats Upright Piano KW (Kawai upright)
@@ -170,7 +289,20 @@ sources:
     commercial_clean: true
     attribution: ""
     download: {url: "https://freepats.zenvoid.org/Piano/UprightPianoKW/UprightPianoKW-SFZ+FLAC-20220221.7z", sha256: 3a66da3b25a2fd9499d90bcf09f1aee4431825796e249361b48af59b1201e703, bytes: 33294287}
-    notes: "Kawai upright in a living room, Zoom H1 at player position (roomy). Salamander Grand (CC-BY-3.0, 742 MB) deferred for bandwidth."
+    notes: "Kawai upright in a living room, Zoom H1 at player position (roomy). Salamander Grand added in M4 L3 (freepats_salamander)."
+
+  - id: freepats_salamander
+    name: Salamander Grand Piano V3 (Yamaha C5, FreePats SFZ+FLAC)
+    kind: sfz
+    engine: sfizz
+    path: "freepats_salamander/SalamanderGrandPiano-SFZ+FLAC-V3+20200602/SalamanderGrandPiano-V3+20200602.sfz"
+    leaves: [keys.piano]
+    license: CC-BY-3.0
+    license_url: https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html
+    commercial_clean: true
+    attribution: "Salamander Grand Piano by Alexander Holm, CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); FreePats SFZ+FLAC edition by roberto@zenvoid.org"
+    download: {url: "https://freepats.zenvoid.org/Piano/SalamanderGrandPiano/SalamanderGrandPiano-SFZ+FLAC-V3+20200602.tar.gz", sha256: b7760e168494cf095344e217b0af013fc449ad033abbbdf1c65211cf11dc038b, bytes: 741757374}
+    notes: "M4 L3. Yamaha C5 grand, two AKG C414 in AB ~12 cm above the strings (close, bright), 48 kHz/24-bit, 16 velocity layers, sampled in minor thirds; hammer-noise and string-resonance release samples. A grand, close-miked: complements the roomy Kawai upright. Sibling 'Retuned' sfz not used. CC-BY: attribution required wherever renders/models are distributed."
 
   - id: freepats_fm_piano1
     name: FreePats FM Synthesized Piano 1 (DX7 E.Piano 1)
@@ -359,7 +491,30 @@ sources:
     commercial_clean: true
     attribution: "MuldjordKit by Lars Muldjord (DrumGizmo), CC BY 4.0; stereo SFZ edition by FreePats (roberto@zenvoid.org)"
     download: {url: "https://github.com/freepats/muldjordkit/releases/download/2020-10-18/MuldjordKit-SFZ+FLAC-20201018.7z", sha256: 89261006296a9a4d93dfda2c1c5a3925215e24329f408c2c8bc1bcf6ea123c8f, bytes: 165026479}
-    notes: "GM drum map, velocity layers + randomized round robins; stereo mixdown of the 16-mic original. Includes cymbals (labels: drums.acoustic_kit only, cymbals are not a separate v1 leaf). Only acoustic kit downloaded (Big Rusty / SM Drums deferred)."
+    notes: "GM drum map, velocity layers + randomized round robins; stereo mixdown of the 16-mic original. Includes cymbals (labels: drums.acoustic_kit only, cymbals are not a separate v1 leaf). Big Rusty added in M4 L3 (karoryfer_big_rusty_drums); SM Drums still not downloaded."
+
+  - id: karoryfer_big_rusty_drums
+    name: Karoryfer Big Rusty Drums (Szpaderski 1980s kit, sticks, basic program)
+    kind: sfz
+    engine: sfizz
+    # Kit keymap is GM-like up to 47 then diverges (user guide appendix "Default Keymap"):
+    # 48 unmapped, 50 = crash CHOKE, 52 = ride edge, 54/56 = hi-hat sounds, 55/57/59 differ.
+    # 02-basic has no 22" tom / China / sizzle cymbals, so GM toms fold onto 18/15/14" toms
+    # and the GM crash/splash/crash2 all hit the one 17" crash. Unmapped GM notes are dropped.
+    # Hat: 42 = tightly closed tip, 44 = foot chik, 46 = tip hit with openness from CC4; the
+    # program default set_cc4=127 = FULLY OPEN, so 46 is an honest open hat (measured: 46 rings
+    # 1.9 s vs 0.18 s for 42). 35 -> 36: the undampened kick (key 35) is not in 02-basic (silent).
+    note_map: {35: 36, 36: 36, 37: 37, 38: 38, 40: 40, 41: 43, 43: 43, 45: 45, 47: 47,
+               48: 47, 50: 47, 42: 42, 44: 44, 46: 46, 49: 49, 55: 49, 57: 49, 51: 51,
+               59: 51, 53: 53}
+    path: karoryfer_big_rusty_drums/Programs/02-basic.sfz
+    leaves: [drums.acoustic_kit]
+    license: CC0-1.0
+    license_url: https://github.com/sfzinstruments/karoryfer.big-rusty-drums/blob/main/LICENSE
+    commercial_clean: true
+    attribution: ""
+    download: {url: "https://github.com/sfzinstruments/karoryfer.big-rusty-drums/releases/download/v1.100/Big_Rusty_Drums_1100.zip", sha256: d4a9990acd19376d91ce446dae415c81428728b5adebb6a88eddbb3a6aac8744, bytes: 619600370}
+    notes: "M4 L3. Szpaderski (Poland, ~early 1980s) 24x18 kick, 14x8 wooden snare (replacement wires), 18/15/14in toms; Sabian HHX Evolution 14in hats, Sabian Big & Ugly King 22in ride, 17in crash. Close + overhead mics mixed by the program. Big, roomy, 'rough' vintage kit: a very different timbre from MuldjordKit. 02-basic = sticks only; 01-full adds brushes/mallets/stirs (selected by CC25-28), 22in RMIF tom, China, sizzle cymbals, stack - not used. Programs/ekit/ = reversed hi-hat CC (not used)."
 
   # ------------------------------------------------------------------ woodwinds
   - id: freepats_tenor_sax
