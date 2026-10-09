@@ -239,3 +239,17 @@ def test_stem_fraction_saves_subset_but_labels_complete(midi_root, registry_file
     assert not any((out / "clips").glob("*/stems/*.flac"))
     idx = load_dataset("synthetic", out)
     assert all(s.audio is None for r in idx.records for s in r.stems)
+
+
+def test_fx_v2_identity_safe_and_applies():
+    from disstruments.ml.synth.fx import apply_chain, master_chain_v2, stem_chain_v2, synth_room_ir
+    for seed in range(200):
+        ch = stem_chain_v2("guitar.electric.clean", np.random.default_rng(seed))
+        drives = [c["params"]["drive_db"] for c in ch if c["plugin"] == "Distortion"]
+        assert all(d <= 4.0 for d in drives)            # clean guitar: at most amp warmth
+    ir = synth_room_ir(16000, rt60_s=0.8, predelay_ms=10, n_early=4, brightness=0.5, seed=1)
+    assert np.abs(ir).max() == 1.0 and len(ir) > 8000
+    rng = np.random.default_rng(5)
+    x = (np.random.default_rng(0).standard_normal((1, 16000)) * 0.1).astype(np.float32)
+    y = apply_chain(x, 16000, stem_chain_v2("guitar.electric.distorted", rng) + master_chain_v2(rng))
+    assert y.shape[0] == 1 and np.isfinite(y).all() and np.abs(y).max() > 0

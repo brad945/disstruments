@@ -16,7 +16,7 @@ from typing import Any, Mapping
 import numpy as np
 
 from .engines import Engine
-from .fx import apply_chain, master_chain, stem_chain
+from .fx import apply_chain, master_chain, master_chain_v2, stem_chain, stem_chain_v2
 from .midi import CYMBAL_NOTES, Window
 from .sources import Registry
 
@@ -53,7 +53,7 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
                 commercial_only: bool = False, taxonomy_version: str = "",
                 sha: str = "", midi_clean: bool = False,
                 midi_license: str = "CC-BY-4.0 (Lakh MIDI compilation; compositions not cleared)",
-                save_stems: bool = True) -> dict[str, Any] | None:
+                save_stems: bool = True, fx_profile: str = "v1") -> dict[str, Any] | None:
     """Render one clip. Returns the labels dict (also written to disk), or None when no
     part could be rendered (e.g. every source failed or was silent)."""
     import soundfile as sf
@@ -79,7 +79,7 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         except Exception as e:  # noqa: BLE001 — one bad source must not kill the clip
             failures.append({"leaf": part.leaf, "source": src.id, "error": f"{type(e).__name__}: {e}"[:300]})
             continue
-        chain = stem_chain(part.leaf or "", rng)
+        chain = (stem_chain_v2 if fx_profile == "v2" else stem_chain)(part.leaf or "", rng)
         wet = apply_chain(dry[None, :], sr, chain)[0]
         wet, _ = _gain_to(wet, sr, -20.0)                       # level-match before mixing
         # A positive label must be audible: measurable loudness AND a real peak after fx
@@ -108,7 +108,7 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         cdir.rmdir()
         return None
     mix = np.sum(stem_audio, axis=0)
-    mchain = master_chain(rng)
+    mchain = (master_chain_v2 if fx_profile == "v2" else master_chain)(rng)
     mix = apply_chain(mix[None, :], sr, mchain)[0]
     target = round(float(rng.uniform(-18, -9)), 2)
     mix, _ = _gain_to(mix, sr, target)
@@ -124,7 +124,7 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         "schema_version": SCHEMA_VERSION, "clip_id": clip_id, "split": split, "seed": seed,
         "renderer_sha": sha, "taxonomy_version": taxonomy_version, "sample_rate": sr,
         "duration_s": window.duration,
-        "stems_saved": save_stems,
+        "stems_saved": save_stems, "fx_profile": fx_profile,
         "positive_leaves": sorted({s["leaf"] for s in stems_meta} | set(implied)),
         "implied_leaves": {l: "hat/cymbal notes in the drum part" for l in implied},
         # Lakh compositions are not cleared, so Lakh renders are never commercially clean
