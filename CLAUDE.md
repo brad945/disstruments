@@ -36,7 +36,12 @@ ML track, in order (milestones in ML_ENGINEERING.md §8):
 
    MERT is research-only (CC-BY-NC). CLAP is the licence-clean candidate; see
    [DIRECTION_NOTES]. Run GPU jobs one at a time (16 GB RAM).
-3. M3–M5: LoRA ablation ladder, calibration, domain-gap study, ONNX serving
+3. M3 DONE (2026-10-09; `docs/debriefs/m3.md`):
+   - a from-scratch 1.2M CNN ties frozen and LoRA MERT on real OpenMIC (coarse classes);
+   - calibration = one global temperature fit on real held-out data;
+   - 10x more synthetic data doesn't move real-music scores, so M4 = diversity.
+4. M4–M5: domain-gap work (source and production diversity, separation-artifact
+   augmentation, real co-training), then ONNX serving
 
 Deferred to draft 3: structure (F9), chords (F10), MIDI export (F11), genre profiles (F19).
 
