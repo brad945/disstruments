@@ -6,7 +6,7 @@ from typing import Any
 
 from .base import DatasetIndex, Record, StemLabels, UnknownLabelsError
 
-DATASETS = ("medleydb", "openmic", "slakh", "synthetic")
+DATASETS = ("medleydb", "openmic", "slakh", "synthetic", "golden")
 
 
 def load_dataset(name: str, root: Path | str, **opts: Any) -> DatasetIndex:
@@ -20,6 +20,8 @@ def load_dataset(name: str, root: Path | str, **opts: Any) -> DatasetIndex:
         from .slakh import load
     elif name == "synthetic":
         from .synthetic import load
+    elif name == "golden":
+        from .golden import load
     else:
         raise ValueError(f"unknown dataset {name!r}; expected one of {DATASETS}")
     return load(root, **opts)

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Golden Set Labeller</title>
+<style>
+:root{--bg:#121417;--panel:#1b1e23;--line:#2a2e35;--text:#e6e8eb;--muted:#9aa1ab;--accent:#5b9cff;--present:#2fbf71;--unsure:#e0a930}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 80px}
+h1{font-size:20px;margin:0 0 4px}.muted{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0}
+input[type=text],input[type=search]{background:#0f1114;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 9px;width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:180px}
+audio{width:100%;margin-top:8px}
+.fam{margin:14px 0 4px;font-weight:600;text-transform:capitalize;color:var(--muted)}
+.leaf{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;border:1px solid transparent}
+.leaf:hover{border-color:var(--line)}.leaf .nm{flex:1}.leaf .nm small{display:block;color:var(--muted);font-size:12px}
+.seg button{background:#0f1114;border:1px solid var(--line);color:var(--muted);padding:4px 9px;cursor:pointer;font-size:12px}
+.seg button:first-child{border-radius:6px 0 0 6px}.seg button:last-child{border-radius:0 6px 6px 0}
+.seg button.on.a{color:var(--text);border-color:#555}.seg button.on.p{background:var(--present);color:#08130c;border-color:var(--present)}
+.seg button.on.u{background:var(--unsure);color:#1a1405;border-color:var(--unsure)}
+.mark{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px}
+.mark.rec{border-color:#e05050;color:#ff8a8a}.iv{color:var(--muted);font-size:12px;min-width:120px;text-align:right}
+.btn{background:var(--accent);color:#06101f;border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer}
+.sticky{position:sticky;top:0;z-index:2;background:var(--bg);padding-top:6px}
+.summary span{display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:999px;font-size:12px}
+.summary .p{background:#173826;color:#8ee3b4}.summary .u{background:#3a2f12;color:#f0cf7a}
+code{background:#0f1114;padding:1px 5px;border-radius:4px}
+</style></head><body><div class="wrap">
+<h1>Golden set labeller</h1>
+<div class="muted">Label a real song you know well, by ear, with the specific instruments you hear.
+Taxonomy __TAXVER__. Nothing leaves your computer.</div>
+
+<div class="panel">
+ <b>How to:</b>
+ <ol class="muted" style="margin:6px 0 0 18px;padding:0">
+  <li>Copy the song file into <code>~/datasets/golden/audio/</code> and pick it here.</li>
+  <li>Mark each instrument you hear as <b>present</b>, or <b>unsure</b> if you can't tell
+   (e.g. Rhodes vs Wurlitzer). Everything else counts as <b>absent</b>.</li>
+  <li>Optional: while it plays, press <b>⏱</b> on a present instrument to mark when it
+   starts, and again when it stops.</li>
+  <li>Tick "listened to the whole song", then <b>Save</b>. Move the downloaded
+   <code>.labels.json</code> into <code>~/datasets/golden/labels/</code>, or tell Claude
+   and it will collect it.</li>
+ </ol>
+</div>
+
+<div class="panel">
+ <input type="file" id="file" accept="audio/*">
+ <audio id="au" controls></audio>
+ <div class="row" style="margin-top:8px">
+  <div><div class="muted">Artist</div><input type="text" id="artist"></div>
+  <div><div class="muted">Title</div><input type="text" id="title"></div>
+  <div><div class="muted">Genre</div><input type="text" id="genre" placeholder="indie rock"></div>
+ </div>
+</div>
+
+<div class="sticky">
+ <input type="search" id="q" placeholder="search instruments (e.g. rhodes, distorted, 808)…">
+ <div class="summary" id="sum" style="margin:6px 0"></div>
+</div>
+<div id="list"></div>
+
+<div class="panel">
+ <div class="muted">Notes (optional)</div><input type="text" id="notes" placeholder="e.g. bridge has a synth I can't identify">
+ <label style="display:block;margin:10px 0"><input type="checkbox" id="full"> I listened to the whole song and marked everything I heard</label>
+ <button class="btn" id="save">Save labels</button> <span class="muted" id="msg"></span>
+</div>
+</div>
+<script>
+const LEAVES = /*__LEAVES__*/[];
+const state = {}; let fileName = "", recording = {};
+const $ = id => document.getElementById(id);
+const fmt = t => (Math.floor(t/60)) + ":" + String(Math.round(t%60)).padStart(2,"0");
+function key(){ return "golden:" + fileName; }
+function draft(){ try{ localStorage.setItem(key(), JSON.stringify({state, artist:$("artist").value, title:$("title").value, genre:$("genre").value, notes:$("notes").value})) }catch(e){} }
+function loadDraft(){ try{ const d = JSON.parse(localStorage.getItem(key())||"null"); if(!d) return;
+  Object.assign(state, d.state||{}); ["artist","title","genre","notes"].forEach(k=>{ if(d[k]) $(k).value=d[k] }) }catch(e){} }
+function render(){
+  const q = $("q").value.toLowerCase(); const L = $("list"); L.innerHTML = ""; let fam = "";
+  for (const l of LEAVES){
+    if (q && !(l.name+" "+l.id+" "+l.path).toLowerCase().includes(q)) continue;
+    if (l.family !== fam){ fam = l.family; const h = document.createElement("div"); h.className="fam"; h.textContent=fam; L.appendChild(h); }
+    const s = state[l.id] || {state:"absent", intervals:[]};
+    const row = document.createElement("div"); row.className = "leaf";
+    row.innerHTML = `<div class="nm">${l.name}<small>${l.path}</small></div>
+      <span class="iv">${(s.intervals||[]).map(iv=>fmt(iv[0])+"–"+(iv[1]==null?"…":fmt(iv[1]))).join(", ")}</span>
+      ${s.state==="present" ? `<button class="mark ${recording[l.id]?"rec":""}" title="mark start/stop at current time">⏱</button>` : ""}
+      <span class="seg"><button class="a ${s.state==="absent"?"on":""}">absent</button><button class="p ${s.state==="present"?"on":""}">present</button><button class="u ${s.state==="unsure"?"on":""}">unsure</button></span>`;
+    const [ba,bp,bu] = row.querySelectorAll(".seg button");
+    ba.onclick = () => set(l.id, "absent"); bp.onclick = () => set(l.id, "present"); bu.onclick = () => set(l.id, "unsure");
+    const m = row.querySelector(".mark"); if (m) m.onclick = () => mark(l.id);
+    L.appendChild(row);
+  }
+  const p = LEAVES.filter(l => (state[l.id]||{}).state==="present"), u = LEAVES.filter(l => (state[l.id]||{}).state==="unsure");
+  $("sum").innerHTML = p.map(l=>`<span class="p">${l.name}</span>`).join("") + u.map(l=>`<span class="u">${l.name}?</span>`).join("") || '<span class="muted">nothing marked yet</span>';
+}
+function set(id, st){ const s = state[id] || {state:"absent", intervals:[]}; s.state = st; if (st!=="present"){ s.intervals=[]; delete recording[id]; } state[id]=s; draft(); render(); }
+function mark(id){ const t = $("au").currentTime, s = state[id];
+  if (!recording[id]){ s.intervals.push([+t.toFixed(2), null]); recording[id]=true; }
+  else { s.intervals[s.intervals.length-1][1] = +t.toFixed(2); delete recording[id]; }
+  draft(); render(); }
+$("file").onchange = e => { const f = e.target.files[0]; if (!f) return; fileName = f.name;
+  $("au").src = URL.createObjectURL(f);
+  const base = f.name.replace(/\.[^.]+$/,""); const parts = base.split(" - ");
+  if (parts.length >= 2){ $("artist").value = parts[0].trim(); $("title").value = parts.slice(1).join(" - ").trim(); } else { $("title").value = base; }
+  for (const k in state) delete state[k]; recording = {}; loadDraft(); render(); };
+$("q").oninput = render; ["artist","title","genre","notes"].forEach(k => $(k).oninput = draft);
+document.addEventListener("keydown", e => { if (e.code==="Space" && e.target.tagName!=="INPUT"){ e.preventDefault(); const a=$("au"); a.paused?a.play():a.pause(); } });
+$("save").onclick = () => {
+  if (!fileName){ $("msg").textContent = "pick a song first"; return; }
+  const labels = {}; for (const [id,s] of Object.entries(state)) if (s.state!=="absent") labels[id] = {state:s.state, intervals:(s.intervals||[]).filter(iv=>iv[1]!=null)};
+  const doc = {schema:1, taxonomy_version:"__TAXVER__", audio_filename:fileName, artist:$("artist").value.trim(), title:$("title").value.trim(),
+    genre:$("genre").value.trim(), duration_s:+($("au").duration||0).toFixed(2), listened_fully:$("full").checked, labels,
+    notes:$("notes").value.trim(), labelled_at:new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(doc,null,1)], {type:"application/json"}); const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = (doc.artist? doc.artist+" - " : "") + (doc.title||fileName) + ".labels.json"; a.click();
+  $("msg").textContent = "saved: " + a.download + (doc.listened_fully ? "" : " (not marked as fully listened: unmarked instruments will count as unknown)");
+};
+render();
+</script></body></html>
