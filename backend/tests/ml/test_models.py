@@ -119,3 +119,16 @@ def test_mel_cache_memmap_roundtrip_and_rows_view(tmp_path, monkeypatch):
     v = _Rows(X, [4, 0, 2])
     assert len(v) == 3 and float(v[0][0, 0]) == 4 and float(v[2, 0, 0]) == 2
     assert [float(r[0, 0]) for r in v.materialize()] == [4, 0, 2]
+
+
+def test_commercial_licence_filter_and_concat_view():
+    from disstruments.ml.models.__main__ import _Concat, _Rows, commercial_ok
+    assert commercial_ok("Attribution") and commercial_ok("Attribution-ShareAlike")
+    assert not commercial_ok("Attribution-NonCommercial-ShareAlike 3.0 International")
+    assert not commercial_ok("Attribution-Noncommercial-No Derivative Works 3.0 United States")
+    assert not commercial_ok("Creative Commons Attribution-NonCommercial-NoDerivatives 4.0")
+    assert not commercial_ok("")
+    a = np.arange(3 * 2 * 4).reshape(3, 2, 4); b = 100 + np.arange(2 * 2 * 4).reshape(2, 2, 4)
+    v = _Concat([_Rows(a, [2, 0]), _Rows(b, [1])])
+    assert len(v) == 3 and v.shape == (3, 2, 4)
+    assert (v[0] == a[2]).all() and (v[2] == b[1]).all() and (v[1, :, 1:3] == a[0, :, 1:3]).all()

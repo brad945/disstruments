@@ -130,6 +130,41 @@ def cmd_mels(a) -> int:
     return 0
 
 
+COMMERCIAL_BLOCKERS = ("noncommercial", "no derivative", "noderivatives", "noderivs")
+
+
+def openmic_licences(root: Path) -> dict[str, str]:
+    """sample_key -> FMA licence title (per-clip licences: most OpenMIC clips are NC/ND)."""
+    import csv
+    with open(Path(root) / "openmic-2018-metadata.csv", newline="") as f:
+        return {r["sample_key"]: r["license_title"] for r in csv.DictReader(f)}
+
+
+def commercial_ok(title: str) -> bool:
+    t = title.lower().replace("-", " ").replace("_", " ")
+    t2 = t.replace(" ", "")
+    return bool(title) and not any(b.replace(" ", "") in t2 for b in COMMERCIAL_BLOCKERS)
+
+
+class _Concat:
+    """Row view over several (X, rows) sources, e.g. synthetic + real co-training data."""
+
+    def __init__(self, parts):
+        self.parts = parts
+        self.index = [(p, r) for p, view in enumerate(parts) for r in range(len(view))]
+        self.shape = (len(self.index),) + tuple(parts[0].shape[1:])
+
+    def __len__(self):
+        return len(self.index)
+
+    def __getitem__(self, k):
+        if isinstance(k, tuple):
+            p, r = self.index[k[0]]
+            return self.parts[p][(r,) + k[1:]]
+        p, r = self.index[k]
+        return self.parts[p][r]
+
+
 class _Rows:
     """Lazy row view over a (possibly memmapped) mel cache: X[i] reads one clip from disk."""
 
@@ -169,15 +204,35 @@ def cmd_scratch(a) -> int:
     X, Y, Mk = xy("train")
     Xv, Yv, Mv = xy("val")
     Xv = Xv.materialize()                                  # val is small: keep in RAM
+    cot = {}
+    if a.cotrain_openmic:
+        # M4 L1: real coarse labels (masked, partial) added to the synthetic training set.
+        oidx = load_dataset("openmic", a.openmic_root, check_split_leakage=False)
+        lic = openmic_licences(a.openmic_root)
+        recs = oidx.split("train")
+        if a.cotrain_licence == "commercial":
+            recs = [r for r in recs if commercial_ok(lic.get(r.item_id, ""))]
+        oids, oy, om = label_matrices(label_items(recs, "mix"), tax)
+        ocids, OX = S.load_mel_cache(a.cache / "mels" / "openmic_train_mix.npz")
+        opos = {i: k for k, i in enumerate(ocids)}
+        keep = [k for k, i in enumerate(oids) if i in opos]
+        orow = _Rows(OX, [opos[oids[k]] for k in keep])
+        X = _Concat([X, orow])
+        Y, Mk = np.concatenate([Y, oy[keep]]), np.concatenate([Mk, om[keep]])
+        cot = {"dataset": "openmic", "split": "train", "licence": a.cotrain_licence,
+               "n": len(keep)}
+        print(f"co-training with {len(keep)} OpenMIC train clips (licence={a.cotrain_licence})")
     cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs)
     model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg)
     meta = {"model": "scratch_cnn", "n_params": S.n_params(model), "backbone": None,
             "backbone_license": "none (random init)", "commercial_clean": a.commercial_only,
             "train": {"dataset": "synthetic", "n_train": len(X), "n_val": len(Xv),
                       "commercial_only": a.commercial_only},
-            "best_val_map": max(h["val_map"] for h in hist), "epochs_run": len(hist)}
+            "best_val_map": max(h["val_map"] for h in hist), "epochs_run": len(hist),
+            "cotrain": cot}
     a.out.mkdir(parents=True, exist_ok=True)
-    tag = f"_{a.mel_prefix}" + (f"_n{a.train_limit}" if a.train_limit else "")
+    tag = (f"_{a.mel_prefix}" + (f"_n{a.train_limit}" if a.train_limit else "")
+           + (f"_cot{a.cotrain_licence}" if a.cotrain_openmic else ""))
     S.save(model, a.out / f"scratch_cnn{tag}.pt", cfg, hist, meta)
     from .embed import _device
     for spec in a.eval:
@@ -333,6 +388,9 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--epochs", type=int, default=40)
     sc.add_argument("--mel-prefix", default="synthetic", help="mel cache prefix, e.g. synthetic_v2")
     sc.add_argument("--train-limit", type=int, help="use a nested random subset of N train clips")
+    sc.add_argument("--cotrain-openmic", action="store_true", help="M4 L1: add OpenMIC train (real, coarse)")
+    sc.add_argument("--cotrain-licence", default="all", choices=("all", "commercial"))
+    sc.add_argument("--openmic-root", type=Path)
     sc.add_argument("--seed", type=int, default=0)
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
