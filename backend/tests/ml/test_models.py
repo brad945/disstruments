@@ -103,3 +103,19 @@ def test_global_temperature_commutes_with_max_propagation():
     a = tax.max_propagate(apply_temperatures(s, [0] * len(tax), g))
     b = apply_temperatures(tax.max_propagate(s), [0] * len(tax), g)
     assert np.allclose(a, b)
+
+
+def test_mel_cache_memmap_roundtrip_and_rows_view(tmp_path, monkeypatch):
+    from disstruments.ml.models import scratch as S
+    from disstruments.ml.models.__main__ import _Rows
+    fake = {f"c{i}": np.full((S.N_MELS, S.FRAMES - (i % 2)), i, np.float16) for i in range(5)}
+    monkeypatch.setattr(S, "logmel", lambda p: fake[p.stem])
+    from concurrent import futures
+    monkeypatch.setattr(futures, "ProcessPoolExecutor", futures.ThreadPoolExecutor)
+    out = S.build_mel_cache([(k, tmp_path / f"{k}.flac") for k in fake], tmp_path / "x.npz", workers=2)
+    ids, X = S.load_mel_cache(tmp_path / "x.npz")
+    assert ids == list(fake) and isinstance(X, np.memmap) and X.shape == (5, S.N_MELS, S.FRAMES)
+    assert float(X[3, 0, 0]) == 3 and float(X[1, 0, -1]) == 0          # short clip zero-padded
+    v = _Rows(X, [4, 0, 2])
+    assert len(v) == 3 and float(v[0][0, 0]) == 4 and float(v[2, 0, 0]) == 2
+    assert [float(r[0, 0]) for r in v.materialize()] == [4, 0, 2]

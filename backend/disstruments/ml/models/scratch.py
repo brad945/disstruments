@@ -36,17 +36,30 @@ def logmel(path: Path) -> np.ndarray:
 
 
 def build_mel_cache(items: Sequence[tuple[str, Path]], out: Path, workers: int = 6) -> Path:
+    """Streams log-mels into a disk-backed `.npy` memmap (+ `.ids.txt`), so 100k clips
+    (~11 GB) never have to fit in RAM. Older `.npz` caches are still readable."""
     from concurrent.futures import ProcessPoolExecutor
+    out = out.with_suffix(".npy")
     out.parent.mkdir(parents=True, exist_ok=True)
     ids = [i for i, _ in items]
+    X = np.lib.format.open_memmap(out, mode="w+", dtype=np.float16, shape=(len(ids), N_MELS, FRAMES))
     with ProcessPoolExecutor(workers) as ex:
-        mels = list(ex.map(logmel, [p for _, p in items], chunksize=16))
-    X = np.stack([np.pad(m, ((0, 0), (0, FRAMES - m.shape[1]))) for m in mels])
-    np.savez(out, ids=np.array(ids), X=X)
+        for k, m in enumerate(ex.map(logmel, [p for _, p in items], chunksize=32)):
+            X[k, :, : m.shape[1]] = m
+            if m.shape[1] < FRAMES:
+                X[k, :, m.shape[1]:] = 0
+    X.flush()
+    out.with_suffix(".ids.txt").write_text("\n".join(ids))
     return out
 
 
 def load_mel_cache(path: Path) -> tuple[list[str], np.ndarray]:
+    """-> (ids, X) where X is a read-only memmap for `.npy` caches (batches are read from
+    disk on demand), or an in-memory array for legacy `.npz` caches."""
+    path = Path(path)
+    if path.with_suffix(".npy").exists():
+        ids = path.with_suffix(".ids.txt").read_text().split("\n")
+        return ids, np.load(path.with_suffix(".npy"), mmap_mode="r")
     z = np.load(path, allow_pickle=False)
     return z["ids"].tolist(), z["X"]
 

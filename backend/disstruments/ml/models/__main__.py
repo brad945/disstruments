@@ -124,10 +124,29 @@ def cmd_mels(a) -> int:
     opts = {"check_split_leakage": False} if a.dataset == "openmic" else {}
     idx = load_dataset(a.dataset, a.root, **opts)
     items = _audio_items(idx.split(a.split), a.unit)
-    out = a.cache / "mels" / f"{a.dataset}_{a.split}_{a.unit}.npz"
+    out = a.cache / "mels" / f"{a.prefix or a.dataset}_{a.split}_{a.unit}.npz"
     build_mel_cache(items, out, workers=a.workers)
     print(f"wrote {out} ({len(items)} items)")
     return 0
+
+
+class _Rows:
+    """Lazy row view over a (possibly memmapped) mel cache: X[i] reads one clip from disk."""
+
+    def __init__(self, X, rows):
+        self.X, self.rows = X, np.asarray(rows)
+        self.shape = (len(self.rows),) + tuple(X.shape[1:])
+
+    def __len__(self):
+        return len(self.rows)
+
+    def __getitem__(self, k):
+        if isinstance(k, tuple):
+            return self.X[(self.rows[k[0]],) + k[1:]]
+        return self.X[self.rows[k]]
+
+    def materialize(self):
+        return np.asarray(self.X[np.sort(self.rows)])[np.argsort(np.argsort(self.rows))]
 
 
 def cmd_scratch(a) -> int:
@@ -139,12 +158,17 @@ def cmd_scratch(a) -> int:
 
     def xy(split):
         ids, y, m = label_matrices(label_items(idx.split(split), "mix"), tax)
-        cids, X = S.load_mel_cache(a.cache / "mels" / f"synthetic_{split}_mix.npz")
+        cids, X = S.load_mel_cache(a.cache / "mels" / f"{a.mel_prefix}_{split}_mix.npz")
         pos = {i: k for k, i in enumerate(cids)}
-        return X[[pos[i] for i in ids]], y, m
+        rows = np.array([pos[i] for i in ids])
+        if split == "train" and a.train_limit:            # data-scaling curve: nested subsets
+            keep = np.random.default_rng(0).permutation(len(rows))[: a.train_limit]
+            rows, y, m = rows[np.sort(keep)], y[np.sort(keep)], m[np.sort(keep)]
+        return _Rows(X, rows), y, m
 
     X, Y, Mk = xy("train")
     Xv, Yv, Mv = xy("val")
+    Xv = Xv.materialize()                                  # val is small: keep in RAM
     cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs)
     model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg)
     meta = {"model": "scratch_cnn", "n_params": S.n_params(model), "backbone": None,
@@ -153,7 +177,8 @@ def cmd_scratch(a) -> int:
                       "commercial_only": a.commercial_only},
             "best_val_map": max(h["val_map"] for h in hist), "epochs_run": len(hist)}
     a.out.mkdir(parents=True, exist_ok=True)
-    S.save(model, a.out / "scratch_cnn.pt", cfg, hist, meta)
+    tag = f"_{a.mel_prefix}" + (f"_n{a.train_limit}" if a.train_limit else "")
+    S.save(model, a.out / f"scratch_cnn{tag}.pt", cfg, hist, meta)
     from .embed import _device
     for spec in a.eval:
         ds, split = spec.split(":")
@@ -162,8 +187,9 @@ def cmd_scratch(a) -> int:
             print(f"skip {spec}: no mel cache {f.name}")
             continue
         ids, Xe = S.load_mel_cache(f)
+        ids = [i for i in ids if i]
         scores = S.predict(model, Xe, _device())
-        p = save_predictions(a.out / f"scratch_{ds}_{split}_mix.npz", ids, nodes, scores,
+        p = save_predictions(a.out / f"scratch{tag}_{ds}_{split}_mix.npz", ids, nodes, scores,
                              tax.version, dataset=ds, meta=meta)
         print(f"wrote {p} ({len(ids)} items; best val mAP {meta['best_val_map']:.3f}, "
               f"{meta['n_params']/1e6:.2f}M params)")
@@ -298,12 +324,15 @@ def main(argv: list[str] | None = None) -> int:
     mm.add_argument("--unit", default="mix", choices=("mix", "stem"))
     mm.add_argument("--cache", required=True, type=Path)
     mm.add_argument("--workers", type=int, default=6)
+    mm.add_argument("--prefix", help="cache name prefix (default: dataset name)")
     mm.set_defaults(fn=cmd_mels)
     sc = sub.add_parser("scratch", help="M3 R5: train the from-scratch CNN (A2)")
     sc.add_argument("--train-root", required=True, type=Path)
     sc.add_argument("--cache", required=True, type=Path)
     sc.add_argument("--eval", nargs="*", default=["synthetic:test"])
     sc.add_argument("--epochs", type=int, default=40)
+    sc.add_argument("--mel-prefix", default="synthetic", help="mel cache prefix, e.g. synthetic_v2")
+    sc.add_argument("--train-limit", type=int, help="use a nested random subset of N train clips")
     sc.add_argument("--seed", type=int, default=0)
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
