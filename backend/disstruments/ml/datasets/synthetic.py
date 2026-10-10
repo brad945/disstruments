@@ -36,6 +36,9 @@ def load(root: Path | str, *, commercial_only: bool = False, strict: bool = True
             continue
         versions.add(lab.get("taxonomy_version"))
         leaves = lab["positive_leaves"]
+        unknown = set()
+        for node in lab.get("unknown_below", []):     # coarse labels: subtree unknown
+            unknown |= set(tax.descendants(node))
         bad = [l for l in leaves if l not in tax]
         if bad:
             raise ValueError(f"synthetic {lab['clip_id']}: leaves not in taxonomy {tax.version}: {bad}")
@@ -43,14 +46,18 @@ def load(root: Path | str, *, commercial_only: bool = False, strict: bool = True
         stems = tuple(
             StemLabels(stem_id=s["leaf"], positive=frozenset(tax.close_upward(
                 [s["leaf"]] + (list(lab.get("implied_leaves") or {}) if s["leaf"].startswith("drums") else []))),
-                       observed=all_nodes, source_labels=(s["source_id"],),
-                       audio=(cdir / "stems" / f"{s['leaf']}.flac") if lab.get("stems_saved", True) else None,
+                       observed=all_nodes - (frozenset(tax.descendants(s["leaf"]))
+                                             if s["leaf"] != s.get("part_leaf", s["leaf"]) else frozenset()),
+                       source_labels=(s["source_id"],),
+                       audio=(lambda f: f if f.exists() else None)(cdir / "stems" / f"{s['leaf']}.flac")
+                       if lab.get("stems_saved", True) else None,
                        bleed=False)
             for s in lab["stems"])
         records.append(Record(
             dataset=NAME, item_id=lab["clip_id"], split=lab["split"],
             artist=lab["midi"]["composition"].split("/", 1)[0],   # = split key
-            positive=frozenset(tax.close_upward(leaves)), observed=all_nodes,
+            positive=frozenset(tax.close_upward(leaves)),
+            observed=all_nodes - frozenset(unknown - set(tax.close_upward(leaves))),
             source_labels=tuple(s["source_id"] for s in lab["stems"]),
             audio={"mix": cdir / "mix.flac"}, stems=stems,
             extra={"commercial_clean": lab.get("commercial_clean"),

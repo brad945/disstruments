@@ -99,10 +99,11 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         mix_gain_db = round(float(rng.uniform(-6, 3)), 2)       # random balance
         wet = wet * np.float32(10 ** (mix_gain_db / 20))
         if save_stems:          # disk: stems are kept for a subset of clips only (v2)
-            sf.write(cdir / "stems" / f"{part.leaf}.flac", np.clip(wet, -1, 1), sr, subtype="PCM_16")
+            sf.write(cdir / "stems" / f"{src.label_as or part.leaf}.flac", np.clip(wet, -1, 1), sr, subtype="PCM_16")
         stem_audio.append(wet)
+        label = src.label_as or part.leaf
         stems_meta.append({
-            "leaf": part.leaf, "source_id": src.id, "source_license": src.license,
+            "leaf": label, "part_leaf": part.leaf, "source_id": src.id, "source_license": src.license,
             "commercial_clean": src.commercial_clean, "engine": src.engine,
             "engine_meta": emeta, "fx_chain": chain, "mix_gain_db": mix_gain_db,
             "lufs": _lufs(wet, sr),
@@ -136,6 +137,8 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         "stems_saved": save_stems, "fx_profile": fx_profile, "source_role": source_role,
         "held_out_stems": sorted(s["leaf"] for s in stems_meta if (s["source_id"], s["leaf"]) in holdout),
         "positive_leaves": sorted({s["leaf"] for s in stems_meta} | set(implied)),
+        # nodes whose status is unknown because a source was labelled coarsely (label_as)
+        "unknown_below": sorted({s["leaf"] for s in stems_meta if s["leaf"] != s["part_leaf"]}),
         "implied_leaves": {l: "hat/cymbal notes in the drum part" for l in implied},
         # Lakh compositions are not cleared, so Lakh renders are never commercially clean
         # (licence-clean end state, docs/DIRECTION_NOTES.md); the sources may still be.

@@ -56,7 +56,12 @@ def set_nearest(plugin, name: str, target: float) -> Any:
 
 
 def _set(plugin, rec: dict, name: str, value: Any) -> None:
-    """Choice/string params are set directly; numeric ones via nearest valid value."""
+    """Choice/string params are set directly; numeric ones via nearest valid value.
+    Surge exposes some parameters only for certain oscillator types; a parameter that
+    doesn't exist for the current type is skipped and recorded as such."""
+    if name not in plugin.parameters:
+        rec.setdefault("_skipped", []).append(name)
+        return
     if isinstance(value, (str, bool)):
         setattr(plugin, name, value)
         rec[name] = value
@@ -201,6 +206,99 @@ def _dexed_ep(plugin, rng, *, tine: bool):
     return rec
 
 
+# ---------------------------------------------------------------------- Surge v2 (M4)
+# Wider timbre families per leaf: the leave-source-out test showed synth leaves trained on
+# one narrow recipe don't generalize to other synths. Each call draws an oscillator engine,
+# filter model, unison and drive, so the leaf is learned as a *family* of sounds.
+_LP = ["LP 12 dB", "LP 24 dB", "LP Legacy Ladder", "LP Vintage Ladder", "LP OB-Xd 12 dB",
+       "LP OB-Xd 24 dB", "LP K35"]
+
+
+def _osc(plugin, rec, rng, types):
+    t = str(rng.choice(types))
+    _set(plugin, rec, "a_osc_1_type", t)
+    _set(plugin, rec, "a_osc_1_shape", _u(rng, -100, 100))
+    return t
+
+
+def _common_v2(plugin, rec, rng, *, unison_max: int, drive_p: float):
+    nv = int(rng.integers(1, unison_max + 1))
+    _set(plugin, rec, "a_osc_1_unison_voices", f"{nv} voice" + ("s" if nv > 1 else ""))
+    _set(plugin, rec, "a_osc_1_unison_detune", _u(rng, 5, 40))
+    _set(plugin, rec, "a_osc_2_mute", bool(rng.random() < 0.5))
+    _set(plugin, rec, "a_osc_2_octave", float(rng.choice([-1.0, 0.0, 1.0])))
+    _set(plugin, rec, "a_osc_drift", _u(rng, 0, 0.5))
+    drive = rng.random() < drive_p
+    _set(plugin, rec, "a_waveshaper_type", str(rng.choice(["Soft", "Hard", "Asymmetric", "Digital"])) if drive else "Off")
+    _set(plugin, rec, "a_waveshaper_drive", _u(rng, 1, 12) if drive else 0.0)
+
+
+def _surge_lead_v2(plugin, rng):
+    rec: dict = {"recipe": "lead_v2"}
+    rec["osc_type"] = _osc(plugin, rec, rng, ["Classic", "Modern", "FM2", "FM3", "Wavetable", "Twist", "Alias", "Window"])
+    _common_v2(plugin, rec, rng, unison_max=7, drive_p=0.35)
+    _set(plugin, rec, "a_filter_1_type", str(rng.choice(_LP)))
+    _set(plugin, rec, "a_filter_1_cutoff", _lu(rng, 1200, 10000))
+    _set(plugin, rec, "a_filter_1_resonance", _u(rng, 0, 60))
+    _set(plugin, rec, "a_amp_eg_attack", _lu(rng, 1, 60))
+    _set(plugin, rec, "a_amp_eg_sustain", _u(rng, 60, 100))
+    _set(plugin, rec, "a_amp_eg_release", _lu(rng, 40, 600))
+    _set(plugin, rec, "a_portamento", _u(rng, 0, 100) if rng.random() < 0.35 else 0.0)
+    return rec
+
+
+def _surge_pluck_v2(plugin, rng):
+    rec: dict = {"recipe": "pluck_v2"}
+    rec["osc_type"] = _osc(plugin, rec, rng, ["Classic", "String", "Modern", "FM2", "Wavetable", "Twist"])
+    _common_v2(plugin, rec, rng, unison_max=3, drive_p=0.15)
+    _set(plugin, rec, "a_filter_1_type", str(rng.choice(_LP)))
+    _set(plugin, rec, "a_filter_1_cutoff", _lu(rng, 200, 2500))
+    _set(plugin, rec, "a_filter_1_resonance", _u(rng, 0, 55))
+    _set(plugin, rec, "a_filter_1_feg_mod_amount", _u(rng, 18, 66))
+    _set(plugin, rec, "a_filter_eg_decay", _lu(rng, 40, 450))
+    _set(plugin, rec, "a_filter_eg_sustain", _u(rng, 0, 10))
+    _set(plugin, rec, "a_amp_eg_attack", _lu(rng, 1, 6))
+    _set(plugin, rec, "a_amp_eg_decay", _lu(rng, 100, 900))
+    _set(plugin, rec, "a_amp_eg_sustain", _u(rng, 0, 20))
+    _set(plugin, rec, "a_amp_eg_release", _lu(rng, 60, 500))
+    return rec
+
+
+def _surge_pad_v2(plugin, rng):
+    rec: dict = {"recipe": "pad_v2"}
+    rec["osc_type"] = _osc(plugin, rec, rng, ["Classic", "Wavetable", "Modern", "Window", "Twist", "FM2"])
+    _common_v2(plugin, rec, rng, unison_max=9, drive_p=0.1)
+    _set(plugin, rec, "a_filter_1_type", str(rng.choice(_LP + ["BP 12 dB"])))
+    _set(plugin, rec, "a_filter_1_cutoff", _lu(rng, 500, 8000))
+    _set(plugin, rec, "a_filter_1_resonance", _u(rng, 0, 40))
+    _set(plugin, rec, "a_amp_eg_attack", _lu(rng, 80, 2500))
+    _set(plugin, rec, "a_amp_eg_sustain", _u(rng, 60, 100))
+    _set(plugin, rec, "a_amp_eg_release", _lu(rng, 300, 3500))
+    return rec
+
+
+def _surge_bass_analog_v2(plugin, rng):
+    rec: dict = {"recipe": "bass_analog_v2"}
+    rec["osc_type"] = _osc(plugin, rec, rng, ["Classic", "Modern", "FM2", "Twist", "Wavetable", "Alias"])
+    _common_v2(plugin, rec, rng, unison_max=3, drive_p=0.4)
+    _set(plugin, rec, "a_osc_1_sub_mix", _u(rng, 0, 70))
+    _set(plugin, rec, "a_octave", -1.0)
+    _set(plugin, rec, "a_filter_1_type", str(rng.choice(_LP)))
+    _set(plugin, rec, "a_filter_1_cutoff", _lu(rng, 120, 2500))
+    _set(plugin, rec, "a_filter_1_resonance", _u(rng, 0, 60))
+    _set(plugin, rec, "a_filter_1_feg_mod_amount", _u(rng, 0, 48))
+    _set(plugin, rec, "a_filter_eg_decay", _lu(rng, 40, 700))
+    _set(plugin, rec, "a_filter_eg_sustain", _u(rng, 0, 60))
+    _set(plugin, rec, "a_amp_eg_attack", _lu(rng, 1, 15))
+    _set(plugin, rec, "a_amp_eg_sustain", _u(rng, 50, 100))
+    _set(plugin, rec, "a_amp_eg_release", _lu(rng, 20, 300))
+    return rec
+
+
+RECIPES_V2 = {"bass.synth.analog": _surge_bass_analog_v2, "keys.synth.pad": _surge_pad_v2,
+              "keys.synth.lead": _surge_lead_v2, "keys.synth.pluck": _surge_pluck_v2}
+
+
 RECIPES: dict[str, dict[str, Callable]] = {
     "surge_xt": {"bass.synth.analog": _surge_bass_analog, "bass.synth.sub_808": _surge_bass_808,
                  "keys.synth.pad": _surge_pad, "keys.synth.lead": _surge_lead,
@@ -217,9 +315,16 @@ def describe_parameters(plugin) -> dict[str, Any]:
             for n, p in plugin.parameters.items()}
 
 
+import os as _os
+
+PATCH_PROFILE = _os.environ.get("DISS_PATCH_PROFILE", "v1")   # build --patch-profile sets it
+
+
 def make_patch(engine: str, leaf: str, rng: np.random.Generator, plugin) -> dict[str, Any]:
     """Apply a randomized recipe for `leaf` to `plugin`; return the recipe actually used."""
-    recipes = RECIPES.get(engine) or {}
+    recipes = dict(RECIPES.get(engine) or {})
+    if engine == "surge_xt" and PATCH_PROFILE == "v2":
+        recipes.update(RECIPES_V2)
     if leaf not in recipes:
         raise NotImplementedError(f"no {engine} patch recipe for {leaf}")
     return recipes[leaf](plugin, rng)
