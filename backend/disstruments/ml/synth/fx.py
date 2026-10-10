@@ -184,3 +184,52 @@ def apply_chain(audio: np.ndarray, sr: int, chain: Chain) -> np.ndarray:
             plugins.append(getattr(pedalboard, name)(**p))
     flush()
     return x
+
+
+# --- Drive continuum (M4 L2b, fx_profile "drive") ------------------------------------
+# IDMT showed the model learned "distorted = high gain": light overdrive ranked as cleaner
+# than clean. The fix renders clean electric-guitar sources through a random amount of
+# drive and labels the result by the distortion it *measurably* produced, not by the knob.
+# pedalboard's Distortion is level-dependent, so the knob alone isn't a label.
+# Thresholds were fixed a priori from sine THD (clean amps < ~3%, overdrive >= ~10%) and
+# never tuned on IDMT (the test set). Between them, clean vs distorted is unknown (masked).
+DRIVE_CLEAN_MAX = 0.03
+DRIVE_DIST_MIN = 0.10
+
+
+def nonlinearity(x: np.ndarray, y: np.ndarray) -> float:
+    """Residual energy of y after the best linear (scalar) fit to x, relative to that fit.
+    ~THD for a memoryless waveshaper; 0 for a pure gain."""
+    x = x.astype(np.float64)
+    y = y.astype(np.float64)
+    xx = float(np.dot(x, x))
+    if xx <= 0:
+        return 0.0
+    a = float(np.dot(x, y)) / xx
+    fit = a * x
+    den = float(np.sqrt(np.dot(fit, fit)))
+    return float(np.sqrt(np.dot(y - fit, y - fit)) / den) if den > 0 else 0.0
+
+
+def drive_stage(dry: np.ndarray, sr: int, rng: np.random.Generator) -> tuple[np.ndarray, dict]:
+    """Normalize to a random input level, then apply a random amount of drive.
+    Returns (driven mono audio, meta with the measured nonlinearity)."""
+    import pedalboard
+    in_db = _u(rng, -24, -12)                                   # input RMS, dBFS
+    drive_db = _u(rng, 0, 40)
+    x = dry.astype(np.float32)
+    rms = float(np.sqrt(np.mean(x.astype(np.float64) ** 2)))
+    if rms > 0:
+        x = x * np.float32(10 ** (in_db / 20) / rms)
+    y = pedalboard.Pedalboard([pedalboard.Distortion(drive_db=drive_db)])(x[None, :], sr)[0]
+    nl = nonlinearity(x, y)
+    return y, {"input_rms_db": in_db, "drive_db": drive_db, "nonlinearity": round(nl, 4),
+               "label": drive_label(nl)}
+
+
+def drive_label(nl: float) -> str | None:
+    if nl <= DRIVE_CLEAN_MAX:
+        return "guitar.electric.clean"
+    if nl >= DRIVE_DIST_MIN:
+        return "guitar.electric.distorted"
+    return None                                                  # ambiguous: masked

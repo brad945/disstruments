@@ -47,7 +47,7 @@ def load(root: Path | str, *, commercial_only: bool = False, strict: bool = True
             StemLabels(stem_id=s["leaf"], positive=frozenset(tax.close_upward(
                 [s["leaf"]] + (list(lab.get("implied_leaves") or {}) if s["leaf"].startswith("drums") else []))),
                        observed=all_nodes - (frozenset(tax.descendants(s["leaf"]))
-                                             if s["leaf"] != s.get("part_leaf", s["leaf"]) else frozenset()),
+                                             if s.get("coarse", s["leaf"] != s.get("part_leaf", s["leaf"])) else frozenset()),
                        source_labels=(s["source_id"],),
                        audio=(lambda f: f if f.exists() else None)(cdir / "stems" / f"{s['leaf']}.flac")
                        if lab.get("stems_saved", True) else None,

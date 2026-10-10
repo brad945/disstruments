@@ -315,3 +315,60 @@ def test_label_as_marks_subtree_unknown(midi_root, tmp_path, tax):
     reg.write_text(yaml.safe_dump(bad))
     with pytest.raises(SourceError, match="label_as"):
         load_registry(reg, tax)
+
+
+# ------------------------------------------------------------------- drive continuum (M4 L2b)
+def test_nonlinearity_and_drive_label():
+    from disstruments.ml.synth.fx import (DRIVE_CLEAN_MAX, DRIVE_DIST_MIN, drive_label,
+                                          drive_stage, nonlinearity)
+    t = np.arange(16000) / 16000
+    x = (0.1 * np.sin(2 * np.pi * 220 * t)).astype(np.float32)
+    assert nonlinearity(x, 3.0 * x) < 1e-6                       # pure gain is not distortion
+    assert nonlinearity(x, np.tanh(40 * x)) > DRIVE_DIST_MIN      # hard clipping is
+    assert drive_label(0.0) == "guitar.electric.clean"
+    assert drive_label(DRIVE_DIST_MIN) == "guitar.electric.distorted"
+    assert drive_label((DRIVE_CLEAN_MAX + DRIVE_DIST_MIN) / 2) is None
+    seen = set()
+    for seed in range(40):                                       # label follows measurement
+        y, meta = drive_stage(x, 16000, np.random.default_rng(seed))
+        assert meta["label"] == drive_label(meta["nonlinearity"])
+        seen.add(meta["label"])
+    assert seen == {"guitar.electric.clean", "guitar.electric.distorted", None}
+
+
+def test_drive_profile_labels_by_measurement(midi_root, tmp_path, tax):
+    import yaml
+    from disstruments.ml.datasets import load_dataset
+    from disstruments.ml.synth.build import build
+    doc = {"version": 1, "root": str(tmp_path / "src"), "v1_leaves": V1, "sources": [
+        {"id": f"fake_{i}", "name": "x", "kind": "synth", "engine": "fake", "leaves": [l],
+         "license": "CC0-1.0", "commercial_clean": True} for i, l in enumerate(V1)]}
+    p = tmp_path / "reg.yaml"
+    p.write_text(yaml.safe_dump(doc))
+    clean_src = {f"fake_{i}" for i, l in enumerate(V1) if l == "guitar.electric.clean"}
+    out = tmp_path / "drv"
+    build(midi_root, out, 40, seed=2, sr=16000, registry_path=str(p), fake=True,
+          windows_per_file=8, fx_profile="drive")
+    labs = [json.loads(f.read_text()) for f in (out / "clips").glob("*/labels.json")]
+    driven = [(lab, s) for lab in labs for s in lab["stems"] if s.get("drive")]
+    assert driven, "no drive-path stems rendered"
+    for lab, s in driven:
+        assert s["source_id"] in clean_src                       # drive path uses clean sources
+        assert not any(c["plugin"] == "Distortion" for c in s["fx_chain"])
+        want = s["drive"]["label"] or "guitar.electric"
+        assert s["leaf"] == want and s["coarse"] == (s["drive"]["label"] is None)
+        if s["coarse"]:
+            assert "guitar.electric" in lab["unknown_below"]
+    idx = {r.item_id: r for r in load_dataset("synthetic", out).records}
+    for lab, s in driven:
+        r = idx[lab["clip_id"]]
+        assert "guitar.electric" in r.positive
+        if s["coarse"] and not ({"guitar.electric.clean", "guitar.electric.distorted"}
+                                & set(lab["positive_leaves"])):
+            assert "guitar.electric.clean" not in r.observed
+            assert "guitar.electric.distorted" not in r.observed
+    # the default profile never takes the drive path
+    out1 = tmp_path / "v1"
+    build(midi_root, out1, 12, seed=2, sr=16000, registry_path=str(p), fake=True)
+    assert not any(s.get("drive") for f in (out1 / "clips").glob("*/labels.json")
+                   for s in json.loads(f.read_text())["stems"])
