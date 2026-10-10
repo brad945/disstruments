@@ -426,6 +426,8 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--medleydb-audio-root", type=Path)
     q.add_argument("--moisesdb-root", type=Path)
     q.add_argument("--golden-root", type=Path)
+    for n in ("idmt-bass", "idmt-bass-tracks", "idmt-fx"):
+        q.add_argument(f"--{n}-root", type=Path)
     q.add_argument("--commercial-only", action="store_true")
     q.add_argument("--seed", type=int, default=0)
     q.add_argument("--hidden", type=int, default=0, help="MLP head width (0 = linear probe)")
