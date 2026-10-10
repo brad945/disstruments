@@ -118,8 +118,15 @@ def probe_key_range(binary: str, sfz: Path, sr: int = 22050, cache: Path | None 
     return rng_
 
 
-def fit_octaves(pitches: list[int], lo: int, hi: int) -> int:
-    """Octave shift that puts the most notes inside [lo, hi] (ties: smallest |shift|)."""
+def fit_octaves(pitches: list[int], lo: int, hi: int, keep_frac: float = 0.8) -> int:
+    """Octave shift into [lo, hi]. No shift if >= `keep_frac` of the notes already fit
+    (M4 rigor fix: always maximizing coverage pushed e.g. YR basses (26-46) an octave down
+    on ordinary bass lines, making register a giveaway for the source). Otherwise the
+    shift covering the most notes (ties: smallest |shift|)."""
+    if not pitches:
+        return 0
+    if sum(lo <= p <= hi for p in pitches) >= keep_frac * len(pitches):
+        return 0
     best = max(range(-4, 5), key=lambda o: (sum(lo <= p + 12 * o <= hi for p in pitches), -abs(o)))
     return 12 * best
 

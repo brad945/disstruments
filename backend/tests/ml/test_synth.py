@@ -253,3 +253,36 @@ def test_fx_v2_identity_safe_and_applies():
     x = (np.random.default_rng(0).standard_normal((1, 16000)) * 0.1).astype(np.float32)
     y = apply_chain(x, 16000, stem_chain_v2("guitar.electric.distorted", rng) + master_chain_v2(rng))
     assert y.shape[0] == 1 and np.isfinite(y).all() and np.abs(y).max() > 0
+
+
+def test_fit_octaves_keeps_register_when_mostly_in_range():
+    from disstruments.ml.synth.engines import fit_octaves
+    assert fit_octaves([38, 40, 43, 45, 47], 26, 46) == 0       # 80% fit: no register shift
+    assert fit_octaves([50, 52, 55, 57], 26, 46) == -12
+
+
+def test_leave_source_out_build(midi_root, tmp_path):
+    import yaml
+    from disstruments.ml.synth.build import build
+    doc = {"version": 1, "root": str(tmp_path / "src"), "v1_leaves": V1, "sources": [
+        {"id": f"fake_{i}", "name": "x", "kind": "synth", "engine": "fake", "leaves": [l],
+         "license": "CC0-1.0", "commercial_clean": True} for i, l in enumerate(V1)] + [
+        {"id": "held_piano", "name": "h", "kind": "synth", "engine": "fake", "leaves": ["keys.piano"],
+         "license": "CC0-1.0", "commercial_clean": True}]}
+    reg = tmp_path / "reg.yaml"
+    reg.write_text(yaml.safe_dump(doc))
+    out = tmp_path / "lso"
+    # fake=True routes every source to the fake engine but keeps source ids/holdout logic
+    m = build(midi_root, out, 40, seed=3, sr=16000, registry_path=str(reg), fake=True,
+              holdout=["held_piano:keys.piano"], windows_per_file=6)
+    labs = [json.loads(p.read_text()) for p in (out / "clips").glob("*/labels.json")]
+    used = lambda l: {(s["source_id"], s["leaf"]) for s in l["stems"]}  # noqa: E731
+    train_like = [l for l in labs if l["split"] != "test_lso"]
+    lso = [l for l in labs if l["split"] == "test_lso"]
+    assert not any(("held_piano", "keys.piano") in used(l) for l in train_like)
+    assert lso and m["holdout"] == ["held_piano:keys.piano"]
+    piano_lso = [l for l in lso if "keys.piano" in l["positive_leaves"]]
+    assert piano_lso and all(("held_piano", "keys.piano") in used(l) for l in piano_lso)
+    assert all(l["source_role"] == "lso" for l in lso)
+    n_test = sum(l["split"] == "test" for l in labs)
+    assert len(lso) == n_test                                   # every test window twice

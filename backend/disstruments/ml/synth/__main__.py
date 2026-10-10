@@ -30,6 +30,9 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--limit-files", type=int)
     b.add_argument("--windows-per-file", type=int, default=2)
     b.add_argument("--fx-profile", default="v1", choices=("v1", "v2"))
+    b.add_argument("--holdout", nargs="*", default=[], metavar="SOURCE:LEAF",
+                   help="leave-source-out pairs: excluded from train/val; test windows are "
+                        "re-rendered with them as split 'test_lso'")
     b.add_argument("--stem-fraction", type=float, default=1.0,
                    help="save stem audio for this fraction of clips (labels always complete)")
     au = sub.add_parser("audition", help="dry examples per source -> local HTML listening page")
@@ -60,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
               registry_path=a.registry, sources_root=a.sources_root,
               commercial_only=a.commercial_only, fake=a.fake, limit_files=a.limit_files,
               windows_per_file=a.windows_per_file, stem_fraction=a.stem_fraction,
-              fx_profile=a.fx_profile)
+              fx_profile=a.fx_profile, holdout=a.holdout)
     print(json.dumps({k: m[k] for k in ("n_rendered", "splits", "timing_s", "stem_failures")}, indent=1))
     return 0
 

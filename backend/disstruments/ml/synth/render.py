@@ -53,13 +53,15 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
                 commercial_only: bool = False, taxonomy_version: str = "",
                 sha: str = "", midi_clean: bool = False,
                 midi_license: str = "CC-BY-4.0 (Lakh MIDI compilation; compositions not cleared)",
-                save_stems: bool = True, fx_profile: str = "v1") -> dict[str, Any] | None:
+                save_stems: bool = True, fx_profile: str = "v1",
+                holdout: frozenset = frozenset(), source_role: str = "train") -> dict[str, Any] | None:
     """Render one clip. Returns the labels dict (also written to disk), or None when no
     part could be rendered (e.g. every source failed or was silent)."""
     import soundfile as sf
 
     rng = np.random.default_rng(seed)
-    clip_id = hashlib.sha1(f"{window.midi_id}:{window.start}:{seed}".encode()).hexdigest()[:16]
+    clip_id = hashlib.sha1(f"{window.midi_id}:{window.start}:{seed}"
+                           f"{':' + source_role if source_role != 'train' else ''}".encode()).hexdigest()[:16]
     cdir = out_dir / "clips" / clip_id
     if (cdir / "labels.json").exists():                         # resumable builds
         return json.loads((cdir / "labels.json").read_text())
@@ -69,6 +71,13 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
     for part in window.parts:
         cands = registry.for_leaf(part.leaf or "", commercial_only=commercial_only)
         cands = [s for s in cands if s.engine in engines]
+        # Leave-source-out (M4 rigor): held-out (source, leaf) pairs never appear in the
+        # train pool; the LSO test uses them exclusively wherever a leaf has one.
+        held = [s for s in cands if (s.id, part.leaf) in holdout]
+        if source_role == "lso" and held:
+            cands = held
+        else:
+            cands = [s for s in cands if (s.id, part.leaf) not in holdout]
         if not cands:
             failures.append({"leaf": part.leaf, "error": "no source"})
             continue
@@ -124,7 +133,8 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         "schema_version": SCHEMA_VERSION, "clip_id": clip_id, "split": split, "seed": seed,
         "renderer_sha": sha, "taxonomy_version": taxonomy_version, "sample_rate": sr,
         "duration_s": window.duration,
-        "stems_saved": save_stems, "fx_profile": fx_profile,
+        "stems_saved": save_stems, "fx_profile": fx_profile, "source_role": source_role,
+        "held_out_stems": sorted(s["leaf"] for s in stems_meta if (s["source_id"], s["leaf"]) in holdout),
         "positive_leaves": sorted({s["leaf"] for s in stems_meta} | set(implied)),
         "implied_leaves": {l: "hat/cymbal notes in the drum part" for l in implied},
         # Lakh compositions are not cleared, so Lakh renders are never commercially clean
