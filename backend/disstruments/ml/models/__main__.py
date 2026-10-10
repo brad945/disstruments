@@ -359,7 +359,7 @@ def cmd_scratch_predict(a) -> int:
         prefix, split = spec.split(":")
         ids, Xe = S.load_mel_cache(a.cache / "mels" / f"{prefix}_{split}_mix.npz")
         scores = S.predict(model, Xe, dev)
-        ds = "openmic" if prefix == "openmic" else "synthetic"
+        ds = prefix if prefix in ("openmic", "moisesdb", "golden") or prefix.startswith("idmt") else "synthetic"
         out = a.out / f"{a.model.stem}__{prefix}_{split}_mix.npz"
         save_predictions(out, ids, nodes, scores, tax.version, dataset=ds, meta=meta)
         print(f"wrote {out} ({len(ids)} items)")
@@ -424,6 +424,8 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--openmic-root", type=Path)
     q.add_argument("--medleydb-root", type=Path)
     q.add_argument("--medleydb-audio-root", type=Path)
+    q.add_argument("--moisesdb-root", type=Path)
+    q.add_argument("--golden-root", type=Path)
     q.add_argument("--commercial-only", action="store_true")
     q.add_argument("--seed", type=int, default=0)
     q.add_argument("--hidden", type=int, default=0, help="MLP head width (0 = linear probe)")
