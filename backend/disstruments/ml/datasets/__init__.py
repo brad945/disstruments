@@ -7,7 +7,8 @@ from typing import Any
 from .base import DatasetIndex, Record, StemLabels, UnknownLabelsError
 
 DATASETS = ("medleydb", "openmic", "slakh", "synthetic", "golden",
-            "idmt_bass", "idmt_bass_tracks", "idmt_fx")   # idmt_*: test-only
+            "idmt_bass", "idmt_bass_tracks", "idmt_fx",   # idmt_*: test-only
+            "moisesdb")                                     # test-only (CC BY-NC-SA)
 
 
 def load_dataset(name: str, root: Path | str, **opts: Any) -> DatasetIndex:
@@ -29,6 +30,8 @@ def load_dataset(name: str, root: Path | str, **opts: Any) -> DatasetIndex:
         from .idmt import load_bass_tracks as load
     elif name == "idmt_fx":
         from .idmt import load_fx as load
+    elif name == "moisesdb":
+        from .moisesdb_clips import load
     else:
         raise ValueError(f"unknown dataset {name!r}; expected one of {DATASETS}")
     return load(root, **opts)
