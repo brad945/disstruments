@@ -184,6 +184,17 @@ def n_params(model) -> int:
     return sum(p.numel() for p in model.parameters())
 
 
+def load_model(path: Path, n_out: int, device: str):
+    import torch
+    ck = torch.load(path, map_location="cpu", weights_only=False)
+    c = dict(ck["cfg"])
+    c["channels"] = tuple(c["channels"])
+    cfg = ScratchConfig(**c)
+    model = make_model(n_out, cfg)
+    model.load_state_dict(ck["state"])
+    return model.to(device).eval()
+
+
 def save(model, path: Path, cfg: ScratchConfig, hist: list, extra: dict) -> None:
     import torch
     path.parent.mkdir(parents=True, exist_ok=True)

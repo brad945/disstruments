@@ -245,7 +245,8 @@ def cmd_scratch(a) -> int:
         ids = [i for i in ids if i]
         scores = S.predict(model, Xe, _device())
         p = save_predictions(a.out / f"scratch{tag}_{ds}_{split}_mix.npz", ids, nodes, scores,
-                             tax.version, dataset=ds, meta=meta)
+                             tax.version, dataset="synthetic" if ds.startswith("synthetic") else ds,
+                             meta=meta)
         print(f"wrote {p} ({len(ids)} items; best val mAP {meta['best_val_map']:.3f}, "
               f"{meta['n_params']/1e6:.2f}M params)")
     return 0
@@ -340,6 +341,63 @@ def cmd_lora(a) -> int:
     return 0
 
 
+def cmd_scratch_predict(a) -> int:
+    """Score an existing from-scratch model on other mel caches (e.g. leave-production-out:
+    a v1-production model on v2-production renders)."""
+    import json as _json
+
+    from . import scratch as S
+    from .embed import _device
+    tax = Taxonomy.load()
+    nodes = list(tax.nodes)
+    dev = _device()
+    model = S.load_model(a.model, len(nodes), dev)
+    meta = _json.loads(a.model.with_suffix(".json").read_text())
+    meta = {k: meta[k] for k in ("n_params", "cfg") if k in meta} | {"model": "scratch_cnn",
+                                                                      "model_file": a.model.name}
+    for spec in a.eval:
+        prefix, split = spec.split(":")
+        ids, Xe = S.load_mel_cache(a.cache / "mels" / f"{prefix}_{split}_mix.npz")
+        scores = S.predict(model, Xe, dev)
+        ds = "openmic" if prefix == "openmic" else "synthetic"
+        out = a.out / f"{a.model.stem}__{prefix}_{split}_mix.npz"
+        save_predictions(out, ids, nodes, scores, tax.version, dataset=ds, meta=meta)
+        print(f"wrote {out} ({len(ids)} items)")
+    return 0
+
+
+def cmd_shortcut(a) -> int:
+    """M4 rigor: non-timbre shortcut baseline (see ml/eval/shortcut.py)."""
+    from ..eval import shortcut as SC
+    tax = Taxonomy.load()
+    nodes = list(tax.nodes)
+    idx = load_dataset("synthetic", a.root)
+    cache = a.cache / "shortcut" / f"{a.root.name}.npz"
+    if cache.exists():
+        z = np.load(cache); fid, F = z["ids"].tolist(), z["X"]
+    else:
+        items = _audio_items(idx.records, "mix")
+        fid, F = SC.build(items, workers=a.workers)
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        np.savez(cache, ids=np.array(fid), X=F)
+    pos = {i: k for k, i in enumerate(fid)}
+
+    def xy(split):
+        ids, y, m = label_matrices(label_items(idx.split(split), "mix"), tax)
+        return ids, F[[pos[i] for i in ids]][:, None, :], y, m
+
+    _, X, Y, Mk = xy("train")
+    _, Xv, Yv, Mv = xy("val")
+    probe = LinearProbe(1, X.shape[2], len(nodes), ProbeConfig(hidden=a.hidden, lr=1e-2 if not a.hidden else 1e-3)).fit(X, Y, Mk, Xv, Yv, Mv)
+    for split in a.splits:
+        ids, Xt, _, _ = xy(split)
+        p = save_predictions(a.out / f"shortcut_{a.root.name}_{split}.npz", ids, nodes,
+                             probe.predict(Xt), tax.version, dataset="synthetic",
+                             meta={"model": "shortcut_nontimbre", "features": SC.N_FEATS})
+        print(f"wrote {p}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m disstruments.ml.models")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -395,6 +453,20 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)
+    sh = sub.add_parser("shortcut", help="M4 rigor: non-timbre shortcut baseline")
+    sh.add_argument("--root", required=True, type=Path)
+    sh.add_argument("--cache", required=True, type=Path)
+    sh.add_argument("--splits", nargs="+", default=["test"])
+    sh.add_argument("--hidden", type=int, default=256)
+    sh.add_argument("--workers", type=int, default=4)
+    sh.add_argument("--out", required=True, type=Path)
+    sh.set_defaults(fn=cmd_shortcut)
+    sp = sub.add_parser("scratch-predict", help="score a saved from-scratch model on mel caches")
+    sp.add_argument("--model", required=True, type=Path)
+    sp.add_argument("--cache", required=True, type=Path)
+    sp.add_argument("--eval", nargs="+", required=True, help="mel-prefix:split pairs")
+    sp.add_argument("--out", required=True, type=Path)
+    sp.set_defaults(fn=cmd_scratch_predict)
     lr = sub.add_parser("lora", help="M3 R3: LoRA fine-tune + head on synthetic audio")
     lr.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
     lr.add_argument("--train-root", required=True, type=Path)
