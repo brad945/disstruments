@@ -286,3 +286,32 @@ def test_leave_source_out_build(midi_root, tmp_path):
     assert all(l["source_role"] == "lso" for l in lso)
     n_test = sum(l["split"] == "test" for l in labs)
     assert len(lso) == n_test                                   # every test window twice
+
+
+def test_label_as_marks_subtree_unknown(midi_root, tmp_path, tax):
+    import yaml
+    from disstruments.ml.datasets import load_dataset
+    from disstruments.ml.synth.build import build
+    doc = {"version": 1, "root": str(tmp_path / "src"), "v1_leaves": V1, "sources": [
+        {"id": f"fake_{i}", "name": "x", "kind": "synth", "engine": "fake", "leaves": [l],
+         "license": "CC0-1.0", "commercial_clean": True, "weight": 0.001 if l == "bass.electric.picked" else 1.0}
+        for i, l in enumerate(V1)] + [
+        {"id": "coarse_bass", "name": "c", "kind": "synth", "engine": "fake",
+         "leaves": ["bass.electric.picked"], "label_as": "bass.electric",
+         "license": "CC0-1.0", "commercial_clean": True}]}
+    reg = tmp_path / "reg.yaml"
+    reg.write_text(yaml.safe_dump(doc))
+    out = tmp_path / "la"
+    build(midi_root, out, 20, seed=4, sr=16000, registry_path=str(reg), fake=True, windows_per_file=6)
+    idx = load_dataset("synthetic", out)
+    hit = [r for r in idx.records if "coarse_bass" in r.source_labels]
+    assert hit
+    for r in hit:
+        assert "bass.electric" in r.positive and "bass.electric.picked" not in r.positive
+        assert "bass.electric.picked" not in r.observed and "bass.electric.fingered" not in r.observed
+        assert "bass" in r.observed and "guitar" in r.observed
+    bad = {"version": 1, "root": "x", "v1_leaves": V1, "sources": doc["sources"][:-1] + [
+        dict(doc["sources"][-1], label_as="guitar")]}
+    reg.write_text(yaml.safe_dump(bad))
+    with pytest.raises(SourceError, match="label_as"):
+        load_registry(reg, tax)

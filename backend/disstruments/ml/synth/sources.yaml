@@ -137,8 +137,11 @@ sources:
     name: Karoryfer Swagbass (Ibanez BTB, flatwounds, DI)
     kind: sfz
     engine: sfizz
-    path: karoryfer_swagbass/Swagbass/swagbass.sfz
-    leaves: []   # UNMAPPED: no source says fingers or pick
+    path: karoryfer_swagbass/Swagbass/swagbass_clean.sfz
+    # M4: used for electric-bass parts but labelled only `bass.electric`; the technique
+    # (fingered/picked) is undocumented, so those leaves are UNKNOWN on its clips.
+    leaves: [bass.electric.fingered, bass.electric.picked]
+    label_as: bass.electric
     license: CC0-1.0
     license_url: https://github.com/sfzinstruments/karoryfer.swagbass/blob/master/LICENSE
     commercial_clean: true

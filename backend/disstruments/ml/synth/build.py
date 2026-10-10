@@ -53,8 +53,11 @@ def plan_windows(midi_files: Iterable[Path], midi_root: Path, leaves: Iterable[s
 _WORKER: dict[str, Any] = {}
 
 
-def _init_worker(registry_path: str | None, sources_root: str | None, fake: bool) -> None:
+def _init_worker(registry_path: str | None, sources_root: str | None, fake: bool,
+                 patch_profile: str = "v1") -> None:
+    from . import patches
     from .engines import FakeEngine, default_engines
+    patches.PATCH_PROFILE = patch_profile
     _WORKER["reg"] = load_registry(registry_path, root=sources_root)
     _WORKER["eng"] = {"fake": FakeEngine()} if fake else default_engines()
 
@@ -75,7 +78,7 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
           workers: int = 1, registry_path: str | None = None, sources_root: str | None = None,
           commercial_only: bool = False, fake: bool = False, limit_files: int | None = None,
           windows_per_file: int = 2, stem_fraction: float = 1.0, fx_profile: str = "v1",
-          holdout: Iterable[str] = ()) -> dict:
+          holdout: Iterable[str] = (), patch_profile: str = "v1") -> dict:
     tax = Taxonomy.load()
     reg = load_registry(registry_path, tax, root=sources_root)
     files = sorted(midi_root.rglob("*.mid"))[: limit_files or None]
@@ -97,11 +100,11 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
     t1 = time.monotonic()
     results: list[dict | None] = []
     if workers <= 1:
-        _init_worker(registry_path, sources_root, fake)
+        _init_worker(registry_path, sources_root, fake, patch_profile)
         results = [_render_one(j) for j in jobs]
     else:
         with ProcessPoolExecutor(workers, initializer=_init_worker,
-                                 initargs=(registry_path, sources_root, fake)) as ex:
+                                 initargs=(registry_path, sources_root, fake, patch_profile)) as ex:
             results = list(ex.map(_render_one, jobs, chunksize=4))
     ok = [r for r in results if r]
     leaf_counts = Counter(l for r in ok for l in r["positive_leaves"])
@@ -112,7 +115,7 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
         "n_rendered": len(ok), "renderer_sha": sha, "taxonomy_version": tax.version,
         "commercial_only": commercial_only, "fake": fake, "fractions": FRACTIONS,
         "windows_per_file": windows_per_file, "stem_fraction": stem_fraction, "fx_profile": fx_profile,
-        "holdout": sorted(":".join(h) for h in hold),
+        "holdout": sorted(":".join(h) for h in hold), "patch_profile": patch_profile,
         "splits": dict(Counter(r["split"] for r in ok)),
         "leaf_counts": dict(sorted(leaf_counts.items())),
         "source_counts": dict(sorted(src_counts.items())),
