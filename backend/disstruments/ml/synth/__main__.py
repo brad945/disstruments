@@ -29,7 +29,8 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--fake", action="store_true", help="fake engine for every source (dry run)")
     b.add_argument("--limit-files", type=int)
     b.add_argument("--windows-per-file", type=int, default=2)
-    b.add_argument("--fx-profile", default="v1", choices=("v1", "v2"))
+    b.add_argument("--fx-profile", default="v1", choices=("v1", "v2", "drive", "drive2"),
+                   help="drive: v1 + random drive amount on clean electric guitars, labelled by measured distortion; drive2: same, distorted parts only")
     b.add_argument("--patch-profile", default="v1", choices=("v1", "v2"),
                    help="synth recipe family width (v2: many oscillator/filter engines)")
     b.add_argument("--holdout", nargs="*", default=[], metavar="SOURCE:LEAF",

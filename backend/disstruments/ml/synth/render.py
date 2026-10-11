@@ -16,7 +16,10 @@ from typing import Any, Mapping
 import numpy as np
 
 from .engines import Engine
-from .fx import apply_chain, master_chain, master_chain_v2, stem_chain, stem_chain_v2
+from .fx import apply_chain, drive_stage, master_chain, master_chain_v2, stem_chain, stem_chain_v2
+
+E_GUITARS = ("guitar.electric.clean", "guitar.electric.distorted")
+DRIVE_PATH_P = 0.5      # fx_profile "drive": share of electric-guitar parts on the drive path
 from .midi import CYMBAL_NOTES, Window
 from .sources import Registry
 
@@ -69,15 +72,23 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
     n = int(sr * window.duration)
     stems_meta, stem_audio, failures = [], [], []
     for part in window.parts:
-        cands = registry.for_leaf(part.leaf or "", commercial_only=commercial_only)
+        # fx_profile "drive": half of electric-guitar parts are rendered from a *clean*
+        # source, driven by a random amount, and labelled by measured distortion.
+        # "drive2": only *distorted* parts take the drive path, so clean examples are
+        # never converted away (v6 halved clean coverage and cost clean-guitar AP).
+        drive_path = ((fx_profile == "drive" and part.leaf in E_GUITARS
+                       or fx_profile == "drive2" and part.leaf == "guitar.electric.distorted")
+                      and rng.random() < DRIVE_PATH_P)
+        src_leaf = "guitar.electric.clean" if drive_path else (part.leaf or "")
+        cands = registry.for_leaf(src_leaf, commercial_only=commercial_only)
         cands = [s for s in cands if s.engine in engines]
         # Leave-source-out (M4 rigor): held-out (source, leaf) pairs never appear in the
         # train pool; the LSO test uses them exclusively wherever a leaf has one.
-        held = [s for s in cands if (s.id, part.leaf) in holdout]
+        held = [s for s in cands if (s.id, src_leaf) in holdout]
         if source_role == "lso" and held:
             cands = held
         else:
-            cands = [s for s in cands if (s.id, part.leaf) not in holdout]
+            cands = [s for s in cands if (s.id, src_leaf) not in holdout]
         if not cands:
             failures.append({"leaf": part.leaf, "error": "no source"})
             continue
@@ -88,7 +99,15 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         except Exception as e:  # noqa: BLE001 — one bad source must not kill the clip
             failures.append({"leaf": part.leaf, "source": src.id, "error": f"{type(e).__name__}: {e}"[:300]})
             continue
-        chain = (stem_chain_v2 if fx_profile == "v2" else stem_chain)(part.leaf or "", rng)
+        drive_meta = None
+        if drive_path:
+            dry, drive_meta = drive_stage(dry, sr, rng)
+            chain = stem_chain("guitar.electric.clean", rng)    # no further distortion
+            if rng.random() < 0.5:                               # cab sim, label-independent
+                chain.insert(0, {"plugin": "LowpassFilter",
+                                 "params": {"cutoff_frequency_hz": float(rng.uniform(4500, 8000))}})
+        else:
+            chain = (stem_chain_v2 if fx_profile == "v2" else stem_chain)(part.leaf or "", rng)
         wet = apply_chain(dry[None, :], sr, chain)[0]
         wet, _ = _gain_to(wet, sr, -20.0)                       # level-match before mixing
         # A positive label must be audible: measurable loudness AND a real peak after fx
@@ -98,12 +117,16 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
             continue
         mix_gain_db = round(float(rng.uniform(-6, 3)), 2)       # random balance
         wet = wet * np.float32(10 ** (mix_gain_db / 20))
-        if save_stems:          # disk: stems are kept for a subset of clips only (v2)
-            sf.write(cdir / "stems" / f"{src.label_as or part.leaf}.flac", np.clip(wet, -1, 1), sr, subtype="PCM_16")
-        stem_audio.append(wet)
         label = src.label_as or part.leaf
+        coarse = label != part.leaf
+        if drive_meta is not None:
+            label = drive_meta["label"] or "guitar.electric"      # ambiguous -> L2, masked below
+            coarse = drive_meta["label"] is None
+        if save_stems:          # disk: stems are kept for a subset of clips only (v2)
+            sf.write(cdir / "stems" / f"{label}.flac", np.clip(wet, -1, 1), sr, subtype="PCM_16")
+        stem_audio.append(wet)
         stems_meta.append({
-            "leaf": label, "part_leaf": part.leaf, "source_id": src.id, "source_license": src.license,
+            "leaf": label, "part_leaf": part.leaf, "coarse": coarse, "drive": drive_meta, "source_id": src.id, "source_license": src.license,
             "commercial_clean": src.commercial_clean, "engine": src.engine,
             "engine_meta": emeta, "fx_chain": chain, "mix_gain_db": mix_gain_db,
             "lufs": _lufs(wet, sr),
@@ -138,7 +161,7 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
         "held_out_stems": sorted(s["leaf"] for s in stems_meta if (s["source_id"], s["leaf"]) in holdout),
         "positive_leaves": sorted({s["leaf"] for s in stems_meta} | set(implied)),
         # nodes whose status is unknown because a source was labelled coarsely (label_as)
-        "unknown_below": sorted({s["leaf"] for s in stems_meta if s["leaf"] != s["part_leaf"]}),
+        "unknown_below": sorted({s["leaf"] for s in stems_meta if s.get("coarse", s["leaf"] != s["part_leaf"])}),
         "implied_leaves": {l: "hat/cymbal notes in the drum part" for l in implied},
         # Lakh compositions are not cleared, so Lakh renders are never commercially clean
         # (licence-clean end state, docs/DIRECTION_NOTES.md); the sources may still be.

@@ -331,10 +331,13 @@ def _per_leaf(records: Iterable[Record], tax: Taxonomy) -> dict[str, dict[str, i
 def load(root: Path | str, *, window_start: float = 20.0, strict: bool = True,
          abs_floor_db: float = ABS_FLOOR_DB, rel_db: float = REL_DB,
          silence_db: float = SILENCE_DB, taxonomy: Taxonomy | None = None) -> DatasetIndex:
-    """Records for every `<root>/clips/*_w<start>.json` (one per song)."""
+    """Records for every `<root>/clips/*_w<start>.json` (one per song). `window_start="all"`
+    pools every fetched window (several items per song; bootstrap by artist keeps them
+    grouped)."""
     tax = taxonomy or get_taxonomy()
     root = Path(root).expanduser()
-    tag = window_tag(window_start)
+    pooled = str(window_start) == "all"
+    tag = "w*" if pooled else window_tag(window_start)
     files = sorted((root / "clips").glob(f"*_{tag}.json"))
     if not files:
         raise FileNotFoundError(f"moisesdb: no clips/*_{tag}.json under {root} "
@@ -355,7 +358,7 @@ def load(root: Path | str, *, window_start: float = 20.0, strict: bool = True,
         unknown_types.update(unmapped)
         flac = f.with_suffix(".flac")
         records.append(Record(
-            dataset="moisesdb", item_id=f"{doc['song_id']}_{tag}", split="test",
+            dataset="moisesdb", item_id=f.stem, split="test",
             artist=normalize_artist(doc["artist"]), positive=pos, observed=obs,
             source_labels=tuple(sorted({t["trackType"] for t, s in zip(tracks, states)
                                         if s != SILENT})),
@@ -372,6 +375,6 @@ def load(root: Path | str, *, window_start: float = 20.0, strict: bool = True,
              "activity_states": dict(states_count), "unknown_track_types": collect,
              "per_leaf": _per_leaf(records, tax)}
     return DatasetIndex("moisesdb", records,
-                        {"dataset": "moisesdb", "window_start": float(window_start),
+                        {"dataset": "moisesdb", "window_start": "all" if pooled else float(window_start),
                          "abs_floor_db": abs_floor_db, "rel_db": rel_db, "silence_db": silence_db,
                          "taxonomy_version": tax.version, "licence": LICENCE}, stats)

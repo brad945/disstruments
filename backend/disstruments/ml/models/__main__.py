@@ -49,6 +49,8 @@ def cmd_embed(a) -> int:
     opts = {"audio_root": a.audio_root} if a.audio_root else {}
     if a.dataset == "openmic" and a.no_split_leakage_check:
         opts["check_split_leakage"] = False
+    if a.dataset == "moisesdb":
+        opts["window_start"] = a.moisesdb_window
     idx = load_dataset(a.dataset, a.root, **opts)
     items = _audio_items(idx.split(a.split), a.unit)
     if not items:
@@ -106,7 +108,8 @@ def cmd_probe(a) -> int:
             continue
         idx = train_idx if ds == "synthetic" else load_dataset(
             ds, root, **({"audio_root": a.medleydb_audio_root} if ds == "medleydb" else
-                         {"check_split_leakage": False} if ds == "openmic" else {}))
+                         {"check_split_leakage": False} if ds == "openmic" else
+                         {"window_start": a.moisesdb_window} if ds == "moisesdb" else {}))
         recs = idx.split(split)
         ids = [i for i, _, _ in label_items(recs, a.unit)]
         eids, eemb, _ = load_cache(cache_path(a.cache, a.backbone, ds, a.unit))
@@ -121,7 +124,8 @@ def cmd_probe(a) -> int:
 
 def cmd_mels(a) -> int:
     from .scratch import build_mel_cache
-    opts = {"check_split_leakage": False} if a.dataset == "openmic" else {}
+    opts = ({"check_split_leakage": False} if a.dataset == "openmic" else
+            {"window_start": a.moisesdb_window} if a.dataset == "moisesdb" else {})
     idx = load_dataset(a.dataset, a.root, **opts)
     items = _audio_items(idx.split(a.split), a.unit)
     out = a.cache / "mels" / f"{a.prefix or a.dataset}_{a.split}_{a.unit}.npz"
@@ -359,7 +363,8 @@ def cmd_scratch_predict(a) -> int:
         prefix, split = spec.split(":")
         ids, Xe = S.load_mel_cache(a.cache / "mels" / f"{prefix}_{split}_mix.npz")
         scores = S.predict(model, Xe, dev)
-        ds = prefix if prefix in ("openmic", "moisesdb", "golden") or prefix.startswith("idmt") else "synthetic"
+        ds = ("moisesdb" if prefix.startswith("moisesdb") else
+              prefix if prefix in ("openmic", "golden") or prefix.startswith("idmt") else "synthetic")
         out = a.out / f"{a.model.stem}__{prefix}_{split}_mix.npz"
         save_predictions(out, ids, nodes, scores, tax.version, dataset=ds, meta=meta)
         print(f"wrote {out} ({len(ids)} items)")
@@ -402,6 +407,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m disstruments.ml.models")
     sub = p.add_subparsers(dest="cmd", required=True)
     e = sub.add_parser("embed")
+    e.add_argument("--moisesdb-window", type=lambda v: v if v == "all" else float(v), default=20.0, help="moisesdb clip window start (s), or 'all'")
     e.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
     e.add_argument("--dataset", required=True)
     e.add_argument("--root", required=True, type=Path)
@@ -414,6 +420,7 @@ def main(argv: list[str] | None = None) -> int:
                    help="openmic: official split01 has 1 artist (fma:15155) in train and test")
     e.set_defaults(fn=cmd_embed)
     q = sub.add_parser("probe")
+    q.add_argument("--moisesdb-window", type=lambda v: v if v == "all" else float(v), default=20.0, help="moisesdb clip window start (s), or 'all'")
     q.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
     q.add_argument("--train-root", required=True, type=Path)
     q.add_argument("--cache", required=True, type=Path)
@@ -435,6 +442,7 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--out", required=True, type=Path)
     q.set_defaults(fn=cmd_probe)
     mm = sub.add_parser("mels", help="cache log-mel spectrograms for the from-scratch CNN")
+    mm.add_argument("--moisesdb-window", type=lambda v: v if v == "all" else float(v), default=20.0, help="moisesdb clip window start (s), or 'all'")
     mm.add_argument("--dataset", required=True)
     mm.add_argument("--root", required=True, type=Path)
     mm.add_argument("--split", default="all")
