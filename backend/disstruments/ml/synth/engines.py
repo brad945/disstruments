@@ -236,4 +236,76 @@ def default_engines() -> dict[str, Engine]:
     return {"sfizz": SfizzEngine(), "fluidsynth": FluidSynthEngine(),
             "surge_xt": VST3Engine("surge_xt", os.environ.get("DISS_SURGE_VST3", str(plug / "Surge XT.vst3"))),
             "dexed": VST3Engine("dexed", os.environ.get("DISS_DEXED_VST3", str(plug / "Dexed.vst3"))),
-            "drum808": Drum808Engine(), "fake": FakeEngine()}
+            "drum808": Drum808Engine(), "notes": NotesEngine(), "fake": FakeEngine()}
+
+
+# --- Note collections (M4 L3c): NSynth, Iowa MIS -----------------------------------------
+_NOTE_INDEX: dict[tuple[str, str], dict[tuple[int, int], Path]] = {}
+_NOTE_CACHE: dict[Path, np.ndarray] = {}
+_NOTE_CACHE_MAX = 400                     # per worker; NSynth notes are 4 s @ 16 kHz (~250 KB)
+
+
+def note_index(root: Path, instrument: str) -> dict[tuple[int, int], Path]:
+    """(pitch, velocity) -> wav for files named `<instrument>-<pitch>-<velocity>.wav`."""
+    key = (str(root), instrument)
+    if key not in _NOTE_INDEX:
+        idx = {}
+        for f in Path(root).glob(f"{instrument}-*-*.wav"):
+            try:
+                pitch, vel = (int(x) for x in f.stem[len(instrument) + 1:].split("-"))
+            except ValueError:
+                continue
+            idx[(pitch, vel)] = f
+        _NOTE_INDEX[key] = idx
+    return _NOTE_INDEX[key]
+
+
+def _note_audio(path: Path) -> tuple[np.ndarray, int]:
+    import soundfile as sf
+    if path not in _NOTE_CACHE:
+        if len(_NOTE_CACHE) >= _NOTE_CACHE_MAX:
+            _NOTE_CACHE.pop(next(iter(_NOTE_CACHE)))
+        data, file_sr = sf.read(str(path), dtype="float32", always_2d=True)
+        _NOTE_CACHE[path] = (data.mean(axis=1), file_sr)
+    return _NOTE_CACHE[path]
+
+
+class NotesEngine:
+    """Plays a MIDI part from per-note recordings: nearest recorded pitch (resampled to the
+    exact pitch, at most +-3 semitones away after octave fitting) and nearest velocity
+    layer; each note is cut at its MIDI end plus a short release fade."""
+    name = "notes"
+    MAX_SHIFT = 3
+    RELEASE_S = 0.12
+
+    def render(self, part, source, root, sr, duration, rng):
+        part = _jitter_velocity(part, rng)
+        idx = note_index(source.file(root), source.instrument or "")
+        if not idx:
+            raise FileNotFoundError(f"notes: no files for {source.instrument} under {source.file(root)}")
+        pitches = sorted({p for p, _ in idx})
+        shift = fit_octaves([n.pitch for n in part.notes], pitches[0], pitches[-1])
+        n_out = int(sr * duration)
+        out = np.zeros(n_out, np.float32)
+        skipped = 0
+        for note in part.notes:
+            want = note.pitch + shift
+            have = min(pitches, key=lambda p: (abs(p - want), p))
+            if abs(have - want) > self.MAX_SHIFT:
+                skipped += 1
+                continue
+            vels = sorted(v for p, v in idx if p == have)
+            vel = min(vels, key=lambda v: abs(v - note.velocity))
+            x, fsr = _note_audio(idx[(have, vel)])
+            ratio = 2 ** ((want - have) / 12)                       # >1: play faster/higher
+            step = ratio * fsr / sr                                 # source samples per output sample
+            a = int(note.start * sr)
+            length = min(int((note.end - note.start + self.RELEASE_S) * sr), int((len(x) - 1) / step), n_out - a)
+            if length <= 0:
+                continue
+            y = np.interp(np.arange(length) * step, np.arange(len(x)), x).astype(np.float32)
+            rel = min(int(self.RELEASE_S * sr), length)
+            y[-rel:] *= np.linspace(1, 0, rel, dtype=np.float32)
+            out[a:a + length] += y
+        return out, {"engine": "notes", "instrument": source.instrument, "octave_shift": shift // 12,
+                     "velocity_jitter": 12, "skipped_out_of_range": skipped}

@@ -63,7 +63,7 @@ def _init_worker(registry_path: str | None, sources_root: str | None, fake: bool
 
 
 def _render_one(args: tuple) -> dict | None:
-    w, split, clip_seed, out, sr, commercial_only, tax_version, sha, save_stems, fx_profile, holdout, role = args
+    w, split, clip_seed, out, sr, commercial_only, tax_version, sha, save_stems, fx_profile, holdout, role, bandlimit_p = args
     reg, eng = _WORKER["reg"], _WORKER["eng"]
     if "fake" in eng and len(eng) == 1:                  # dry run: route everything to fake
         from dataclasses import replace
@@ -71,14 +71,14 @@ def _render_one(args: tuple) -> dict | None:
     return render_clip(w, reg, eng, seed=clip_seed, out_dir=Path(out), sr=sr, split=split,
                        commercial_only=commercial_only, taxonomy_version=tax_version, sha=sha,
                        save_stems=save_stems, fx_profile=fx_profile, holdout=holdout,
-                       source_role=role)
+                       source_role=role, bandlimit_p=bandlimit_p)
 
 
 def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 44100,
           workers: int = 1, registry_path: str | None = None, sources_root: str | None = None,
           commercial_only: bool = False, fake: bool = False, limit_files: int | None = None,
           windows_per_file: int = 2, stem_fraction: float = 1.0, fx_profile: str = "v1",
-          holdout: Iterable[str] = (), patch_profile: str = "v1") -> dict:
+          holdout: Iterable[str] = (), patch_profile: str = "v1", bandlimit_p: float = 0.0) -> dict:
     tax = Taxonomy.load()
     reg = load_registry(registry_path, tax, root=sources_root)
     files = sorted(midi_root.rglob("*.mid"))[: limit_files or None]
@@ -90,12 +90,12 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
     sha = renderer_sha()
     # Stems are saved for a deterministic subset (stable hash of the clip seed) to save disk;
     # labels.json always describes every stem.
-    hold = frozenset(tuple(h.split(":", 1)) for h in holdout)
+    hold = frozenset(tuple(h.rsplit(":", 1)) for h in holdout)   # source ids may contain ":"
     jobs = [(w, sp, cs, str(out), sr, commercial_only, tax.version, sha,
-             (cs % 1000) < stem_fraction * 1000, fx_profile, hold, "train") for w, sp, cs in plan]
+             (cs % 1000) < stem_fraction * 1000, fx_profile, hold, "train", bandlimit_p) for w, sp, cs in plan]
     if hold:   # LSO: every test window is rendered a second time with held-out sources
         jobs += [(w, "test_lso", cs, str(out), sr, commercial_only, tax.version, sha,
-                  (cs % 1000) < stem_fraction * 1000, fx_profile, hold, "lso")
+                  (cs % 1000) < stem_fraction * 1000, fx_profile, hold, "lso", bandlimit_p)
                  for w, sp, cs in plan if sp == "test"]
     t1 = time.monotonic()
     results: list[dict | None] = []
@@ -116,6 +116,7 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
         "commercial_only": commercial_only, "fake": fake, "fractions": FRACTIONS,
         "windows_per_file": windows_per_file, "stem_fraction": stem_fraction, "fx_profile": fx_profile,
         "holdout": sorted(":".join(h) for h in hold), "patch_profile": patch_profile,
+        "bandlimit_p": bandlimit_p,
         "splits": dict(Counter(r["split"] for r in ok)),
         "leaf_counts": dict(sorted(leaf_counts.items())),
         "source_counts": dict(sorted(src_counts.items())),

@@ -3,6 +3,7 @@ under which licence. Every rendered clip records the ids (and licences) of its s
 a commercially clean subset can always be filtered out (docs/DIRECTION_NOTES.md)."""
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -13,7 +14,7 @@ import yaml
 from ..taxonomy import Taxonomy
 
 REGISTRY_PATH = Path(__file__).with_name("sources.yaml")
-KINDS = {"sfz": "sfizz", "sf2": "fluidsynth", "synth": None}
+KINDS = {"sfz": "sfizz", "sf2": "fluidsynth", "synth": None, "notes": "notes"}
 # Licences we accept at all, and whether each is commercially clean. Anything else is an
 # error: a new licence must be reviewed and added here deliberately.
 LICENCES: dict[str, bool] = {
@@ -50,6 +51,8 @@ class Source:
     note_map: dict[int, int] = field(default_factory=dict)   # GM drum note -> source key
     label_as: str | None = None    # coarser node to label with (e.g. bass.electric when the
                                    # playing technique is undocumented); its subtree is unknown
+    instrument: str | None = None  # notes: file prefix `<instrument>-<pitch>-<velocity>.wav`
+    native_sr: int | None = None   # recording sample rate when band-limited (e.g. NSynth 16 kHz)
 
     def file(self, root: Path) -> Path | None:
         return (root / self.path) if self.path else None
@@ -84,7 +87,7 @@ def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = No
     v1 = tuple(doc.get("v1_leaves") or ())
     errs += [f"v1_leaves: {l} is not a taxonomy leaf" for l in v1 if l not in leaves]
     out, seen = [], set()
-    for raw in doc.get("sources") or []:
+    for raw in _expand(doc.get("sources") or [], tax, errs):
         sid = raw.get("id", "?")
         if sid in seen:
             errs.append(f"{sid}: duplicate id")
@@ -119,10 +122,55 @@ def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = No
                           download=raw.get("download") or {}, notes=raw.get("notes", ""),
                           weight=float(raw.get("weight", 1.0)),
                           note_map={int(k): int(v) for k, v in (raw.get("note_map") or {}).items()},
-                          label_as=raw.get("label_as")))
+                          label_as=raw.get("label_as"), instrument=raw.get("instrument"),
+                          native_sr=raw.get("native_sr")))
     reg = Registry(int(doc.get("version", 1)), r, v1, tuple(out))
     uncovered = [l for l in v1 if not reg.for_leaf(l, commercial_only=True)]
     errs += [f"v1 leaf {l} has no commercially clean source" for l in uncovered]
     if errs:
         raise SourceError("sources.yaml invalid:\n  " + "\n  ".join(errs))
     return reg
+
+
+def _expand(raws: list[dict], tax: Taxonomy, errs: list[str]) -> list[dict]:
+    """Entries with `expand_labels: <json>` become one source per labelled instrument
+    (multi-instrument note collections such as NSynth). Label values: a taxonomy leaf; a
+    coarser node (rendered for all its v1-relevant leaves, labelled coarsely); or "skip".
+    The entry's `weight` is split evenly across the instruments serving each leaf, so a
+    collection with 40 basses doesn't swamp the leaf's other sources."""
+    out: list[dict] = []
+    for raw in raws:
+        lab_file = raw.get("expand_labels")
+        if not lab_file:
+            out.append(raw)
+            continue
+        p = Path(lab_file) if Path(lab_file).is_absolute() else Path(__file__).parent / lab_file
+        if not p.exists():          # labels not made yet: the collection contributes nothing
+            continue
+        labels = json.loads(p.read_text()).get("labels", {})
+        per_leaf: dict[str, list[tuple[str, tuple[str, ...], str | None]]] = {}
+        for inst, node in sorted(labels.items()):
+            if node in (None, "skip"):
+                continue
+            if node not in tax:
+                errs.append(f"{raw.get('id')}: {inst}: {node!r} is not a taxonomy node")
+                continue
+            leaves = tuple(l for l in raw.get("leaves") or () if node == l or node in tax.ancestors(l))
+            if not leaves:
+                errs.append(f"{raw.get('id')}: {inst}: {node!r} covers none of the entry's leaves")
+                continue
+            coarse = None if node in leaves and len(leaves) == 1 and node == leaves[0] else node
+            for l in leaves:
+                per_leaf.setdefault(l, []).append((inst, leaves, coarse))
+        n_for = {l: len(v) for l, v in per_leaf.items()}
+        done = set()
+        for l, items in per_leaf.items():
+            for inst, leaves, coarse in items:
+                if inst in done:
+                    continue
+                done.add(inst)
+                w = float(raw.get("weight", 1.0)) / max(n_for[x] for x in leaves)
+                out.append({k: v for k, v in raw.items() if k not in ("expand_labels", "leaves", "weight")}
+                           | {"id": f"{raw['id']}:{inst}", "leaves": list(leaves), "instrument": inst,
+                              "weight": w, "label_as": coarse})
+    return out

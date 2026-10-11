@@ -31,6 +31,9 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--windows-per-file", type=int, default=2)
     b.add_argument("--fx-profile", default="v1", choices=("v1", "v2", "drive", "drive2"),
                    help="drive: v1 + random drive amount on clean electric guitars, labelled by measured distortion; drive2: same, distorted parts only")
+    b.add_argument("--bandlimit-p", type=float, default=0.0,
+                   help="share of full-band stems low-passed to 7-8 kHz, so band-limited sources "
+                        "(NSynth, 16 kHz) aren't identifiable by bandwidth alone")
     b.add_argument("--patch-profile", default="v1", choices=("v1", "v2"),
                    help="synth recipe family width (v2: many oscillator/filter engines)")
     b.add_argument("--holdout", nargs="*", default=[], metavar="SOURCE:LEAF",
@@ -62,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         return 0
     from .build import build
-    m = build(a.midi_root, a.out, a.n_clips, seed=a.seed, sr=a.sr, workers=a.workers,
+    m = build(a.midi_root, a.out, a.n_clips, seed=a.seed, sr=a.sr, workers=a.workers, bandlimit_p=a.bandlimit_p,
               registry_path=a.registry, sources_root=a.sources_root,
               commercial_only=a.commercial_only, fake=a.fake, limit_files=a.limit_files,
               windows_per_file=a.windows_per_file, stem_fraction=a.stem_fraction,

@@ -57,7 +57,8 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
                 sha: str = "", midi_clean: bool = False,
                 midi_license: str = "CC-BY-4.0 (Lakh MIDI compilation; compositions not cleared)",
                 save_stems: bool = True, fx_profile: str = "v1",
-                holdout: frozenset = frozenset(), source_role: str = "train") -> dict[str, Any] | None:
+                holdout: frozenset = frozenset(), source_role: str = "train",
+                bandlimit_p: float = 0.0) -> dict[str, Any] | None:
     """Render one clip. Returns the labels dict (also written to disk), or None when no
     part could be rendered (e.g. every source failed or was silent)."""
     import soundfile as sf
@@ -108,6 +109,11 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
                                  "params": {"cutoff_frequency_hz": float(rng.uniform(4500, 8000))}})
         else:
             chain = (stem_chain_v2 if fx_profile == "v2" else stem_chain)(part.leaf or "", rng)
+        # Band-limited sources (NSynth is 16 kHz) must not be identifiable by bandwidth alone:
+        # low-pass a share of the full-band stems to the same ~8 kHz ceiling.
+        if bandlimit_p > 0 and not src.native_sr and rng.random() < bandlimit_p:
+            chain.insert(0, {"plugin": "LowpassFilter",
+                             "params": {"cutoff_frequency_hz": float(rng.uniform(7000, 8000))}})
         wet = apply_chain(dry[None, :], sr, chain)[0]
         wet, _ = _gain_to(wet, sr, -20.0)                       # level-match before mixing
         # A positive label must be audible: measurable loudness AND a real peak after fx
