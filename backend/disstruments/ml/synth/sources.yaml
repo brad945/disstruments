@@ -597,3 +597,84 @@ sources:
     attribution: "Fluid (R3) SoundFont, Copyright (c) 2000-2002, 2008 Frank Wen; MIT licence (GM2 2.2 edit by 'Church Organist' for MuseScore)"
     download: {url: "https://ftp.osuosl.org/pub/musescore/soundfont/fluid-soundfont.tar.gz", sha256: c815769e44d86f1507b946a6c48c997c7f650699aea1ec4b11ba66e3415c26b9, bytes: 130294103}
     notes: "GM fallback / secondary only (non-target accompaniment, or low-weight extra timbre). Bundled readme says 'Released to Public Domain 12/25/01'; Frank Wen re-released under MIT in 2008. Some samples have unknown upstream origin (M2_PLAN §6 licence-debt risk)."
+
+  # ------------------------------------------------------------------ note collections (M4 L3c)
+  # Per-note recordings played by the `notes` engine; prepared by
+  # `python -m disstruments.ml.synth.notes_prep` into `notes/<instrument>-<pitch>-<vel>.wav`.
+  - id: iowa_guitar_nylon
+    name: Univ. of Iowa MIS guitar (Raimundo 118 classical, nylon)
+    kind: notes
+    path: notes
+    instrument: iowa_guitar_nylon
+    leaves: [guitar.acoustic.nylon]
+    license: LicenseRef-IowaMIS-any-use
+    license_url: https://theremin.music.uiowa.edu/MIS.html
+    commercial_clean: true
+    attribution: "University of Iowa Electronic Music Studios"
+    download: {url: "https://theremin.music.uiowa.edu/sound files/MIS/Piano_Other/guitar/Guitar.mono.1644.1.zip", sha256: null}
+    notes: "Chromatic runs split at onsets; every note pitch-checked with pYIN (notes_prep)."
+  - id: iowa_doublebass_pizz
+    name: Univ. of Iowa MIS double bass (pizzicato)
+    kind: notes
+    path: notes
+    instrument: iowa_doublebass_pizz
+    leaves: [bass.upright]
+    license: LicenseRef-IowaMIS-any-use
+    license_url: https://theremin.music.uiowa.edu/MIS.html
+    commercial_clean: true
+    attribution: "University of Iowa Electronic Music Studios"
+    download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISDoubleBass2012.html", sha256: null}
+  - id: iowa_trumpet
+    name: Univ. of Iowa MIS Bb trumpet (vibrato)
+    kind: notes
+    path: notes
+    instrument: iowa_trumpet
+    leaves: [brass.trumpet]
+    license: LicenseRef-IowaMIS-any-use
+    license_url: https://theremin.music.uiowa.edu/MIS.html
+    commercial_clean: true
+    attribution: "University of Iowa Electronic Music Studios"
+    download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISBbTrumpet2012.html", sha256: null}
+  - id: iowa_altosax
+    name: Univ. of Iowa MIS Eb alto saxophone
+    kind: notes
+    path: notes
+    instrument: iowa_altosax
+    leaves: [woodwinds.saxophone.tenor]
+    label_as: woodwinds.saxophone
+    license: LicenseRef-IowaMIS-any-use
+    license_url: https://theremin.music.uiowa.edu/MIS.html
+    commercial_clean: true
+    attribution: "University of Iowa Electronic Music Studios"
+    download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISEbAltoSaxophone2012.html", sha256: null}
+    notes: "Alto, not tenor: plays tenor parts but is labelled at the saxophone level (tenor/alto masked)."
+  - id: iowa_sopranosax
+    name: Univ. of Iowa MIS Bb soprano saxophone
+    kind: notes
+    path: notes
+    instrument: iowa_sopranosax
+    leaves: [woodwinds.saxophone.tenor]
+    label_as: woodwinds.saxophone
+    license: LicenseRef-IowaMIS-any-use
+    license_url: https://theremin.music.uiowa.edu/MIS.html
+    commercial_clean: true
+    attribution: "University of Iowa Electronic Music Studios"
+    download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISBbSopranoSaxophone2012.html", sha256: null}
+    notes: "Soprano, not tenor: labelled at the saxophone level, like iowa_altosax."
+  - id: nsynth
+    name: NSynth (Google Magenta), hand-labelled instruments
+    kind: notes
+    path: notes
+    native_sr: 16000
+    expand_labels: nsynth_labels.json
+    weight: 1.0
+    leaves: [guitar.acoustic.nylon, guitar.acoustic.steel, guitar.electric.clean, guitar.electric.distorted,
+             bass.electric.fingered, bass.electric.picked, bass.upright, bass.synth.analog, bass.synth.sub_808,
+             keys.piano, keys.electric_piano.rhodes, keys.electric_piano.fm, keys.organ.drawbar,
+             woodwinds.saxophone.tenor]
+    license: CC-BY-4.0
+    license_url: https://magenta.tensorflow.org/datasets/nsynth
+    commercial_clean: true
+    attribution: "NSynth Dataset (Engel et al. 2017, Google Magenta), CC BY 4.0"
+    download: {url: "http://download.magenta.tensorflow.org/datasets/nsynth/", sha256: null}
+    notes: "16 kHz single notes from ~1000 instruments; leaf labels by Bradley's listening (nsynth_label). Renders with NSynth need --bandlimit-p so bandwidth is not a source giveaway."

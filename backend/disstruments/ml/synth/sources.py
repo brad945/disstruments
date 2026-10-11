@@ -155,7 +155,12 @@ def _expand(raws: list[dict], tax: Taxonomy, errs: list[str]) -> list[dict]:
             if node not in tax:
                 errs.append(f"{raw.get('id')}: {inst}: {node!r} is not a taxonomy node")
                 continue
-            leaves = tuple(l for l in raw.get("leaves") or () if node == l or node in tax.ancestors(l))
+            def covered(n: str) -> tuple[str, ...]:
+                return tuple(l for l in raw.get("leaves") or () if n == l or n in tax.ancestors(l))
+            leaves = covered(node)
+            if not leaves and tax.parent(node):     # e.g. alto sax -> saxophone (serves tenor parts)
+                node = tax.parent(node)
+                leaves = covered(node)
             if not leaves:
                 errs.append(f"{raw.get('id')}: {inst}: {node!r} covers none of the entry's leaves")
                 continue

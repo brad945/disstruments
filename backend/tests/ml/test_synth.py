@@ -458,3 +458,14 @@ def test_bandlimit_applies_only_when_asked(midi_root, registry_file, tmp_path):
     out0 = tmp_path / "bl0"
     build(midi_root, out0, 8, seed=3, sr=16000, registry_path=str(registry_file), fake=True)
     assert json.loads((out0 / "manifest.json").read_text())["bandlimit_p"] == 0.0
+
+
+def test_notes_prep_parsing_and_trim():
+    from disstruments.ml.synth.notes_prep import note_to_midi, parse_tokens, trim
+    assert note_to_midi("C4") == 60 and note_to_midi("A4") == 69 and note_to_midi("Bb3") == 58
+    assert parse_tokens("Bass.pizz.ff.sulA.C2.stereo") == ([36], 112)
+    assert parse_tokens("Guitar.pp.sulE.E2B2.stereo") == ([40, 47], 40)
+    assert parse_tokens("SopSax.vib.mf.Ab3.stereo") == ([56], 80)
+    y = np.concatenate([np.zeros(1000), np.ones(500), np.zeros(800)]).astype(np.float32)
+    t = trim(y, 44100, pre_s=0.0)
+    assert len(t) == 500
