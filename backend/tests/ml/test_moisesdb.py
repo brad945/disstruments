@@ -361,3 +361,13 @@ def test_bleed_only_type_is_unknown_even_when_silent():
     _, obs_silent, _, _ = lab([mc.LEAD_MALE, mc.BASS_GUITAR], [S, A], bleed={mc.LEAD_MALE})
     _, obs_active, _, _ = lab([mc.LEAD_MALE, mc.BASS_GUITAR], [A, A], bleed={mc.LEAD_MALE})
     assert "voice.sung" not in obs_silent and "voice.sung" not in obs_active
+
+
+def test_pooled_windows(tmp_path):
+    root, zpath, _ = build_root(tmp_path)
+    for start in (0.0, 1.0):
+        mf.run(root, mf.FileRangeSource(zpath), start_s=start, dur_s=1.0, min_free_gb=0, echo=False)
+    idx = load_dataset("moisesdb", root, window_start="all")
+    assert sorted(r.item_id for r in idx.records) == [f"{SONG}_w0", f"{SONG}_w1"]
+    assert len({r.artist for r in idx.records}) == 1               # same group for bootstrap
+    assert idx.config["window_start"] == "all"

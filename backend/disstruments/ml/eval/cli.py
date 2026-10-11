@@ -99,8 +99,8 @@ def _add_dataset_args(p: argparse.ArgumentParser) -> None:
                    help="slakh: stems quieter than this are masked (unknown); 'none' disables")
     g.add_argument("--seed", type=int, default=0, help="split seed (medleydb generated, openmic val)")
     g.add_argument("--val-fraction", type=float, default=0.0, help="openmic: artist-disjoint val carve-out")
-    g.add_argument("--window-start", type=float, default=20.0,
-                   help="moisesdb: which fetched clip window (clips/<song>_w<start>.json)")
+    g.add_argument("--window-start", type=lambda v: v if v == "all" else float(v), default=20.0,
+                   help="moisesdb: which fetched clip window (clips/<song>_w<start>.json), or 'all'")
     g.add_argument("--slakh-split", default="redux", choices=("redux", "split2", "orig"))
     g.add_argument("--non-strict", action="store_true",
                    help="record unmapped source labels instead of failing (they mask the item)")
