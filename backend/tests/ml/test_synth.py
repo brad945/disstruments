@@ -372,3 +372,21 @@ def test_drive_profile_labels_by_measurement(midi_root, tmp_path, tax):
     build(midi_root, out1, 12, seed=2, sr=16000, registry_path=str(p), fake=True)
     assert not any(s.get("drive") for f in (out1 / "clips").glob("*/labels.json")
                    for s in json.loads(f.read_text())["stems"])
+
+
+def test_drive2_only_converts_distorted_parts(midi_root, tmp_path):
+    import yaml
+    from disstruments.ml.synth.build import build
+    doc = {"version": 1, "root": str(tmp_path / "src"), "v1_leaves": V1, "sources": [
+        {"id": f"fake_{i}", "name": "x", "kind": "synth", "engine": "fake", "leaves": [l],
+         "license": "CC0-1.0", "commercial_clean": True} for i, l in enumerate(V1)]}
+    p = tmp_path / "reg.yaml"
+    p.write_text(yaml.safe_dump(doc))
+    out = tmp_path / "d2"
+    build(midi_root, out, 40, seed=2, sr=16000, registry_path=str(p), fake=True,
+          windows_per_file=8, fx_profile="drive2")
+    stems = [s for f in (out / "clips").glob("*/labels.json") for s in json.loads(f.read_text())["stems"]]
+    driven = [s for s in stems if s.get("drive")]
+    assert driven and all(s["part_leaf"] == "guitar.electric.distorted" for s in driven)
+    if any(s["part_leaf"] == "guitar.electric.clean" for s in stems):
+        assert all(not s.get("drive") for s in stems if s["part_leaf"] == "guitar.electric.clean")

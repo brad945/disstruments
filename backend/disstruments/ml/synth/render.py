@@ -74,7 +74,10 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
     for part in window.parts:
         # fx_profile "drive": half of electric-guitar parts are rendered from a *clean*
         # source, driven by a random amount, and labelled by measured distortion.
-        drive_path = (fx_profile == "drive" and part.leaf in E_GUITARS
+        # "drive2": only *distorted* parts take the drive path, so clean examples are
+        # never converted away (v6 halved clean coverage and cost clean-guitar AP).
+        drive_path = ((fx_profile == "drive" and part.leaf in E_GUITARS
+                       or fx_profile == "drive2" and part.leaf == "guitar.electric.distorted")
                       and rng.random() < DRIVE_PATH_P)
         src_leaf = "guitar.electric.clean" if drive_path else (part.leaf or "")
         cands = registry.for_leaf(src_leaf, commercial_only=commercial_only)
