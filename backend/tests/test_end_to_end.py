@@ -14,7 +14,7 @@ def test_upload_analyze_report(client, wav_file):
     assert status == "done"
 
     report = client.get(f"/api/v1/songs/{body['song_id']}/analysis").json()
-    assert report["schema_version"] == 1
+    assert report["schema_version"] == 2
     assert report["global"]["key"]["value"]
     assert report["global"]["bpm"]["value"] > 0
     assert report["stems_status"] == "ok"
@@ -25,7 +25,20 @@ def test_upload_analyze_report(client, wav_file):
         assert tag["activations"], "every tag needs time regions"
     assert report["structure"]["status"] == "skipped"  # draft-2 slot, never guessed
     stages = {s["stage"] for s in report["provenance"]["stages"]}
-    assert {"transcode", "separation", "tagging_mix", "attributes"} <= stages
+    assert {"transcode", "separation", "tagging_mix", "tagging_leaf", "attributes"} <= stages
+
+    # M5 routing (fake leaf model): bass presence is ours, subtypes are flagged uncalibrated,
+    # and a family with no subtype above threshold falls back to "(subtype uncertain)".
+    by_label = {t["label"]: t for t in report["instruments"]}
+    for tag in report["instruments"]:
+        assert {"node", "model", "calibrated"} <= tag.keys()
+    assert "bass" not in by_label, "PANNs bass is replaced by the leaf model's presence"
+    assert by_label["Electric bass"]["model"] == "disstruments-cnn"
+    nylon = by_label["Nylon-string acoustic guitar"]
+    assert nylon["subtype"] and nylon["calibrated"] is False
+    assert "guitar" not in by_label
+    assert by_label["drums (subtype uncertain)"]["subtype_uncertain"]
+    assert report["provenance"]["leaf_model"]["sha256"] == "fake"
 
 
 def test_stem_download_owner_only(client, wav_file):
@@ -62,6 +75,15 @@ def test_rejects_garbage_file(client, tmp_path):
     with open(bad, "rb") as f:
         r = client.post("/api/v1/songs", files={"file": ("not_audio.mp3", f, "audio/mpeg")})
     assert r.status_code == 422
+
+
+def test_library_instrument_filter_matches_subtree(client):
+    # fake report has a nylon-guitar subtype (node guitar.acoustic.nylon) and "Electric bass"
+    assert client.get("/api/v1/songs", params={"instrument": "guitar"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "guitar.acoustic"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "bass"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "voice"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "banjo"}).json() == []
 
 
 def test_library_filters(client):

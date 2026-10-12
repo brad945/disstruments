@@ -5,7 +5,7 @@ PYTHON ?= python3.12
 API_PORT ?= 8642
 WEB_PORT ?= 3642
 
-.PHONY: setup setup-ml api web dev test
+.PHONY: setup setup-ml leaf-model api web dev test
 
 setup:            ## backend deps (fake-ML capable) + frontend deps
 	cd backend && $(PYTHON) -m venv .venv && .venv/bin/pip install -e ".[dev]"
@@ -14,6 +14,15 @@ setup:            ## backend deps (fake-ML capable) + frontend deps
 setup-ml:         ## real ML models (torch/demucs/panns/librosa) — several GB
 	cd backend && .venv/bin/pip install -e ".[ml]"
 	sh backend/scripts/fetch_weights.sh
+
+# M5 leaf model: research-only, so it is built locally, never committed (SYSTEMS_DESIGN §4).
+SYNTH ?= $(HOME)/datasets/disstruments-synth
+LEAF_CKPT ?= $(SYNTH)/preds/m5serve/scratch_cnn_synthetic_v7s.pt
+LEAF_MANIFEST ?= $(SYNTH)/v7serve/manifest.json
+leaf-model:       ## export our instrument model to ~/.disstruments/models/leaf (needs local renders)
+	cd backend && .venv/bin/python -m disstruments.ml.models export-onnx --model $(LEAF_CKPT) \
+	  --manifest $(LEAF_MANIFEST) --calib-cache $(SYNTH)/emb \
+	  --calib-root $(HOME)/datasets/openmic/openmic-2018 --out $(HOME)/.disstruments/models/leaf
 
 api:              ## run backend on :$(API_PORT)
 	cd backend && .venv/bin/uvicorn "disstruments.main:get_app" --factory --port $(API_PORT)

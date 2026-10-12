@@ -27,9 +27,14 @@ FRAMES = int(SR * SECONDS / HOP) + 1
 
 
 def logmel(path: Path) -> np.ndarray:
-    import librosa
     from .embed import load_clip
-    y = load_clip(path, SR, SECONDS)
+    return logmel_array(load_clip(path, SR, SECONDS))
+
+
+def logmel_array(y: np.ndarray) -> np.ndarray:
+    """Mono audio at `SR` (one window) -> (N_MELS, <=FRAMES) float16. Shared by the mel cache
+    and the app's serving path (M5), so training and serving features cannot drift."""
+    import librosa
     m = librosa.feature.melspectrogram(y=y, sr=SR, n_fft=N_FFT, hop_length=HOP, n_mels=N_MELS,
                                        fmin=30, fmax=SR // 2)
     return np.log1p(100.0 * m).astype(np.float16)[:, :FRAMES]

@@ -80,19 +80,12 @@ def _probs_to_intervals(probs: np.ndarray, hop_s: float, enter: float, exit_: fl
     return intervals
 
 
-def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
-    """-> [{label, confidence, stem, activations}] sorted by confidence desc."""
-    if settings.fake_ml:
-        return _fake_tag(audio_path, source_stem)
-
-    import librosa
+def panns_framewise(y: np.ndarray) -> tuple[dict[str, np.ndarray], float]:
+    """32 kHz mono audio -> ({OpenMIC-20 label: framewise prob}, hop seconds)."""
     from panns_inference.config import labels as audioset_labels
 
-    y, _ = librosa.load(audio_path, sr=32000, mono=True)
-    sed = _get_sed()
-    framewise = sed.inference(y[None, :])[0]  # (frames, 527); ~0.32 s hop (10ms*32)
+    framewise = _get_sed().inference(y[None, :])[0]  # (frames, 527); ~0.32 s hop (10ms*32)
     hop_s = (len(y) / 32000) / framewise.shape[0]
-
     per_label: dict[str, np.ndarray] = {}
     for idx, as_name in enumerate(audioset_labels):
         ours = AUDIOSET_MAP.get(as_name)
@@ -100,6 +93,18 @@ def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
             continue
         col = framewise[:, idx]
         per_label[ours] = np.maximum(per_label[ours], col) if ours in per_label else col
+    return per_label, hop_s
+
+
+def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
+    """-> [{label, confidence, stem, activations}] sorted by confidence desc."""
+    if settings.fake_ml:
+        return _fake_tag(audio_path, source_stem)
+
+    import librosa
+
+    y, _ = librosa.load(audio_path, sr=32000, mono=True)
+    per_label, hop_s = panns_framewise(y)
 
     results = []
     show = settings.tag_threshold_show

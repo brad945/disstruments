@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     device: str = "auto"            # auto -> mps > cuda > cpu
     tag_threshold_show: float = 0.30      # F15: hide below
     tag_threshold_confident: float = 0.60 # F15: 0.3–0.6 marked uncertain in UI
+    # M5 leaf model (ONNX + sidecar, kept outside the repo: research-only licence).
+    # Missing -> the leaf stage is skipped and reports are PANNs-only.
+    leaf_model_dir: Path = Path.home() / ".disstruments" / "models" / "leaf"
 
     # Rate limiting (F23) — dormant locally, values are the Phase-1 profile (PRD §7.2)
     rate_limiting_enabled: bool = False

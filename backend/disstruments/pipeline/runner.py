@@ -17,10 +17,10 @@ from ..events import bus
 from ..jobqueue import record_job_cost
 # Late-bound: storage.storage is None until init_storage(); a from-import would freeze it.
 from .. import storage as storage_mod
-from . import attributes, separation, tagging
+from . import attributes, leaf_tagging, separation, tagging
 from .transcode import to_canonical
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2   # 2 (M5): instrument entries carry node/model/calibrated; leaf subtypes
 
 
 def _stage(job_id: int, name: str, model: str, version: str, fn, *args, **kw):
@@ -113,6 +113,19 @@ def run_job(job_id: int) -> None:
             seen.add(t["label"])
             instruments.append(t)
 
+    # -- B2: leaf model on the full mix, merged under the sidecar's routing (M5) -------
+    leaf_info = None
+    if leaf_tagging.available():
+        leaf, _ = _stage(job_id, "tagging_leaf", "disstruments-cnn", _leaf_version(),
+                         leaf_tagging.window_scores, canonical)
+        if leaf is not None:
+            leaf_info = leaf_tagging.info()
+            instruments = _merge_leaf(instruments, leaf, leaf_info)
+        else:
+            failed_any = True
+    else:
+        _skip(job_id, "tagging_leaf", "disstruments-cnn", "no model at settings.leaf_model_dir")
+
     # -- C: attributes -----------------------------------------------------------
     attrs, _ = _stage(job_id, "attributes", "librosa+ks", "0.10",
                       attributes.analyze, canonical)
@@ -139,7 +152,7 @@ def run_job(job_id: int) -> None:
         "structure": {"status": "skipped"},   # draft 2 (F9)
         "chords": {"status": "skipped"},      # draft 2 (F10)
         "midi": {"status": "skipped"},        # draft 2 (F11)
-        "provenance": {"stages": provenance},
+        "provenance": {"stages": provenance, "leaf_model": leaf_info},
     }
 
     status = "done" if (ok_any and not failed_any) else ("partial" if ok_any else "failed")
@@ -147,6 +160,33 @@ def run_job(job_id: int) -> None:
 
     if not settings.keep_canonical:  # legal posture: transient processing (design doc §9)
         canonical.unlink(missing_ok=True)
+
+
+def _leaf_version() -> str:
+    try:
+        info = leaf_tagging.info()
+        return f"{info['version']}@{info['sha256'][:12]}"
+    except Exception:  # noqa: BLE001 — the stage itself reports the load error
+        return "unloaded"
+
+
+def _skip(job_id: int, name: str, model: str, why: str) -> None:
+    with get_session() as s:
+        s.add(StageRun(job_id=job_id, stage=name, model_name=model, model_version="-",
+                       status="skipped", error=why))
+        s.commit()
+    bus.publish(job_id, {"type": "stage", "stage": name, "status": "skipped"})
+
+
+def _merge_leaf(instruments: list[dict], leaf, info: dict) -> list[dict]:
+    from ..ml.datasets.openmic import class_to_node
+    from ..ml.taxonomy import get_taxonomy
+    tax = get_taxonomy()
+    nodes, probs, hop_s = leaf
+    return leaf_tagging.merge(instruments, nodes, probs, hop_s, info["routing"],
+                              name_of=lambda n: tax.info[n].name, panns_node=class_to_node(tax),
+                              show=settings.tag_threshold_show,
+                              intervals=tagging._probs_to_intervals)
 
 
 def _finish(job_id: int, song, report: dict, status: str,
@@ -161,8 +201,9 @@ def _finish(job_id: int, song, report: dict, status: str,
             s.add(analysis)
             s.flush()
             for i in instruments or []:
+                # index key = taxonomy node (v2), so a "guitar" filter finds nylon guitars
                 s.add(Instrument(analysis_id=analysis.id, song_id=song.id,
-                                 label=i["label"], confidence=i["confidence"],
+                                 label=i.get("node") or i["label"], confidence=i["confidence"],
                                  stem=i["stem"]))
             for st in stems or []:
                 s.add(Stem(analysis_id=analysis.id, song_id=song.id,

@@ -22,6 +22,8 @@ ml = [
     "panns-inference>=0.1.1",
     "librosa>=0.10",
     "pyloudnorm>=0.1.1",
+    "onnxruntime>=1.18",   # M5: serves our instrument model (MIT)
+    "onnx>=1.16",          # M5: export only (Apache-2.0)
 ]
 # Synthetic data pipeline (M2): render engines + MIDI. sfizz_render / fluidsynth are
 # external CLIs (see docs/debriefs/m2.md); Surge XT / Dexed VST3s are hosted by pedalboard.

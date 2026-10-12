@@ -371,6 +371,85 @@ def cmd_scratch_predict(a) -> int:
     return 0
 
 
+def cmd_panns_predict(a) -> int:
+    """M5: score the app's incumbent tagger (PANNs SED, exactly as `pipeline.tagging` uses it:
+    framewise -> 95th percentile per OpenMIC-20 label) so a model swap is judged against it
+    on the same clips. Labels map to taxonomy nodes via the OpenMIC projection."""
+    import time
+
+    import librosa
+
+    from ...pipeline import tagging
+    from ..datasets.openmic import class_to_node
+    tax = Taxonomy.load()
+    c2n = class_to_node(tax)
+    labels = sorted(c2n)
+    opts = ({"check_split_leakage": False} if a.dataset == "openmic" else   # same as `mels`
+            {"window_start": a.moisesdb_window} if a.dataset == "moisesdb" else {})
+    items = _audio_items(load_dataset(a.dataset, a.root, **opts).split(a.split), "mix")
+    scores = np.zeros((len(items), len(labels)), np.float32)
+    t0 = time.time()
+    for k, (_, path) in enumerate(items):
+        y, _ = librosa.load(path, sr=32000, mono=True)
+        per, _ = tagging.panns_framewise(y)
+        scores[k] = [float(np.percentile(per[l], 95)) if l in per else 0.0 for l in labels]
+    ds = "moisesdb" if a.dataset == "moisesdb" else a.dataset
+    meta = {"model": "panns-sed", "version": "cnn14", "aggregate": "p95 framewise",
+            "latency_s": round((time.time() - t0) / max(1, len(items)), 3)}
+    a.out.mkdir(parents=True, exist_ok=True)
+    out = a.out / f"panns__{a.prefix or a.dataset}_{a.split}_mix.npz"
+    save_predictions(out, [i for i, _ in items], [c2n[l] for l in labels], scores, tax.version,
+                     dataset=ds, meta=meta)
+    print(f"wrote {out} ({len(items)} items)")
+    return 0
+
+
+def cmd_export_onnx(a) -> int:
+    """M5: checkpoint -> ONNX + sidecar (see `export.py`), with a global temperature fit on
+    real held-out clips and an ONNX-vs-torch parity check on real mels."""
+    import json as _json
+    import shutil
+
+    from . import export as EX
+    from . import scratch as S
+    from .embed import _device
+    tax = Taxonomy.load()
+    nodes = list(tax.nodes)
+    manifest = _json.loads(a.manifest.read_text())
+    ckpt_meta = _json.loads(a.model.with_suffix(".json").read_text())
+    trained = EX.trained_nodes(manifest, tax)
+    tmp = a.out.with_name(a.out.name + ".tmp")
+    shutil.rmtree(tmp, ignore_errors=True)
+    tmp.mkdir(parents=True)
+    model = S.load_model(a.model, len(nodes), "cpu")
+    onnx_path = EX.to_onnx(model, tmp / EX.ONNX_NAME)
+
+    # temperature: OpenMIC train (real, never trained on), trained nodes only
+    opts = {"check_split_leakage": False}
+    items = label_items(load_dataset("openmic", a.calib_root, **opts).split("train"), "mix")
+    cids, Xc = S.load_mel_cache(a.calib_cache / "mels" / "openmic_train_mix.npz")
+    pos = {i: k for k, i in enumerate(cids)}
+    items = [it for it in items if it[0] in pos]
+    ids, y, m = label_matrices(items, tax)
+    rows = np.array([pos[i] for i in ids])
+    Xr = np.asarray(Xc[np.sort(rows)])[np.argsort(np.argsort(rows))]
+    scores = S.predict(S.load_model(a.model, len(nodes), _device()), Xr, _device())
+    scores = tax.max_propagate(scores, nodes)       # fit T on what is served (and evaluated)
+    temp = EX.fit_global_temperature(scores, y, m, nodes, set(trained))
+    temp |= {"fit_dataset": "openmic", "fit_split": "train", "n_fit": len(ids)}
+    diff = EX.parity(model, onnx_path, Xr[:64].astype(np.float32))
+    if diff > 1e-4:
+        raise SystemExit(f"ONNX parity failed: max |dp| = {diff:.2e}")
+    doc = EX.sidecar(tax=tax, onnx_path=onnx_path, ckpt_meta=ckpt_meta, manifest=manifest,
+                     trained=trained, temperature=temp, parity_max=diff, source=str(a.model))
+    (tmp / EX.SIDECAR_NAME).write_text(_json.dumps(doc, indent=1))
+    shutil.rmtree(a.out, ignore_errors=True)
+    tmp.rename(a.out)
+    print(f"wrote {a.out}: sha256 {doc['sha256'][:12]}, T={temp['T']:.3f} (n={len(ids)}), "
+          f"onnx parity {diff:.1e}")
+    return 0
+
+
 def cmd_shortcut(a) -> int:
     """M4 rigor: non-timbre shortcut baseline (see ml/eval/shortcut.py)."""
     from ..eval import shortcut as SC
@@ -479,6 +558,21 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--eval", nargs="+", required=True, help="mel-prefix:split pairs")
     sp.add_argument("--out", required=True, type=Path)
     sp.set_defaults(fn=cmd_scratch_predict)
+    pp = sub.add_parser("panns-predict", help="M5: score the incumbent PANNs tagger on a dataset")
+    pp.add_argument("--dataset", required=True)
+    pp.add_argument("--root", required=True, type=Path)
+    pp.add_argument("--split", default="test")
+    pp.add_argument("--moisesdb-window", type=lambda v: v if v == "all" else float(v), default=20.0)
+    pp.add_argument("--prefix", help="output name prefix (default: dataset name)")
+    pp.add_argument("--out", required=True, type=Path)
+    pp.set_defaults(fn=cmd_panns_predict)
+    ex = sub.add_parser("export-onnx", help="M5: package a scratch CNN for the app (ONNX + sidecar)")
+    ex.add_argument("--model", required=True, type=Path)
+    ex.add_argument("--manifest", required=True, type=Path, help="render manifest the model trained on")
+    ex.add_argument("--calib-cache", required=True, type=Path, help="cache dir with mels/openmic_train_mix")
+    ex.add_argument("--calib-root", required=True, type=Path, help="OpenMIC root (labels)")
+    ex.add_argument("--out", required=True, type=Path)
+    ex.set_defaults(fn=cmd_export_onnx)
     lr = sub.add_parser("lora", help="M3 R3: LoRA fine-tune + head on synthetic audio")
     lr.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
     lr.add_argument("--train-root", required=True, type=Path)
