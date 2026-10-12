@@ -186,7 +186,7 @@ def _merge_leaf(instruments: list[dict], leaf, info: dict) -> list[dict]:
     return leaf_tagging.merge(instruments, nodes, probs, hop_s, info["routing"],
                               name_of=lambda n: tax.info[n].name, panns_node=class_to_node(tax),
                               show=settings.tag_threshold_show,
-                              intervals=tagging._probs_to_intervals)
+                              intervals=tagging._probs_to_intervals, trained=leaf_tagging.trained())
 
 
 def _finish(job_id: int, song, report: dict, status: str,

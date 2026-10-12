@@ -28,7 +28,7 @@ def test_upload_analyze_report(client, wav_file):
     assert {"transcode", "separation", "tagging_mix", "tagging_leaf", "attributes"} <= stages
 
     # M5 routing (fake leaf model): bass presence is ours, subtypes are flagged uncalibrated,
-    # and a family with no subtype above threshold falls back to "(subtype uncertain)".
+    # one lane per family, and a family with no clear subtype falls back to "(subtype uncertain)".
     by_label = {t["label"]: t for t in report["instruments"]}
     for tag in report["instruments"]:
         assert {"node", "model", "calibrated"} <= tag.keys()
@@ -36,6 +36,8 @@ def test_upload_analyze_report(client, wav_file):
     assert by_label["Electric bass"]["model"] == "disstruments-cnn"
     nylon = by_label["Nylon-string acoustic guitar"]
     assert nylon["subtype"] and nylon["calibrated"] is False
+    assert all(t["stem"] == "mix" for t in report["instruments"] if t["model"] == "disstruments-cnn")
+    assert sum(1 for t in report["instruments"] if (t.get("node") or "").startswith("guitar")) == 1
     assert "guitar" not in by_label
     assert by_label["drums (subtype uncertain)"]["subtype_uncertain"]
     assert report["provenance"]["leaf_model"]["sha256"] == "fake"

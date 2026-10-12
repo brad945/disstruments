@@ -24,6 +24,7 @@ from pathlib import Path
 
 import numpy as np
 
+from ...pipeline.leaf_tagging import DESCEND_MARGIN
 from ..taxonomy import Taxonomy
 from . import scratch as S
 
@@ -75,17 +76,18 @@ def fit_global_temperature(scores: np.ndarray, y: np.ndarray, m: np.ndarray, nod
 
 
 # Routing chosen from the M5 comparison (docs/debriefs/m5.md). Keys are the incumbent's
-# (PANNs) OpenMIC-20 labels; values are the subtype nodes this model may name under them.
-# Rule: a subtype is listed if the model was trained on it, its family has >= 2 trained
-# alternatives, and it is not measured at chance (normalized AP lift < 0.1 on pooled
-# MoisesDB, or flat on unseen instruments). Not yet measured on real music = listed, but
-# shown as uncertain until the golden set calibrates leaves.
+# (PANNs) OpenMIC-20 labels; values are the deepest nodes this model may name under them
+# (their ancestors may be named too). Rule: a subtype is listed if the model was trained
+# on it, its parent has >= 2 trained children, and it is not measured at chance
+# (normalized AP lift < 0.1 on pooled MoisesDB, or flat on unseen instruments). Not yet
+# measured on real music = listed, but shown as uncertain until the golden set calibrates
+# leaves. The app names at most one subtype per instrument (`leaf_tagging.descend`).
 SUBTYPES: dict[str, list[str]] = {
     "guitar": ["guitar.acoustic.nylon", "guitar.acoustic.steel",
                "guitar.electric.clean", "guitar.electric.distorted"],
     "bass": ["bass.upright", "bass.electric", "bass.synth.analog", "bass.synth.sub_808"],
     "synthesizer": ["keys.synth.lead", "keys.synth.pluck"],
-    "drums": ["drums.acoustic_kit", "drums.electronic.tr808"],
+    "drums": ["drums.acoustic_kit", "drums.electronic"],   # tr808 is electronic's only trained child
 }
 SUPPRESSED: dict[str, str] = {
     "bass.electric.fingered": "flat on unseen basses and IDMT (M4 L3c); shown as electric bass",
@@ -117,7 +119,8 @@ def sidecar(*, tax: Taxonomy, onnx_path: Path, ckpt_meta: dict, manifest: dict, 
         "temperature": temperature,
         "leaf_calibrated": False,
         "onnx_torch_max_abs_diff": parity_max,
-        "routing": {"presence": PRESENCE, "subtypes": SUBTYPES, "suppressed": SUPPRESSED},
+        "routing": {"presence": PRESENCE, "subtypes": SUBTYPES, "suppressed": SUPPRESSED,
+                    "descend_margin": DESCEND_MARGIN},
         "train": {"n_params": ckpt_meta.get("n_params"), "cfg": ckpt_meta.get("cfg"),
                   "best_val_map": ckpt_meta.get("best_val_map"),
                   "renderer_sha": manifest.get("renderer_sha"), "n_rendered": manifest.get("n_rendered"),
