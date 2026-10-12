@@ -40,8 +40,16 @@ ML track, in order (milestones in ML_ENGINEERING.md §8):
    - a from-scratch 1.2M CNN ties frozen and LoRA MERT on real OpenMIC (coarse classes);
    - calibration = one global temperature fit on real held-out data;
    - 10x more synthetic data doesn't move real-music scores, so M4 = diversity.
-4. M4–M5: domain-gap work (source and production diversity, separation-artifact
-   augmentation, real co-training), then ONNX serving
+4. M4 (`docs/debriefs/m4.md`, branch `m4` pushed): domain-gap work; NSynth/Iowa v7 nearly
+   doubles unseen nylon/steel; real MoisesDB ties MERT.
+5. M5 built (branch `m5`, `docs/debriefs/m5.md`): our CNN served via ONNX (stage
+   `tagging_leaf`, schema v2) next to PANNs.
+   - Our model owns bass presence and names one subtype per instrument (relative descent
+     rule).
+   - The model lives at `~/.disstruments/models/leaf` (research-only, `make leaf-model`).
+   - Open: PANNs is uncalibrated, so at F15 thresholds it shows ~5% of real voice/drums
+     (Bradley's call: per-class calibration). The model is input-level sensitive (next
+     model: gain augmentation).
 
 Deferred to draft 3: structure (F9), chords (F10), MIDI export (F11), genre profiles (F19).
 
