@@ -32,6 +32,11 @@ AUDIOSET_MAP = {
     "Choir": "voice", "Speech": "voice",
 }
 
+# M5: per-class Platt scaling fit on OpenMIC train (`panns-calibrate`). Applied framewise
+# in `tag()`, so confidences *and* activation regions use calibrated probabilities.
+CALIBRATION_PATH = Path(__file__).with_name("panns_calibration.json")
+_calib: dict | None = None
+
 _sed = None  # lazy singleton (model load is slow)
 _sed_device = "cpu"
 
@@ -96,8 +101,52 @@ def panns_framewise(y: np.ndarray) -> tuple[dict[str, np.ndarray], float]:
     return per_label, hop_s
 
 
+def calibration() -> dict | None:
+    """The fitted Platt parameters, or None (calibration off or not fitted yet)."""
+    global _calib
+    if settings.fake_ml or not settings.panns_calibrated or not CALIBRATION_PATH.exists():
+        return None
+    if _calib is None:
+        import json
+        raw = CALIBRATION_PATH.read_bytes()
+        _calib = json.loads(raw) | {"sha256": hashlib.sha256(raw).hexdigest()}
+    return _calib
+
+
+def version() -> str:
+    """Stage version for provenance (F13): which scores the report's PANNs tags are."""
+    c = calibration()
+    return f"cnn14+platt@{c['sha256'][:12]}" if c else "cnn14"
+
+
+def calibrate(per_label: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    from ..ml.models.calibrate import apply_platt
+    c = calibration()
+    if c is None:
+        return per_label
+    return {k: apply_platt(v, c["classes"][k]["a"], c["classes"][k]["b"]) if k in c["classes"] else v
+            for k, v in per_label.items()}
+
+
+# A Demucs stem may vouch only for the instrument it was separated *for*. The residual
+# "other" stem (and off-role labels on any stem) invent instruments once scores are
+# calibrated: on pooled MoisesDB, max over mix + all stems showed 2238 false detections at
+# 0.3 vs 471 with this rule, at the same voice/drums/bass recall (M5 debrief, story 8).
+STEM_ROLES = {"vocals": {"voice"}, "drums": {"drums", "cymbals"}, "bass": {"bass"}}
+
+
+def combine(mix_tags: list[dict], stem_tags: list[dict]) -> list[dict]:
+    """Per label, the most confident of the mix entry and its dedicated stem's entry (which
+    also says *where* it was heard)."""
+    best: dict[str, dict] = {}
+    for t in mix_tags + [t for t in stem_tags if t["label"] in STEM_ROLES.get(t["stem"], ())]:
+        if t["label"] not in best or t["confidence"] > best[t["label"]]["confidence"]:
+            best[t["label"]] = t
+    return sorted(best.values(), key=lambda r: -r["confidence"])
+
+
 def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
-    """-> [{label, confidence, stem, activations}] sorted by confidence desc."""
+    """-> [{label, confidence, stem, activations, calibrated}] sorted by confidence desc."""
     if settings.fake_ml:
         return _fake_tag(audio_path, source_stem)
 
@@ -105,6 +154,8 @@ def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
 
     y, _ = librosa.load(audio_path, sr=32000, mono=True)
     per_label, hop_s = panns_framewise(y)
+    per_label = calibrate(per_label)
+    calibrated = calibration() is not None
 
     results = []
     show = settings.tag_threshold_show
@@ -117,6 +168,7 @@ def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
             "confidence": round(conf, 3),
             "stem": source_stem,
             "activations": _probs_to_intervals(probs, hop_s, enter=show, exit_=show * 0.7),
+            "calibrated": calibrated,
         })
     return sorted(results, key=lambda r: -r["confidence"])
 

@@ -1,0 +1,195 @@
+{
+ "format": "disstruments.panns_calibration/v1",
+ "model": "panns-sed cnn14 (Cnn14_DecisionLevelMax)",
+ "map": "p' = sigmoid(a * logit(p) + b), applied to framewise probs",
+ "fit": {
+  "dataset": "openmic",
+  "split": "train",
+  "n_clips": 14915,
+  "statistic": "p95 over frames per 10 s clip (as the app aggregates)",
+  "predictions": "panns__openmic_train_mix.npz",
+  "created": "2026-10-12"
+ },
+ "classes": {
+  "accordion": {
+   "a": 0.5927,
+   "b": 1.7528,
+   "n_obs": 1533,
+   "n_pos": 374,
+   "fitted": true,
+   "nll_before": 0.759,
+   "nll_after": 0.3641
+  },
+  "banjo": {
+   "a": 0.6001,
+   "b": 2.788,
+   "n_obs": 1740,
+   "n_pos": 592,
+   "fitted": true,
+   "nll_before": 1.2066,
+   "nll_after": 0.3792
+  },
+  "bass": {
+   "a": 0.4696,
+   "b": 1.5695,
+   "n_obs": 1425,
+   "n_pos": 415,
+   "fitted": true,
+   "nll_before": 1.1147,
+   "nll_after": 0.4629
+  },
+  "cello": {
+   "a": 0.5488,
+   "b": 2.2349,
+   "n_obs": 1464,
+   "n_pos": 598,
+   "fitted": true,
+   "nll_before": 1.2205,
+   "nll_after": 0.4445
+  },
+  "clarinet": {
+   "a": 0.5276,
+   "b": 1.1116,
+   "n_obs": 1745,
+   "n_pos": 396,
+   "fitted": true,
+   "nll_before": 0.746,
+   "nll_after": 0.4142
+  },
+  "cymbals": {
+   "a": 0.6933,
+   "b": 4.5896,
+   "n_obs": 1299,
+   "n_pos": 814,
+   "fitted": true,
+   "nll_before": 1.8694,
+   "nll_after": 0.2751
+  },
+  "drums": {
+   "a": 1.1159,
+   "b": 6.0403,
+   "n_obs": 1323,
+   "n_pos": 828,
+   "fitted": true,
+   "nll_before": 1.2207,
+   "nll_after": 0.1741
+  },
+  "flute": {
+   "a": 0.4749,
+   "b": 1.5761,
+   "n_obs": 1522,
+   "n_pos": 472,
+   "fitted": true,
+   "nll_before": 1.0305,
+   "nll_after": 0.4418
+  },
+  "guitar": {
+   "a": 1.2092,
+   "b": 4.3394,
+   "n_obs": 1214,
+   "n_pos": 852,
+   "fitted": true,
+   "nll_before": 0.7803,
+   "nll_after": 0.1524
+  },
+  "mallet_percussion": {
+   "a": 0.6772,
+   "b": 2.5127,
+   "n_obs": 1324,
+   "n_pos": 522,
+   "fitted": true,
+   "nll_before": 0.9212,
+   "nll_after": 0.3491
+  },
+  "mandolin": {
+   "a": 0.5569,
+   "b": 1.8215,
+   "n_obs": 1837,
+   "n_pos": 652,
+   "fitted": true,
+   "nll_before": 1.0594,
+   "nll_after": 0.4593
+  },
+  "organ": {
+   "a": 0.6533,
+   "b": 1.3819,
+   "n_obs": 1459,
+   "n_pos": 482,
+   "fitted": true,
+   "nll_before": 0.5931,
+   "nll_after": 0.372
+  },
+  "piano": {
+   "a": 1.2556,
+   "b": 5.325,
+   "n_obs": 1305,
+   "n_pos": 885,
+   "fitted": true,
+   "nll_before": 0.9241,
+   "nll_after": 0.1154
+  },
+  "saxophone": {
+   "a": 0.7839,
+   "b": 3.5209,
+   "n_obs": 1736,
+   "n_pos": 830,
+   "fitted": true,
+   "nll_before": 1.2728,
+   "nll_after": 0.3518
+  },
+  "synthesizer": {
+   "a": 1.0043,
+   "b": 6.7102,
+   "n_obs": 1222,
+   "n_pos": 823,
+   "fitted": true,
+   "nll_before": 2.3418,
+   "nll_after": 0.2267
+  },
+  "trombone": {
+   "a": 0.6231,
+   "b": 2.2081,
+   "n_obs": 2040,
+   "n_pos": 635,
+   "fitted": true,
+   "nll_before": 0.9943,
+   "nll_after": 0.4065
+  },
+  "trumpet": {
+   "a": 0.6992,
+   "b": 2.8242,
+   "n_obs": 2131,
+   "n_pos": 828,
+   "fitted": true,
+   "nll_before": 1.1888,
+   "nll_after": 0.4097
+  },
+  "ukulele": {
+   "a": 0.5681,
+   "b": 2.0356,
+   "n_obs": 1835,
+   "n_pos": 556,
+   "fitted": true,
+   "nll_before": 1.0241,
+   "nll_after": 0.4156
+  },
+  "violin": {
+   "a": 0.771,
+   "b": 2.7249,
+   "n_obs": 1402,
+   "n_pos": 779,
+   "fitted": true,
+   "nll_before": 0.8192,
+   "nll_after": 0.3082
+  },
+  "voice": {
+   "a": 1.5801,
+   "b": 5.6407,
+   "n_obs": 1190,
+   "n_pos": 764,
+   "fitted": true,
+   "nll_before": 1.1522,
+   "nll_after": 0.2094
+  }
+ }
+}

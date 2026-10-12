@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # M5 leaf model (ONNX + sidecar, kept outside the repo: research-only licence).
     # Missing -> the leaf stage is skipped and reports are PANNs-only.
     leaf_model_dir: Path = Path.home() / ".disstruments" / "models" / "leaf"
+    # M5: per-class Platt scaling of PANNs scores, fit on OpenMIC train (real, never trained
+    # on): raw PANNs scores sit far below the F15 thresholds. Off = draft-1 raw scores.
+    panns_calibrated: bool = True
 
     # Rate limiting (F23) — dormant locally, values are the Phase-1 profile (PRD §7.2)
     rate_limiting_enabled: bool = False

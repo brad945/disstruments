@@ -404,6 +404,46 @@ def cmd_panns_predict(a) -> int:
     return 0
 
 
+def cmd_panns_calibrate(a) -> int:
+    """M5: per-class Platt scaling for the incumbent PANNs tagger, fit on its OpenMIC-train
+    scores (`panns-predict --split train`; real, never trained on). Writes the JSON the app
+    applies framewise in `pipeline.tagging`."""
+    import datetime as dt
+    import json as _json
+
+    from ..datasets.openmic import class_to_node
+    from ..eval.predictions import load_predictions
+    from .calibrate import fit_platt
+    tax = Taxonomy.load()
+    node_of = class_to_node(tax)
+    label_of = {n: l for l, n in node_of.items()}
+    pred = load_predictions(a.predictions)
+    opts = {"check_split_leakage": False}
+    items = label_items(load_dataset("openmic", a.root, **opts).split("train"), "mix")
+    ids, y, m = label_matrices(items, tax)
+    pos = {i: k for k, i in enumerate(pred.item_ids)}
+    keep = [k for k, i in enumerate(ids) if i in pos]
+    rows = [pos[ids[k]] for k in keep]
+    ix = tax.index()
+    cols = [ix[n] for n in pred.nodes]
+    fits = fit_platt(pred.scores[rows], y[keep][:, cols], m[keep][:, cols])
+    doc = {"format": "disstruments.panns_calibration/v1",
+           "model": "panns-sed cnn14 (Cnn14_DecisionLevelMax)",
+           "map": "p' = sigmoid(a * logit(p) + b), applied to framewise probs",
+           "fit": {"dataset": "openmic", "split": "train", "n_clips": len(keep),
+                   "statistic": "p95 over frames per 10 s clip (as the app aggregates)",
+                   "predictions": a.predictions.name,
+                   "created": dt.date.today().isoformat()},
+           "classes": {label_of[n]: {k: (round(v, 4) if isinstance(v, float) else v)
+                                     for k, v in f.items()} for n, f in zip(pred.nodes, fits)}}
+    a.out.write_text(_json.dumps(doc, indent=1) + "\n")
+    for lab, f in doc["classes"].items():
+        print(f"{lab:18s} a={f['a']:6.3f} b={f['b']:+7.3f} n_pos={f['n_pos']:5d} "
+              + (f"nll {f['nll_before']:.3f} -> {f['nll_after']:.3f}" if f["fitted"] else "(identity)"))
+    print(f"wrote {a.out} ({len(keep)} clips)")
+    return 0
+
+
 def cmd_export_onnx(a) -> int:
     """M5: checkpoint -> ONNX + sidecar (see `export.py`), with a global temperature fit on
     real held-out clips and an ONNX-vs-torch parity check on real mels."""
@@ -566,6 +606,12 @@ def main(argv: list[str] | None = None) -> int:
     pp.add_argument("--prefix", help="output name prefix (default: dataset name)")
     pp.add_argument("--out", required=True, type=Path)
     pp.set_defaults(fn=cmd_panns_predict)
+    pc = sub.add_parser("panns-calibrate", help="M5: per-class Platt scaling for PANNs (OpenMIC train)")
+    pc.add_argument("--predictions", required=True, type=Path, help="panns-predict output, OpenMIC train")
+    pc.add_argument("--root", required=True, type=Path, help="OpenMIC root (labels)")
+    pc.add_argument("--out", type=Path,
+                    default=Path(__file__).resolve().parents[2] / "pipeline" / "panns_calibration.json")
+    pc.set_defaults(fn=cmd_panns_calibrate)
     ex = sub.add_parser("export-onnx", help="M5: package a scratch CNN for the app (ONNX + sidecar)")
     ex.add_argument("--model", required=True, type=Path)
     ex.add_argument("--manifest", required=True, type=Path, help="render manifest the model trained on")

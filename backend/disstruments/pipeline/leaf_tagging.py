@@ -216,7 +216,7 @@ def merge(panns: list[dict], nodes: list[str], probs: np.ndarray, hop_s: float, 
     subtypes = routing.get("subtypes", {})
     for t in present:
         label = t.get("panns_label", t["label"])
-        # PANNs scores were never fit on real data (draft-1 status quo), hence calibrated False
+        # PANNs entries say themselves whether their scores were calibrated (`tagging.tag`)
         base = {"node": panns_node.get(label), "model": "panns-sed", "calibrated": False, **t}
         base.pop("panns_label", None)
         root = panns_node.get(label, label)

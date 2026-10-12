@@ -87,7 +87,7 @@ def run_job(job_id: int) -> None:
 
     # -- B: full-mix tagging / A1: per-stem tagging ------------------------------
     instruments: list[dict] = []
-    mix_tags, _ = _stage(job_id, "tagging_mix", "panns-sed", "cnn14",
+    mix_tags, _ = _stage(job_id, "tagging_mix", "panns-sed", tagging.version(),
                          tagging.tag, canonical, "mix")
     if mix_tags is not None:
         ok_any = True
@@ -97,21 +97,12 @@ def run_job(job_id: int) -> None:
     stem_tags_all: list[dict] = []
     if sep:
         for name, path in sep["stems"].items():
-            tags, _ = _stage(job_id, f"tagging_{name}", "panns-sed", "cnn14",
+            tags, _ = _stage(job_id, f"tagging_{name}", "panns-sed", tagging.version(),
                              tagging.tag, path, name)
             if tags:
                 stem_tags_all.extend(tags)
 
-    # merge: per-stem wins (it knows *where*); mix fills gaps (design doc §3)
-    seen = set()
-    for t in sorted(stem_tags_all, key=lambda x: -x["confidence"]):
-        if t["label"] not in seen:
-            seen.add(t["label"])
-            instruments.append(t)
-    for t in (mix_tags or []):
-        if t["label"] not in seen:
-            seen.add(t["label"])
-            instruments.append(t)
+    instruments = tagging.combine(mix_tags or [], stem_tags_all)
 
     # -- B2: leaf model on the full mix, merged under the sidecar's routing (M5) -------
     leaf_info = None
