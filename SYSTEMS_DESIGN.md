@@ -99,6 +99,10 @@ Rule: no model enters `main` without (a) an eval-harness run archived, (b) licen
 | OpenMIC-2018 | CC BY 4.0 (Zenodo 1432913); **individual FMA clips carry their own CC licenses incl. NC/ND** (`license_title` in metadata.csv) | Per-clip license must be filtered before any commercial training. |
 | Slakh2100 | CC BY 4.0 (Zenodo 4599666); `slakh-utils` MIT | OK. |
 | Lakh MIDI Dataset | CC BY 4.0 ([project page](https://colinraffel.com/projects/lmd/)); cite page + Raffel thesis | OK for M2 renders (attribution). Underlying MIDI files were web-scraped — note in any commercial review. |
+| NSynth (Google Magenta) | CC BY 4.0. Attribution: "NSynth Dataset (Engel et al. 2017, Google Magenta), CC BY 4.0" | Training source (per-note `notes` engine, M4 L3c). Commercial-OK with attribution. Leaf labels are Bradley's (by ear, `ml/synth/nsynth_labels.json`); NSynth's own family labels are coarse. |
+| University of Iowa Musical Instrument Samples (MIS) | Free for any use ("may be downloaded and used for any projects, without restrictions"), recorded as `LicenseRef-IowaMIS-any-use` | Training source (nylon guitar, double-bass pizz, trumpet, alto/soprano sax). Commercial-OK. |
+| MoisesDB | Non-commercial research licence (NC-SA terms); signed download link is a secret, never committed | **Test only, never trained on.** |
+| IDMT-SMT-Bass / IDMT-SMT-Audio-Effects | CC BY-NC-ND 4.0 | **Test only, never trained on.** |
 | `slakh-generation` patch list, mirdata fixtures | **unverified** | Test fixtures only. |
 
 ## 5. Data model (Postgres)
