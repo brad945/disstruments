@@ -44,8 +44,9 @@ ML track, in order (milestones in ML_ENGINEERING.md §8):
    doubles unseen nylon/steel; real MoisesDB ties MERT.
 5. M5 built (branch `m5`, `docs/debriefs/m5.md`): our CNN served via ONNX (stage
    `tagging_leaf`, schema v2) next to PANNs.
-   - Our model owns bass presence and names one subtype per instrument (relative descent
-     rule).
+   - PANNs decides presence for all instruments; ours names one subtype per instrument
+     (relative descent rule). Bass presence went back to PANNs: it tied once PANNs was
+     calibrated and used the bass stem.
    - The model lives at `~/.disstruments/models/leaf` (research-only, `make leaf-model`).
    - PANNs is now Platt-calibrated per class (`pipeline/panns_calibration.json`, fit on
      OpenMIC train). A Demucs stem vouches only for its own instrument

@@ -95,9 +95,11 @@ SUPPRESSED: dict[str, str] = {
     "keys.electric_piano": "at chance on real music (MoisesDB AP 0.16 vs 0.11 base rate)",
     "keys.synth.pad": "at chance on real music (MoisesDB AP 0.15 vs 0.15 base rate)",
 }
-# Presence owned by this model (beats the incumbent on real music, never worse): bass
-# (MoisesDB +0.18 [+0.13, +0.24]; OpenMIC tie). Everything else: PANNs keeps presence.
-PRESENCE: list[str] = ["bass"]
+# Presence owned by this model (beats the incumbent on real music, never worse). Bass beat
+# raw mix-only PANNs (MoisesDB +0.18 [+0.13, +0.24]) but ties the incumbent the app now
+# runs (calibrated, mix + bass stem: +0.004 [-0.008, +0.020]), so PANNs keeps all
+# presence; this model names subtypes. The owned-presence path stays (FAKE_ROUTING tests it).
+PRESENCE: list[str] = []
 
 
 def sidecar(*, tax: Taxonomy, onnx_path: Path, ckpt_meta: dict, manifest: dict, trained: list[str],
