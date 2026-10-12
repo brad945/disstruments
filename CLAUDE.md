@@ -47,9 +47,11 @@ ML track, in order (milestones in ML_ENGINEERING.md §8):
    - Our model owns bass presence and names one subtype per instrument (relative descent
      rule).
    - The model lives at `~/.disstruments/models/leaf` (research-only, `make leaf-model`).
-   - Open: PANNs is uncalibrated, so at F15 thresholds it shows ~5% of real voice/drums
-     (Bradley's call: per-class calibration). The model is input-level sensitive (next
-     model: gain augmentation).
+   - PANNs is now Platt-calibrated per class (`pipeline/panns_calibration.json`, fit on
+     OpenMIC train). A Demucs stem vouches only for its own instrument
+     (`tagging.STEM_ROLES`).
+   - Open: the model is input-level sensitive (next model: gain augmentation), plus the
+     mono-upmix −3 dB in transcode.
 
 Deferred to draft 3: structure (F9), chords (F10), MIDI export (F11), genre profiles (F19).
 
