@@ -81,6 +81,10 @@ class ScratchConfig:
     channels: tuple[int, ...] = (32, 64, 128, 256)
     dropout: float = 0.3
     seed: int = 0
+    # M5 follow-up: random input gain, uniform in [-gain_db, +gain_db] dB per clip (0 = off).
+    # Renders are loudness-normalised, so without it the model learns a level prior
+    # (served model: MoisesDB AP fell steadily from +3 dB to -6 dB).
+    gain_db: float = 0.0
 
 
 def make_model(n_out: int, cfg: ScratchConfig):
@@ -123,6 +127,14 @@ def _spec_augment(x, rng, n_masks=2, f_w=16, t_w=40):
     return x
 
 
+def _gain(x, rng, max_db: float):
+    """Exact level change on cached features: they are log1p(100 * mel power), so a gain
+    of g dB scales the power by 10**(g/10) inside the log1p."""
+    import torch
+    g = torch.from_numpy(10 ** (rng.uniform(-max_db, max_db, size=(x.shape[0], 1, 1)) / 10)).to(x.dtype)
+    return torch.log1p(g * torch.expm1(x))
+
+
 def _val_map(y, s, m) -> float:
     from ..eval import metrics as M
     ap, reasons = M.per_class_ap(y, s, m)
@@ -153,7 +165,10 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
             i = order[k:k + cfg.batch_size]
             st = rng.integers(0, X.shape[2] - cfg.crop_frames + 1, size=len(i))
             xb = np.stack([X[j, :, s:s + cfg.crop_frames] for j, s in zip(i, st)]).astype(np.float32)
-            xb = _spec_augment(torch.from_numpy(xb), rng).to(dev)
+            xb = torch.from_numpy(xb)
+            if cfg.gain_db > 0:
+                xb = _gain(xb, rng, cfg.gain_db)
+            xb = _spec_augment(xb, rng).to(dev)
             z = model(xb)
             yb, mb = Yt[i].to(dev), Mt[i].to(dev)
             loss = torch.nn.functional.binary_cross_entropy_with_logits(

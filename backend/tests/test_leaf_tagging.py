@@ -134,3 +134,16 @@ def test_served_parents_are_max_propagated_like_the_harness():
     nodes = ["bass", "bass.electric", "bass.electric.fingered", "guitar"]
     out = LT._finalize(np.array([[0.1, 0.2, 0.7, 0.4]]), nodes)
     assert out.tolist() == [[0.7, 0.7, 0.7, 0.4]]
+
+
+def test_gain_augmentation_equals_recomputing_features_at_that_level():
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("librosa")
+    from disstruments.ml.models import scratch as S
+    rng = np.random.default_rng(0)
+    y = (0.1 * rng.standard_normal(S.SR * 2)).astype(np.float32)
+    x = torch.from_numpy(S.logmel_array(y).astype(np.float32))[None]
+    out = S._gain(x, np.random.default_rng(1), 12.0)
+    g_db = np.random.default_rng(1).uniform(-12, 12, size=(1, 1, 1)).item()   # same draw
+    ref = S.logmel_array(y * 10 ** (g_db / 20)).astype(np.float32)
+    assert np.abs(out[0].numpy() - ref).max() < 0.02          # float16 cache precision

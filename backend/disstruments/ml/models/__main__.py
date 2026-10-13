@@ -226,7 +226,7 @@ def cmd_scratch(a) -> int:
         cot = {"dataset": "openmic", "split": "train", "licence": a.cotrain_licence,
                "n": len(keep)}
         print(f"co-training with {len(keep)} OpenMIC train clips (licence={a.cotrain_licence})")
-    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs)
+    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db)
     model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg)
     meta = {"model": "scratch_cnn", "n_params": S.n_params(model), "backbone": None,
             "backbone_license": "none (random init)", "commercial_clean": a.commercial_only,
@@ -581,6 +581,7 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--cotrain-licence", default="all", choices=("all", "commercial"))
     sc.add_argument("--openmic-root", type=Path)
     sc.add_argument("--seed", type=int, default=0)
+    sc.add_argument("--gain-db", type=float, default=0.0, help="random input gain, +/- dB per clip")
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)

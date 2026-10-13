@@ -41,15 +41,21 @@ def probe(path: Path) -> dict:
             f"track is {duration:.0f}s; max is {settings.max_duration_s}s")
     return {"duration_s": duration,
             "codec": streams[0].get("codec_name", "unknown"),
-            "sample_rate": int(streams[0].get("sample_rate", 0))}
+            "sample_rate": int(streams[0].get("sample_rate", 0)),
+            "channels": int(streams[0].get("channels", 0))}
 
 
 def to_canonical(src: Path, dst: Path) -> None:
+    """Mono sources are copied to both channels at unity gain. ffmpeg's default upmix
+    (`-ac 2`) applies a -3 dB pan law, so the mono downmix every model takes came out 3 dB
+    quieter than the upload, and level moves our model's scores (M5 debrief, story 5)."""
     dst.parent.mkdir(parents=True, exist_ok=True)
+    mono = probe(src)["channels"] == 1
+    layout = ["-af", "pan=stereo|c0=c0|c1=c0"] if mono else ["-ac", "2"]
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-v", "error", "-i", str(src),
-             "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le", str(dst)],
+             "-ar", "44100", *layout, "-c:a", "pcm_s16le", str(dst)],
             capture_output=True, check=True, timeout=600)
     except subprocess.CalledProcessError as e:
         raise TranscodeError(f"transcode failed: {e.stderr.decode()[:400]}") from e
