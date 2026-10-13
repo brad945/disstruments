@@ -419,7 +419,11 @@ def cmd_panns_calibrate(a) -> int:
     label_of = {n: l for l, n in node_of.items()}
     pred = load_predictions(a.predictions)
     opts = {"check_split_leakage": False}
-    items = label_items(load_dataset("openmic", a.root, **opts).split("train"), "mix")
+    recs = load_dataset("openmic", a.root, **opts).split("train")
+    if a.licence == "commercial":                   # licence-clean end state: no NC/ND clips
+        lic = openmic_licences(a.root)
+        recs = [r for r in recs if commercial_ok(lic.get(r.item_id, ""))]
+    items = label_items(recs, "mix")
     ids, y, m = label_matrices(items, tax)
     pos = {i: k for k, i in enumerate(pred.item_ids)}
     keep = [k for k, i in enumerate(ids) if i in pos]
@@ -430,7 +434,7 @@ def cmd_panns_calibrate(a) -> int:
     doc = {"format": "disstruments.panns_calibration/v1",
            "model": "panns-sed cnn14 (Cnn14_DecisionLevelMax)",
            "map": "p' = sigmoid(a * logit(p) + b), applied to framewise probs",
-           "fit": {"dataset": "openmic", "split": "train", "n_clips": len(keep),
+           "fit": {"dataset": "openmic", "split": "train", "n_clips": len(keep), "licence": a.licence,
                    "statistic": "p95 over frames per 10 s clip (as the app aggregates)",
                    "predictions": a.predictions.name,
                    "created": dt.date.today().isoformat()},
@@ -621,6 +625,8 @@ def main(argv: list[str] | None = None) -> int:
     pc = sub.add_parser("panns-calibrate", help="M5: per-class Platt scaling for PANNs (OpenMIC train)")
     pc.add_argument("--predictions", required=True, type=Path, help="panns-predict output, OpenMIC train")
     pc.add_argument("--root", required=True, type=Path, help="OpenMIC root (labels)")
+    pc.add_argument("--licence", default="all", choices=("all", "commercial"),
+                    help="fit on all OpenMIC train clips or the commercially licensed ones only")
     pc.add_argument("--out", type=Path,
                     default=Path(__file__).resolve().parents[2] / "pipeline" / "panns_calibration.json")
     pc.set_defaults(fn=cmd_panns_calibrate)
