@@ -30,13 +30,22 @@ PROGRESSIONS = [[0, 4, 5, 3], [0, 5, 3, 4], [0, 3, 4, 4], [5, 3, 0, 4], [0, 3, 0
                 [0, 4, 5, 2, 3, 0, 3, 4], [1, 4, 0, 0], [0, 6, 5, 4], [0, 0, 3, 4], [3, 4, 0, 5]]
 MAJOR = [0, 2, 4, 5, 7, 9, 11]
 # GM program pools per role (0-based), mixing programs that pin a leaf and generic ones.
+# Part probabilities are set so role frequencies per window roughly match the Lakh-based
+# v7 render (guitar ~0.8, piano/e-piano ~0.55, pad/lead/sax/brass ~0.15, organ ~0.1), so
+# a procedural-vs-Lakh comparison differs in composition, not in class frequency.
 PROGRAMS = {
-    "chords": [0, 1, 2, 4, 5, 16, 17, 18, 24, 25, 26, 27, 29, 30, 88, 89, 90, 91, 94],
+    "keys": [0, 1, 2, 3, 4, 5],
+    "organ": [16, 17, 18],
+    "guitar": [24, 25, 26, 27, 28, 29, 30, 31],
     "bass": [32, 33, 34, 35, 36, 37, 38, 39],
-    "lead": [0, 4, 24, 26, 29, 56, 57, 64, 65, 66, 80, 81, 82, 84, 85, 87],
-    "pad": [16, 19, 48, 88, 89, 90, 91, 92, 94, 95],
+    "lead": [24, 26, 29, 56, 57, 64, 65, 66, 80, 81, 82, 84, 85, 87, 4],
+    "pad": [88, 89, 90, 91, 92, 94, 95],
     "horn": [56, 57, 60, 61, 64, 65, 66, 67],
 }
+# (role, part writer kwargs, probability of the part in a song)
+PARTS = [("bass", 1.0), ("guitar", 0.7), ("keys", 0.6), ("organ", 0.12), ("guitar2", 0.25),
+         ("lead", 0.5), ("pad", 0.15), ("horn", 0.2)]
+
 KICK, SNARE, CLOSED_HAT, OPEN_HAT, RIDE, CRASH, LOW_TOM, MID_TOM, HI_TOM = 36, 38, 42, 46, 51, 49, 45, 47, 50
 assert {KICK, SNARE, CLOSED_HAT, OPEN_HAT, RIDE, CRASH, LOW_TOM, MID_TOM, HI_TOM} <= KIT_NOTES
 
@@ -158,17 +167,16 @@ def song(seed: int) -> "object":
         d = pm.Instrument(program=0, is_drum=True, name="drums")
         _drums(d, rng, bars, beat, str(rng.choice(["straight", "syncopated", "four"])))
         m.instruments.append(d)
-    parts = [("bass", _bass), ("chords", _chords), ("lead", _melody)]
-    if rng.random() < 0.5:
-        parts.append(("pad", _chords))
-    if rng.random() < 0.3:
-        parts.append(("horn", _melody))
-    for role, fn in parts:
-        if role != "bass" and rng.random() < 0.15:   # vary the line-up
+    writers = {"bass": _bass, "guitar": _chords, "guitar2": _chords, "keys": _chords, "organ": _chords,
+               "lead": _melody, "pad": _chords, "horn": _melody}
+    octave = {"guitar": 3, "guitar2": 4, "keys": 4, "organ": 4, "pad": 3, "horn": 4}
+    for role, prob in PARTS:
+        if rng.random() >= prob:
             continue
-        inst = pm.Instrument(program=int(rng.choice(PROGRAMS[role])), name=role)
-        kw = {"octave": 3} if role == "pad" else {"octave": 4} if role == "horn" else {}
-        fn(inst, rng, prog, key, minor, bars, beat, **kw)
+        pool = PROGRAMS["guitar" if role == "guitar2" else role]
+        inst = pm.Instrument(program=int(rng.choice(pool)), name=role)
+        kw = {"octave": octave[role]} if role in octave else {}
+        writers[role](inst, rng, prog, key, minor, bars, beat, **kw)
         m.instruments.append(inst)
     return m
 
