@@ -1,4 +1,4 @@
-"""CLI: python -m disstruments.ml.synth {sources,build}."""
+"""CLI: python -m disstruments.ml.synth {sources,build,procedural,audition}."""
 from __future__ import annotations
 
 import argparse
@@ -41,11 +41,19 @@ def main(argv: list[str] | None = None) -> int:
                         "re-rendered with them as split 'test_lso'")
     b.add_argument("--stem-fraction", type=float, default=1.0,
                    help="save stem audio for this fraction of clips (labels always complete)")
+    pr = sub.add_parser("procedural", help="write licence-clean procedural MIDI songs (PRD A2)")
+    pr.add_argument("--out", required=True, type=Path)
+    pr.add_argument("--n-songs", type=int, default=3000)
+    pr.add_argument("--seed", type=int, default=0)
     au = sub.add_parser("audition", help="dry examples per source -> local HTML listening page")
     au.add_argument("--midi-root", required=True, type=Path)
     au.add_argument("--out", required=True, type=Path)
     au.add_argument("--n", type=int, default=3)
     a = p.parse_args(argv)
+    if a.cmd == "procedural":
+        from .procedural import generate
+        print(generate(a.out, a.n_songs, seed=a.seed))
+        return 0
     if a.cmd == "audition":
         from .audition import build_audition
         print(build_audition(a.midi_root, a.out, n=a.n))

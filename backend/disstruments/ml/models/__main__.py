@@ -464,19 +464,30 @@ def cmd_export_onnx(a) -> int:
     model = S.load_model(a.model, len(nodes), "cpu")
     onnx_path = EX.to_onnx(model, tmp / EX.ONNX_NAME)
 
-    # temperature: OpenMIC train (real, never trained on), trained nodes only
+    # temperature: OpenMIC train (real, never trained on), trained nodes only. A licence-clean
+    # model is calibrated on the commercially licensed clips only (most OpenMIC clips are
+    # NC/ND); the all-clips T is recorded next to it for comparison.
+    clean = bool(ckpt_meta.get("commercial_clean", False))
     opts = {"check_split_leakage": False}
-    items = label_items(load_dataset("openmic", a.calib_root, **opts).split("train"), "mix")
+    recs = load_dataset("openmic", a.calib_root, **opts).split("train")
+    lic = openmic_licences(a.calib_root)
     cids, Xc = S.load_mel_cache(a.calib_cache / "mels" / "openmic_train_mix.npz")
     pos = {i: k for k, i in enumerate(cids)}
-    items = [it for it in items if it[0] in pos]
+    items = [it for it in label_items(recs, "mix") if it[0] in pos]
     ids, y, m = label_matrices(items, tax)
     rows = np.array([pos[i] for i in ids])
     Xr = np.asarray(Xc[np.sort(rows)])[np.argsort(np.argsort(rows))]
     scores = S.predict(S.load_model(a.model, len(nodes), _device()), Xr, _device())
     scores = tax.max_propagate(scores, nodes)       # fit T on what is served (and evaluated)
-    temp = EX.fit_global_temperature(scores, y, m, nodes, set(trained))
-    temp |= {"fit_dataset": "openmic", "fit_split": "train", "n_fit": len(ids)}
+    ok = np.array([commercial_ok(lic.get(i, "")) for i in ids])
+    t_all = EX.fit_global_temperature(scores, y, m, nodes, set(trained))
+    if clean:
+        temp = EX.fit_global_temperature(scores[ok], y[ok], m[ok], nodes, set(trained))
+        temp |= {"fit_dataset": "openmic", "fit_split": "train", "fit_licence": "commercial",
+                 "n_fit": int(ok.sum()), "T_all_clips": t_all["T"]}
+    else:
+        temp = t_all | {"fit_dataset": "openmic", "fit_split": "train", "fit_licence": "all",
+                        "n_fit": len(ids)}
     diff = EX.parity(model, onnx_path, Xr[:64].astype(np.float32))
     if diff > 1e-4:
         raise SystemExit(f"ONNX parity failed: max |dp| = {diff:.2e}")
@@ -485,7 +496,7 @@ def cmd_export_onnx(a) -> int:
     (tmp / EX.SIDECAR_NAME).write_text(_json.dumps(doc, indent=1))
     shutil.rmtree(a.out, ignore_errors=True)
     tmp.rename(a.out)
-    print(f"wrote {a.out}: sha256 {doc['sha256'][:12]}, T={temp['T']:.3f} (n={len(ids)}), "
+    print(f"wrote {a.out}: sha256 {doc['sha256'][:12]}, T={temp['T']:.3f} (n={temp['n_fit']}, {temp['fit_licence']} clips), "
           f"onnx parity {diff:.1e}")
     return 0
 

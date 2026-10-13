@@ -129,7 +129,10 @@ def sidecar(*, tax: Taxonomy, onnx_path: Path, ckpt_meta: dict, manifest: dict, 
                   "holdout": manifest.get("holdout", []), "fx_profile": manifest.get("fx_profile")},
         "licence": {
             "commercial_clean": bool(ckpt_meta.get("commercial_clean", False)),
-            "status": "research-only (renders include non-commercial MIDI); see SYSTEMS_DESIGN §4",
+            "status": ("commercial-clean: procedural MIDI + licence-clean sources only; "
+                       "temperature fit on commercially licensed OpenMIC clips"
+                       if ckpt_meta.get("commercial_clean") else
+                       "research-only (renders include non-commercial MIDI); see SYSTEMS_DESIGN §4"),
             "attribution": "Trained in part on NSynth (Engel et al. 2017, Google, CC BY 4.0).",
         },
     }
