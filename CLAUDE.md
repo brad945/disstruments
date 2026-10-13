@@ -51,8 +51,10 @@ ML track, in order (milestones in ML_ENGINEERING.md §8):
    - PANNs is now Platt-calibrated per class (`pipeline/panns_calibration.json`, fit on
      OpenMIC train). A Demucs stem vouches only for its own instrument
      (`tagging.STEM_ROLES`).
-   - Open: the model is input-level sensitive (next model: gain augmentation), plus the
-     mono-upmix −3 dB in transcode.
+   - Served model `v7sg` = v7s + ±12 dB gain augmentation (MoisesDB leaf mAP 0.41 →
+     0.49); mono upmix −3 dB fixed.
+   - Licence-clean path: `ml/synth/procedural.py` (owned MIDI) + `--commercial-only`
+     renders; the procedural-vs-Lakh ablation is in the debrief.
 
 Deferred to draft 3: structure (F9), chords (F10), MIDI export (F11), genre profiles (F19).
 

@@ -86,14 +86,16 @@ SUBTYPES: dict[str, list[str]] = {
     "guitar": ["guitar.acoustic.nylon", "guitar.acoustic.steel",
                "guitar.electric.clean", "guitar.electric.distorted"],
     "bass": ["bass.upright", "bass.electric", "bass.synth.analog", "bass.synth.sub_808"],
-    "synthesizer": ["keys.synth.lead", "keys.synth.pluck"],
+    "synthesizer": ["keys.synth.lead", "keys.synth.pad", "keys.synth.pluck"],
     "drums": ["drums.acoustic_kit", "drums.electronic"],   # tr808 is electronic's only trained child
 }
+# Lifts for the served model (v7sg, gain-augmented): pad 0.15 and electric piano 0.13 now
+# pass the 0.1 bar (both failed for v7s). Electric piano is still unreachable: PANNs files
+# electric pianos under "piano" (keys.piano), which has no electric-piano child.
 SUPPRESSED: dict[str, str] = {
-    "bass.electric.fingered": "flat on unseen basses and IDMT (M4 L3c); shown as electric bass",
-    "bass.electric.picked": "flat on unseen basses and IDMT (M4 L3c); shown as electric bass",
-    "keys.electric_piano": "at chance on real music (MoisesDB AP 0.16 vs 0.11 base rate)",
-    "keys.synth.pad": "at chance on real music (MoisesDB AP 0.15 vs 0.15 base rate)",
+    "bass.electric.fingered": "unstable on real basses (IDMT AP 0.34 vs 0.25 base; 0.51 for v7s, "
+                              "which differs only in gain augmentation); shown as electric bass",
+    "bass.electric.picked": "near chance on real basses (IDMT AP 0.34 vs 0.25 base); shown as electric bass",
 }
 # Presence owned by this model (beats the incumbent on real music, never worse). Bass beat
 # raw mix-only PANNs (MoisesDB +0.18 [+0.13, +0.24]) but ties the incumbent the app now

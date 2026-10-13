@@ -17,7 +17,7 @@ setup-ml:         ## real ML models (torch/demucs/panns/librosa) — several GB
 
 # M5 leaf model: research-only, so it is built locally, never committed (SYSTEMS_DESIGN §4).
 SYNTH ?= $(HOME)/datasets/disstruments-synth
-LEAF_CKPT ?= $(SYNTH)/preds/m5serve/scratch_cnn_synthetic_v7s.pt
+LEAF_CKPT ?= $(SYNTH)/preds/m6gain/scratch_cnn_synthetic_v7sg.pt
 LEAF_MANIFEST ?= $(SYNTH)/v7serve/manifest.json
 leaf-model:       ## export our instrument model to ~/.disstruments/models/leaf (needs local renders)
 	cd backend && .venv/bin/python -m disstruments.ml.models export-onnx --model $(LEAF_CKPT) \
