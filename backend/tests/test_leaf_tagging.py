@@ -147,3 +147,11 @@ def test_gain_augmentation_equals_recomputing_features_at_that_level():
     g_db = np.random.default_rng(1).uniform(-12, 12, size=(1, 1, 1)).item()   # same draw
     ref = S.logmel_array(y * 10 ** (g_db / 20)).astype(np.float32)
     assert np.abs(out[0].numpy() - ref).max() < 0.02          # float16 cache precision
+
+
+def test_owned_presence_maps_the_incumbent_label_to_its_node():
+    routing = {"presence": ["piano"], "subtypes": {}}
+    out = LT.merge([_panns("piano", 0.9)], ["keys.piano"], np.array([[0.7]]), 10.0, routing,
+                   name_of={"keys.piano": "Acoustic piano"}.get,
+                   panns_node={"piano": "keys.piano"}, show=0.3, intervals=_probs_to_intervals)
+    assert [(t["label"], t["model"]) for t in out] == [("Acoustic piano", "disstruments-cnn")]

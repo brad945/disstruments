@@ -207,8 +207,8 @@ def merge(panns: list[dict], nodes: list[str], probs: np.ndarray, hop_s: float, 
     # presence owned by our model replaces the incumbent's entries for that label
     owned = set(routing.get("presence", []))
     present = [dict(t) for t in panns if t["label"] not in owned]
-    for label in owned:
-        e = ours_entry(label)
+    for label in owned:                         # an OpenMIC label, e.g. "piano" -> keys.piano
+        e = ours_entry(panns_node.get(label, label))
         if e:
             e["panns_label"] = label
             present.append(e)
