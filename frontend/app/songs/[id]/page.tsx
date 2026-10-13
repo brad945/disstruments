@@ -17,7 +17,7 @@ type Report = {
   stems: { name: string }[];
   stems_status: string;
   structure: { status: string };
-  provenance: { stages: { stage: string; model: string; status: string }[]; leaf_model?: LeafModel | null };
+  provenance: { stages: { stage: string; model: string; version?: string; status: string }[]; leaf_model?: LeafModel | null };
 };
 
 const LANE_COLORS: Record<string, string> = {
@@ -109,9 +109,14 @@ export default function SongPage() {
           <div className="progress-stage" key={i}>
             <span className={`dot ${s.status === "ok" ? "ok" : s.status === "skipped" ? "" : "failed"}`} />
             <span className="mono">{s.stage}</span>
-            <span style={{ color: "var(--muted)" }}>{s.model} · {s.status}</span>
+            <span style={{ color: "var(--muted)" }}>{s.model}{s.version ? ` ${s.version}` : ""} · {s.status}</span>
           </div>
         ))}
+        {report.provenance?.stages?.some((s) => s.version?.includes("+platt")) && (
+          <div className="footnote">
+            PANNs scores are calibrated per instrument on OpenMIC-2018 (Humphrey et al. 2018).
+          </div>
+        )}
         {report.provenance?.leaf_model && (
           <div className="footnote mono">
             {report.provenance.leaf_model.name} {report.provenance.leaf_model.version} ·
