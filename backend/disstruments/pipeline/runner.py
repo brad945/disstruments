@@ -7,6 +7,7 @@ until draft 2 — the schema slot exists so the UI never guesses.
 from __future__ import annotations
 
 import datetime as dt
+import shutil
 import tempfile
 import time
 from pathlib import Path
@@ -44,6 +45,16 @@ def _stage(job_id: int, name: str, model: str, version: str, fn, *args, **kw):
 
 
 def run_job(job_id: int) -> None:
+    # Scratch only: stems are copied into storage, so the work dir is never read after the
+    # job (it leaked ~150 MB per job before).
+    work = Path(tempfile.mkdtemp(prefix=f"diss-job{job_id}-"))
+    try:
+        _run_job(job_id, work)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def _run_job(job_id: int, work: Path) -> None:
     with get_session() as s:
         job = s.get(Job, job_id)
         song = s.get(Song, job.song_id)
@@ -52,7 +63,6 @@ def run_job(job_id: int) -> None:
     bus.publish(job_id, {"type": "job", "status": "running"})
 
     original_key = f"songs/{song.id}/original{Path(song.fmt).suffix or '.' + song.fmt}"
-    work = Path(tempfile.mkdtemp(prefix=f"diss-job{job_id}-"))
     canonical = work / "canonical.wav"
 
     failed_any = ok_any = False

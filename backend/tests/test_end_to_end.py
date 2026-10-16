@@ -93,3 +93,17 @@ def test_library_filters(client):
                for s in client.get("/api/v1/songs").json())
     hits = client.get("/api/v1/songs", params={"genre": "indie rock"}).json()
     assert len(hits) >= 1
+
+
+def test_job_work_dir_is_removed(client, wav_file):
+    import tempfile
+    from pathlib import Path
+    tmp = Path(tempfile.gettempdir())
+    before = set(tmp.glob("diss-job*"))                  # leftovers from older runs don't count
+    with open(wav_file, "rb") as f:
+        body = client.post("/api/v1/songs", files={"file": ("tone.wav", f, "audio/wav")}).json()
+    assert wait_job(client, body["job_id"]) == "done"
+    assert set(tmp.glob("diss-job*")) <= before
+    # stems were copied to storage first, so they still download
+    report = client.get(f"/api/v1/songs/{body['song_id']}/analysis").json()
+    assert client.get(f"/api/v1/songs/{body['song_id']}/stems/{report['stems'][0]['name']}").status_code == 200

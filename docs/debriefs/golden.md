@@ -431,3 +431,13 @@ possibly hearing that pluck.
    showing that subtype.
 3. Bradley: rule on the cymbals convention and the *Whippy* voice question for future
    label sets (this set stays frozen).
+
+## Addendum (2026-10-16, after results): cymbals convention
+
+Bradley confirmed he probably treated a marked drum kit as including its cymbals. So
+"cymbals absent" on the 9 kit songs is not a reliable negative. From now on cymbals are
+**unobserved on the golden set** (the same rule as MedleyDB/Slakh in taxonomy v3), and any
+golden number involving cymbals above should be read with that in mind. The pre-registered
+numbers are left as they were; the cymbal-free figures already reported post hoc apply:
+confident precision 64/68 = 0.94, and v7sg 0.565 vs PANNs 0.688 on keys/brass/woodwinds
+(PANNs still ahead on coarse). Labels themselves are not edited.
