@@ -195,8 +195,11 @@ reported, not adopted.
 
 **What the headline says:**
 - **Fine-grained, both our models clearly beat chance** under both chance bars. v7sg is at
-  0.69 against a random-ranking 0.48. This is the first real, full-song,
-  independently labelled evidence that the subtype scores carry signal.
+  0.69 against a random-ranking 0.48, on real full songs with an independent answer key.
+  - The fine mean is mostly level-2 identity nodes: acoustic vs electric guitar, electric
+    bass, acoustic kit, piano, organ.
+  - Level-3 evidence is mixed: clean guitar is above chance, distorted is below random,
+    bass technique is unstable across models, and the app's level-3 names agree 3/8 times.
 - **Coarse, v7sg is not distinguishable from a random ranking** (+0.09 [−0.02, +0.26]).
   - Its coarse list has only 4 nodes. guitar, bass and drums are excluded: they have 2, 1
     and 0 negatives.
@@ -214,12 +217,12 @@ Nodes the models were trained on, plus PANNs' own. Eligible (≥ 3 positives and
 
 | node | pos/obs | prev | rand AP | v7sg | clean | PANNs |
 |---|---|---|---|---|---|---|
-| guitar | 23/25 | 0.92 | 0.93 | 0.87 ↓ | 0.88 ↓ | 0.99 |
+| guitar | 23/25 | – | – | not scored (2 negatives; see the next table) | | |
 | **guitar.acoustic** | 12/24 | 0.50 | 0.56 | 0.78 | 0.69 | – |
 | **guitar.electric** | 21/24 | 0.88 | 0.89 | 0.83 ↓ | 0.83 ↓ | – |
 | **guitar.electric.clean** | 10/17 | 0.59 | 0.65 | 0.76 | 0.68 | – |
 | **guitar.electric.distorted** | 6/17 | 0.35 | 0.45 | 0.41 ↓ | 0.43 ↓ | – |
-| bass | 23/24 | 0.96 | 0.96 | 1.00 | 0.90 ↓ | 0.95 ↓ |
+| bass | 23/24 | – | – | not scored (1 negative; see the next table) | | |
 | **bass.electric** | 15/23 | 0.65 | 0.70 | 0.94 | 0.94 | – |
 | **bass.electric.fingered** (suppressed in app) | 4/14 | 0.29 | 0.41 | 0.73 | 0.34 ↓ | – |
 | **bass.electric.picked** (suppressed in app) | 3/14 | 0.21 | 0.35 | 0.87 | 0.48 | – |
@@ -247,8 +250,9 @@ Nodes the models were trained on, plus PANNs' own. Eligible (≥ 3 positives and
   On MoisesDB it was the strongest subtype (lift +0.67). That is the biggest surprise here.
 - **Electric piano** (v7sg) is below random: 0.40 vs 0.44. It is suppressed in the app anyway.
 - **Cymbals** (v7sg) is below random, with the label caveat below.
-- **Guitar/electric guitar** (both ours, 2–3 negatives): v7sg scores *Whippy* (an EDM track
-  with no guitar) 0.992 and *Je l'aime* 0.764, so it can't reject guitar on non-guitar songs.
+- **Electric guitar** (both ours, 3 negatives) is below random: 0.83 vs 0.89. At the coarse
+  guitar node (no AP, 2 negatives), v7sg scores the two guitar-free songs *Whippy* (EDM)
+  0.99 and *Je l'aime* 0.76, so it shows no sign of rejecting guitar on non-guitar songs.
 - **PANNs organ** is at chance: 0.22 vs random 0.22. It scored 0.025–0.045 on the three
   organ songs.
 - Per-node evidence from 3–5 positives, not verdicts: **v7sg ranks piano (0.80 vs PANNs 0.48)
@@ -297,7 +301,7 @@ it: end-to-end bass recall is 23/23 (below).
   - 1 is saxophone on *In Control* (0.61): its brass section is real, trumpet unsure;
   - 1 is "piano" on *Beautiful World* (0.98), where Bradley heard Rhodes.
 
-  Excluding cymbals, confident precision is 64/68 = 0.94.
+  Post hoc, excluding cymbals: confident precision 64/68 = 0.94.
 - **77 "?" entries:** 41 hits, 30 false alarms, 6 unlabelled.
 
 **Per family (level 1):** recall = songs where Bradley marks the family and the app shows
