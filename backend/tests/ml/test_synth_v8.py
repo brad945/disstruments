@@ -80,14 +80,25 @@ def test_gm_program_pins_exact_leaf(prog, leaf):
 
 
 @pytest.mark.parametrize("prog", [8, 10, 14, 15, 43, 45, 47, 50, 51, 52, 53, 54, 55,
-                                  74, 75, 76, 77, 78, 79, 104, 106, 120])
+                                  62, 63, 74, 75, 76, 77, 78, 79, 104, 106, 120])
 def test_programs_without_a_decidable_leaf_are_dropped(prog):
     assert M.role_of(prog, False) is None
 
 
-def test_synth_brass_keeps_v1_behaviour():
-    # 62/63 (synth brass) stay in the brass role, unhinted, exactly as before v8
-    assert M.role_of(62, False) == "brass" and 62 not in M.PROGRAM_HINTS
+@pytest.mark.parametrize("prog", [62, 63])
+def test_synth_brass_never_renders_as_acoustic_brass(prog, tmp_path):
+    # Bradley 2026-10-16: GM 62/63 (synth brass) are dropped, not rendered as trumpet etc.
+    assert M.role_of(prog, False) is None and prog not in M.PROGRAM_HINTS
+    import pretty_midi
+    pm = pretty_midi.PrettyMIDI()
+    for program in (prog, 56):
+        inst = pretty_midi.Instrument(program=program)
+        inst.notes += [pretty_midi.Note(90, 60 + k % 5, 0.5 * k, 0.5 * k + 0.4) for k in range(30)]
+        pm.instruments.append(inst)
+    (tmp_path / "A").mkdir()
+    pm.write(str(tmp_path / "A" / "s.mid"))
+    wins = M.load_windows(tmp_path / "A" / "s.mid", tmp_path)
+    assert wins and all([p.program for p in w.parts] == [56] for w in wins)   # only the trumpet
 
 
 def test_v1_active_roles_are_the_pre_v8_roles():
@@ -404,3 +415,10 @@ def test_packaged_registry_v8(tax):
     # Iowa saxes are exact v8 leaves now (no longer coarse tenor stand-ins)
     assert reg.by_id("iowa_altosax").leaves == ("woodwinds.saxophone.alto",)
     assert reg.by_id("iowa_altosax").label_as is None
+
+
+def test_vcsl_octave_shift_only_for_measured_folders():
+    from disstruments.ml.synth import notes_prep as N
+    assert set(N.VCSL_NAME_OCTAVE_SHIFT) <= set(N.VCSL_SETS)
+    assert all(v == 12 for v in N.VCSL_NAME_OCTAVE_SHIFT.values())
+    assert not any(N.VCSL_SETS[f][0] in N.MALLETS for f in N.VCSL_NAME_OCTAVE_SHIFT)

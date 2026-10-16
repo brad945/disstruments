@@ -25,7 +25,9 @@ import numpy as np
 # rendered): celesta 8, music box 10, tubular bells 14, dulcimer 15, contrabass 43 (bowed
 # double bass: no leaf of its own; bass.upright is learned from pizzicato), pizzicato
 # strings 45, timpani 47, synth strings 50-51, choir/voice 52-54, orchestra hit 55,
-# recorder/pan flute/bottle/shakuhachi/whistle/ocarina 74-79, sitar/koto/shamisen etc.
+# recorder/pan flute/bottle/shakuhachi/whistle/ocarina 74-79, sitar/koto/shamisen etc.,
+# and synth brass 62/63 (Bradley, 2026-10-16: a synth patch is not an acoustic brass
+# instrument, so it never renders under a brass.* label; v1-v7 rendered it as trumpet).
 ROLE_OF_PROGRAM: dict[range, str] = {
     range(0, 8): "keys_piano",      # acoustic + electric pianos
     range(9, 10): "mallet",         # glockenspiel
@@ -40,7 +42,7 @@ ROLE_OF_PROGRAM: dict[range, str] = {
     range(44, 45): "strings_section",   # tremolo strings
     range(46, 47): "harp",
     range(48, 50): "strings_section",   # string ensembles 1 + 2
-    range(56, 64): "brass",
+    range(56, 62): "brass",         # trumpet .. brass section; 62/63 synth brass dropped
     range(64, 72): "reed",          # soprano/alto/tenor/baritone sax, oboe, English horn, bassoon, clarinet
     range(72, 74): "flute",         # piccolo, flute
     range(80, 88): "synth_lead",

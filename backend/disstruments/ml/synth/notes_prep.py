@@ -345,6 +345,15 @@ VCSL_SETS: dict[str, tuple[str, tuple[int, ...] | None, str]] = {
     "Chordophones/Composite Chordophones/Folk Harp": ("vcsl_folk_harp", None, r"^$"),
 }
 MALLETS = ("vcsl_glockenspiel", "vcsl_marimba", "vcsl_vibraphone", "vcsl_xylophone")
+# Folders whose file names use the "C3 = middle C" octave convention (one octave below
+# MIDI/scientific naming). Measured 2026-10-16: pYIN reads every file exactly +12.0 semitones
+# above its name (folk harp E1 -> E2; Special 20 C3 -> C4, the harmonica's lowest note).
+VCSL_NAME_OCTAVE_SHIFT: dict[str, int] = {
+    "Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C": 12,
+    "Aerophones/Free Aerophones/Harmonica-Hohner-Special20-F": 12,
+    "Aerophones/Free Aerophones/Harmonica-Hohner-Super64": 12,
+    "Chordophones/Composite Chordophones/Folk Harp": 12,
+}
 
 
 def vcsl(src: Path, out: Path) -> dict:
@@ -372,6 +381,7 @@ def vcsl(src: Path, out: Path) -> dict:
                 continue
             if pitch is None:
                 continue
+            pitch += VCSL_NAME_OCTAVE_SHIFT.get(folder, 0)
             est = median_pitch(y, sr, fmax=4200)
             if not pitch_ok(est, pitch, octave_ok=inst in MALLETS):
                 r["pitch_mismatch"] += 1

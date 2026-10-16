@@ -267,6 +267,81 @@ min(85%, 1,000) rather than 85% alone.
 8. **Disk**: 24 GB free. Both models need ~16 GB plus sources; run `SKIP_LSO=1` first, or
    clear old renders (v1, v4lso, v5div: your call).
 
+## Decisions applied before running (2026-10-16)
+
+Bradley chose "Yes, use defaults". Applied before any v8 render; the adoption rule above is
+unchanged.
+
+1. **Downloads approved and fetched**: VSCO-2 CE sparse paths, Iowa MIS v8 pages and VCSL
+   sparse paths. Each licence was re-checked at download time:
+   - VSCO-2 CE `LICENSE`/`Readme.txt` are identical to the pinned checkout: CC0, credit
+     requested, don't resell the samples. Same commit `6dd651d`, merged into `sources/vsco2_ce`.
+     Every new `.sfz` sample reference resolves to a file.
+   - VCSL `LICENSE` is CC0 1.0, commit `c1ea7bc`, at `~/datasets/vcsl`.
+   - Iowa `MIS.html` says "used for any projects, without restrictions".
+   
+   The 52 `status: pending_approval` markers are removed, and the git commits are pinned in
+   `sources.yaml`.
+2. **NSynth strings/flute declined** (not downloaded). Viola and cello train thin, with 2
+   instruments each (decision 4: accepted). There's no real calibration data for them, so
+   they stay "?" in the UI.
+3. **Kept out** (one source each): timbales, brass section, accordion, banjo, mandolin.
+4. **808 clap kept** as a claps instrument.
+5. **Synth brass (GM 62/63) dropped**: `ROLE_OF_PROGRAM` brass is now 56-61, so those parts are
+   never rendered. Before, v1-v7 rendered them as trumpet. This also changes what a
+   `--leaf-set v1` build parses: reproducing v7 needs its git SHA (as already noted for the
+   Iowa saxes).
+6. **Skipped**: NSynth brass/reed labelling and the FluidR3/new-source listening pass. In their
+   place, an automated sanity render (below).
+7. **`SKIP_LSO=1`** (disk). There is **no LSO model** this round, so there are no
+   unseen-instrument numbers for the new leaves. Routing decisions that need LSO wait for it.
+
+**Data-prep fix found while preparing VCSL**: the folk harp and both Hohner harmonicas name
+their notes in the "C3 = middle C" convention. pYIN reads every file exactly +12.0 semitones
+above its name, so the pitch check rejected all 183 files. `notes_prep.VCSL_NAME_OCTAVE_SHIFT`
+(+12 for those 4 folders) fixes the names. The check itself is unchanged. Without the fix,
+harmonica would have had one instrument (FluidR3) and failed the gate.
+
+**Old-leaf guard previewed before rendering, so `N_CLIPS` = 30,000 (the pre-registered fix).**
+The planner is deterministic, so I ran it alone, with no audio (same seed, leaf set and MIDI),
+and counted planned parts against the guard floor min(0.85 × v7serve, 1,000):
+
+| leaf | v7serve | floor | v8 plan at 16k | v8 plan at 28k |
+|---|---|---|---|---|
+| brass.trumpet | 1,813 | 1,000 | **601** (under) | 1,039 |
+| woodwinds.saxophone.tenor | 606 | 515 | **451** (under) | 778 |
+| every other v1 leaf | | | above floor | above floor |
+
+- **Why trumpet fell.** v7 rendered every brass part as trumpet (trombone, horn and section
+  MIDI, plus synth brass 62/63). v8 splits brass four ways, and Bradley's synth-brass drop
+  removes 62/63 entirely.
+- **Why tenor fell.** The four sax types and clarinet/oboe/bassoon now share the reed role.
+- **Remedy.** The plan's rule is "raise `N_CLIPS`, not the threshold". Trumpet grew almost
+  linearly (601 → 1,039 from 16k to 28k), so 30k gives about 1,110, roughly 10% headroom over
+  the floor. v7serve lost only 13 silent stems in 10k clips between planning and rendering.
+- **Decided before any v8 render.** The only change to the candidate definition is "16k clips"
+  → 30k. The recipe, the gates and the incumbent are unchanged; the script's own guard still
+  runs on the rendered manifest.
+- **Cost.** About 6 h instead of 3.5 h. Disk: about 9.6 GB of renders plus about 3.4 GB of mels,
+  against 23 GB free.
+- **Still thin even at 30k** (planned parts): violin, viola and cello about 200 each, harp
+  about 330, glockenspiel/marimba/xylophone about 300.
+
+**Automated sanity render (replaces the listening pass).** 108 renders of 3 s each:
+- every approved source of every gated new leaf;
+- every FluidR3 program of those leaves, including each percussion kit.
+
+All 108 are finite and audible (peak > −40 dBFS, RMS > −55 dBFS, before the renderer's loudness
+normalization), with 0 unmapped or out-of-range notes.
+
+**Prepared note counts** (`notes_prep`, after pitch checks):
+- Iowa: violin 46, viola 46, cello 44, flute 39, oboe 33, clarinet 45, bassoon 37, horn 44,
+  trombone 33, tuba 36, marimba 59, vibraphone 40, xylophone 42, bells 41; tambourines 1-3
+  have 2 one-shots each.
+- VCSL: shakers 42/18, cabasa 6, claps 10, tambourines 2+2, bongos/conga/darbuka 120/170/100,
+  glock 18, marimba 20, vibes 36, xylophone 47, harmonicas 57/39, harps 37/57.
+- The Iowa AIFF cache was deleted after prep, as planned.
+
 ## Results
 
 (empty until run)
