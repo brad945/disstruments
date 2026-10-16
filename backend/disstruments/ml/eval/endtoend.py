@@ -1,8 +1,9 @@
 """Score an app report against a labelled record: what the user sees vs the answer key.
 
 Used for the golden set (docs/debriefs/golden.md). Every report entry is shown (the
-backend drops < 0.30); it reads as fact only at >= 0.60 and when it is not a subtype entry
-(subtype entries are always "?", as in the frontend's `isUncertain`). Each entry maps to the
+backend drops < 0.30); it reads as fact only at >= 0.60, when it is not a subtype entry and
+when it is not flagged `calibrated: false` (both are always "?", as in the frontend's
+`isUncertain`; entries without the flag, as in v1 reports, count as calibrated). Each entry maps to the
 taxonomy node in its own `node` field. Against the record:
 - hit: the node is positive (labels are ancestor-closed);
 - false alarm: the node is observed and negative;
@@ -18,7 +19,9 @@ CONFIDENT = 0.6
 
 
 def shown_as(entry: dict, confident: float = CONFIDENT) -> str:
-    return "uncertain" if entry.get("subtype") or entry["confidence"] < confident else "confident"
+    if entry.get("subtype") or entry.get("calibrated") is False or entry["confidence"] < confident:
+        return "uncertain"
+    return "confident"
 
 
 def outcome(node: str | None, positive: frozenset, observed: frozenset) -> str:

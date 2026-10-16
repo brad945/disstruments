@@ -100,6 +100,7 @@ def test_score_report_entries_families_and_subtypes(tax):
         {"label": "drums", "node": "drums", "confidence": 0.4},
         {"label": "Nylon-string guitar", "node": "guitar.acoustic.nylon", "confidence": 0.5, "subtype": True},
         {"label": "bass (subtype uncertain)", "node": "bass", "confidence": 0.35, "subtype_uncertain": True},
+        {"label": "tambourine", "node": "percussion.tambourine", "confidence": 0.9, "calibrated": False},
     ]
     e = EE.score_entries(report, pos, obs, tax)
     by = {x["label"]: x for x in e}
@@ -108,6 +109,7 @@ def test_score_report_entries_families_and_subtypes(tax):
     assert by["piano"]["outcome"] == "false_alarm" and by["piano"]["family"] == "keys"
     assert by["drums"]["outcome"] == "false_alarm" and by["drums"]["shown_as"] == "uncertain"
     assert by["Nylon-string guitar"]["outcome"] == "unlabelled"
+    assert by["tambourine"]["shown_as"] == "uncertain", "uncalibrated labels are always '?'"
     fam = EE.node_outcomes(e, ["keys", "drums", "brass", "guitar"], pos, obs, tax)
     assert fam["keys"] == {"truth": "present", "shown": True, "shown_confident": True}
     assert fam["drums"] == {"truth": "absent", "shown": True, "shown_confident": False}

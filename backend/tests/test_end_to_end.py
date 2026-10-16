@@ -88,6 +88,19 @@ def test_library_instrument_filter_matches_subtree(client):
     assert client.get("/api/v1/songs", params={"instrument": "banjo"}).json() == []
 
 
+def test_library_filter_finds_new_labels_by_label_and_family(client, wav_file):
+    """Rows hold the label when no node was attached (no leaf model, v1); a new label such as
+    "tambourine" must be found by its own name and by its taxonomy family."""
+    from disstruments.db import Analysis, Instrument, get_session
+    with get_session() as s:
+        a = s.query(Analysis).first()
+        s.add(Instrument(analysis_id=a.id, song_id=a.song_id, label="tambourine", confidence=0.4, stem="mix"))
+        s.commit()
+        sid = a.song_id
+    for q in ("tambourine", "percussion", "percussion.tambourine"):
+        assert sid in [r["id"] for r in client.get("/api/v1/songs", params={"instrument": q}).json()], q
+
+
 def test_library_filters(client):
     assert any(s["genres"] == ["indie rock", "pop"] or "indie rock" in s["genres"]
                for s in client.get("/api/v1/songs").json())

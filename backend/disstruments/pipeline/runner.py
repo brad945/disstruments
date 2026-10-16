@@ -180,12 +180,11 @@ def _skip(job_id: int, name: str, model: str, why: str) -> None:
 
 
 def _merge_leaf(instruments: list[dict], leaf, info: dict) -> list[dict]:
-    from ..ml.datasets.openmic import class_to_node
     from ..ml.taxonomy import get_taxonomy
     tax = get_taxonomy()
     nodes, probs, hop_s = leaf
     return leaf_tagging.merge(instruments, nodes, probs, hop_s, info["routing"],
-                              name_of=lambda n: tax.info[n].name, panns_node=class_to_node(tax),
+                              name_of=lambda n: tax.info[n].name, panns_node=tagging.label_nodes(),
                               show=settings.tag_threshold_show,
                               intervals=tagging._probs_to_intervals, trained=leaf_tagging.trained())
 

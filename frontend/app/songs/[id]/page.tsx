@@ -27,8 +27,9 @@ const LANE_COLORS: Record<string, string> = {
 };
 const laneColor = (t: InstrumentTag) =>
   LANE_COLORS[t.node?.split(".")[0] ?? ""] ?? LANE_COLORS[t.label] ?? LANE_COLORS[t.stem] ?? "var(--lane-other)";
-// F15 + F33: subtypes from our model are not calibrated on real music yet, so always "?"
-const isUncertain = (t: InstrumentTag) => t.confidence < 0.6 || !!t.subtype;
+// F15 + F33: subtypes from our model, and any label whose score isn't calibrated
+// (`calibrated: false`, e.g. tambourine), are always "?". v1 reports have no flag.
+const isUncertain = (t: InstrumentTag) => t.confidence < 0.6 || !!t.subtype || t.calibrated === false;
 
 export default function SongPage() {
   const { id } = useParams<{ id: string }>();
@@ -92,6 +93,9 @@ export default function SongPage() {
           {report.instruments.some((t) => t.subtype) && (
             <> Specific types (e.g. nylon vs steel-string) come from Disstruments’ own model and stay marked “?” until
             they are checked against hand-labelled real songs.</>
+          )}
+          {report.instruments.some((t) => !t.subtype && t.calibrated === false) && (
+            <> Instruments with no real calibration data yet (e.g. tambourine, shaker) are always marked “?”, whatever their score.</>
           )}
         </div>
       </div>

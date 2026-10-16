@@ -116,15 +116,20 @@ def create_app() -> FastAPI:
                 ids = [g.song_id for g in s.query(GenreTag).filter(GenreTag.tag == genre.lower())]
                 query = query.filter(Song.id.in_(ids))
             if instrument:
-                # rows hold taxonomy nodes (schema v2) or OpenMIC labels (v1); accept either
-                # in the query, and match a node's whole subtree ("guitar" -> nylon guitar)
+                # rows hold taxonomy nodes (schema v2) or tagger labels (v1, or no leaf
+                # model); accept either in the query, and match a node's whole subtree
+                # ("guitar" -> nylon guitar, "percussion" -> tambourine)
                 from sqlalchemy import or_
 
-                from .ml.datasets.openmic import class_to_node
+                from .pipeline.tagging import label_nodes
                 key = instrument.lower()
-                node = class_to_node().get(key, key)
+                node = label_nodes().get(key, key)
+                # label rows whose node sits in the subtree ("percussion" -> "tambourine")
+                labels = {lab for lab, n in label_nodes().items()
+                          if n == node or n.startswith(node + ".")}
                 ids = [i.song_id for i in s.query(InstrumentRow).filter(or_(
-                    InstrumentRow.label.in_({key, node}), InstrumentRow.label.like(f"{node}.%")))]
+                    InstrumentRow.label.in_({key, node} | labels),
+                    InstrumentRow.label.like(f"{node}.%")))]
                 query = query.filter(Song.id.in_(ids))
             out = []
             for song in query.order_by(Song.uploaded_at.desc()).all():

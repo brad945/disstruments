@@ -43,7 +43,7 @@ def test_tagging_applies_calibration_and_reports_version(tmp_path, monkeypatch):
     assert (out["voice"] > 0.6).all() and (out["drums"] == raw["drums"]).all()  # unknown class: as-is
     assert tagging.version().startswith("cnn14+platt@")
     monkeypatch.setattr(settings, "panns_calibrated", False)
-    assert tagging.calibrate(raw) is raw and tagging.version() == "cnn14"
+    assert tagging.calibrate(raw) is raw and tagging.version() == f"cnn14+map@{tagging.MAP_SHA[:8]}"
 
 
 def test_stems_only_vouch_for_their_own_instrument():
