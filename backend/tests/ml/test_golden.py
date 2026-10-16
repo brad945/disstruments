@@ -50,3 +50,9 @@ def test_parent_present_type_not_sure(tmp_path):
     assert "keys.organ.pipe" in r.negative                          # subtype named -> siblings absent
     html = build_page(tmp_path / "page").read_text()
     assert "Electric guitar (type not sure)" in html
+
+
+def test_page_embeds_song_list(tmp_path):
+    (tmp_path / "songs.json").write_text(json.dumps([{"file": "A - B.mp3", "artist": "A", "title": "B", "genre": "rock"}]))
+    html = build_page(tmp_path).read_text()
+    assert "/*__SONGS__*/" not in html and '"file": "A - B.mp3"' in html
