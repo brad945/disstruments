@@ -243,9 +243,16 @@ passes, R0 stays and the doc says so.
     groups and RNG draws). It reproduces the harness delta and CI exactly on a check case.
 - **Ours:** the `m6gain` predictions (v7sg weights, checkpoint sha `a99ae621`, = served ONNX
   `0a1df16e1827`), harness max-propagation.
-- **Sanity check against M5's own stem run** (same 720 ids): mix scores agree to ≤ 0.06
-  (raw), the bass stem to 0.006. The vocals stem differs by up to 0.30 on one window,
-  because Demucs on MPS is not bit-reproducible. The gates use only the new run.
+- **Sanity check against M5's own stem run** (same 720 ids, raw p95):
+  - The mix agrees to ≤ 0.06 (voice ≤ 0.03). The mix never goes through Demucs, so the
+    cause of that gap isn't established.
+  - The stems differ more: up to 0.21 (bass stem), 0.30 (vocals) and 0.16 (drums); p99
+    0.08–0.13.
+  - That is by design: the app calls `demucs.apply_model` with its default `shifts=1`,
+    which applies a random time shift of up to 0.5 s on every call. So **the app's
+    stem-vouched scores vary from run to run**; golden *Whippy*'s voice went 0.983 → 0.975.
+  - Each gate measured a single draw. Both sides of every pair come from the same run, so
+    the comparisons are consistent.
 
 ### Fix 1: no label passes. Presence stays with PANNs; nothing ships.
 
@@ -400,8 +407,9 @@ The golden-1 problems (organ, percussion, voice on instrumentals) are still open
   independent of golden-1, not of M5.
 - **Fix 2's "with-evidence" is an upper bound for percussion.** MoisesDB only says
   "a-tonal percussion", not which kind. With 0 true shows, it didn't matter.
-- **Demucs on MPS isn't bit-reproducible** (vocals stem up to 0.30 raw on one window vs
-  M5's run). Each gate uses a single run for both sides, so pairs are consistent.
+- **Stem scores are stochastic** (Demucs' default random shift, above). The Fix 1 stem
+  labels and Fix 3 were measured on one draw. A rule decided by a margin smaller than
+  run-to-run variation would need repeated draws; none of the verdicts here is that close.
 
 ### For Bradley (decisions, nothing decided here)
 
