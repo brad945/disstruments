@@ -227,3 +227,133 @@ passes, R0 stays and the doc says so.
   - confident precision.
 - **Nothing is changed in response** to these numbers in this round.
 - **Label hash** checked before and after.
+
+## Results (run 2026-10-16, after the pre-registration commit `51b6f93`)
+
+**Provenance.**
+- **App-path scores:** `~/datasets/fixes_g1/collect.py` (canonical transcode → htdemucs →
+  PANNs, MPS, one job at a time).
+  - `moisesdb_app.npz`: 720 windows × mix + 4 stems, 25 min.
+  - `openmic_app.npz`: 1,481 OpenMIC test clips × mix + vocals/drums/bass stems, 43 min.
+  - Both keep raw p95 for all 527 AudioSet classes, raw and calibrated p95 per app label,
+    and RMS per source. Calibration sha `b8a3369efc68`.
+- **Gate scripts and outputs:** `fix1_gate.py` / `.json` (harness `paired_bootstrap`),
+  `fix2_gate.py` / `.json`, `fix3_gate.py` / `.json`.
+  - Fix 3 uses `fastboot.py`, a per-statistic copy of `paired_bootstrap` (same item order,
+    groups and RNG draws). It reproduces the harness delta and CI exactly on a check case.
+- **Ours:** the `m6gain` predictions (v7sg weights, checkpoint sha `a99ae621`, = served ONNX
+  `0a1df16e1827`), harness max-propagation.
+- **Sanity check against M5's own stem run** (same 720 ids): mix scores agree to ≤ 0.06
+  (raw), the bass stem to 0.006. The vocals stem differs by up to 0.30 on one window,
+  because Demucs on MPS is not bit-reproducible. The gates use only the new run.
+
+### Fix 1: no label passes. Presence stays with PANNs; nothing ships.
+
+ΔAP = v7sg − PANNs as the app runs it; paired artist bootstrap, 95% CI.
+
+| label (node) | OpenMIC test: pos/neg, ours vs PANNs, Δ [CI] | MoisesDB: pos/neg, ours vs PANNs, Δ [CI] | verdict |
+|---|---|---|---|
+| guitar | 286/150, 0.942 vs 0.986, **−0.044 [−0.072, −0.021]** | 512/129, 0.945 vs 0.926, +0.018 [−0.035, +0.076] | fails: worse on OpenMIC |
+| bass (incl. bass stem) | 134/329, 0.586 vs 0.721, **−0.135 [−0.214, −0.056]** | 514/180, 0.984 vs 0.977, +0.007 [−0.005, +0.022] | fails: worse on OpenMIC |
+| drums (incl. drums stem) | 278/146, 0.904 vs 0.966, **−0.062 [−0.106, −0.021]** | 514/146, 0.980 vs 0.995, −0.015 [−0.030, +0.001] | fails: worse on OpenMIC |
+| cymbals (incl. drums stem) | 297/139, 0.976 vs 0.984, −0.008 [−0.035, +0.013] | unobserved | fails: no beat |
+| piano | 285/130, 0.985 vs 0.980, +0.005 [−0.010, +0.021] | 212/424, 0.677 vs 0.642, +0.034 [−0.025, +0.132] | fails: tie on both |
+| **organ** | 121/310, 0.556 vs 0.686, **−0.130 [−0.226, −0.036]** | 57/639, 0.190 vs 0.252, −0.062 [−0.160, +0.053] | **fails: worse on OpenMIC** |
+| synthesizer | 268/112, 0.788 vs 0.979, **−0.191 [−0.258, −0.128]** | 137/517, 0.441 vs 0.360, +0.081 [−0.103, +0.212] | fails: worse on OpenMIC |
+| trumpet | 318/467, 0.715 vs 0.836, **−0.122 [−0.184, −0.062]** | 0 positives | fails |
+| saxophone | 305/324, 0.795 vs 0.906, **−0.111 [−0.151, −0.065]** | 0 positives | fails |
+
+- **Organ, the reason for this fix, fails clearly.** As a *ranker*, PANNs is better at
+  organ on OpenMIC and level on MoisesDB. Our model's golden-1 organ AP (0.75 vs 0.22) does
+  not replicate on either independent set.
+- **No calibration was fitted and nothing was re-exported.** The pre-registration only
+  calibrates labels that pass. `export.PRESENCE` stays `[]`, and the served sidecar is
+  unchanged (sha `0a1df16e1827`; backup at `leaf.v7sg-20261016`).
+- **Repeating M5's bass and piano checks** on this new app-path run gives the same ties:
+  bass +0.007 vs +0.006, piano +0.034 vs +0.036.
+
+**Why organ is missed anyway: an operating-point problem, not a ranking one.** This is
+descriptive and was not pre-registered (`organ_operating_point.json`). It uses calibrated
+PANNs and v7sg with its served T.
+
+| organ positives | PANNs recall@0.3 / @0.6 | v7sg recall@0.3 / @0.6 | precision@0.3: PANNs / v7sg |
+|---|---|---|---|
+| OpenMIC test (121) | 0.73 / 0.52 | 0.85 / 0.49 | 0.52 / 0.36 |
+| MoisesDB (57) | **0.05 / 0.05** | 0.49 / 0.12 | 1.00 / 0.12 |
+
+PANNs ranks organ about as well as ours on MoisesDB. But its calibrated scores on real
+multitracks sit far below 0.3: median 0.02 on organ windows. The Platt fit was made on
+OpenMIC, where organ clips score high, and it doesn't transfer. That is the golden-1
+symptom ("0.025–0.045 on the organ songs"). Our model reaches the threshold more often,
+but at 12% precision it would mostly show organ where there is none. **Neither model gives
+a usable organ detector on real multitracks today.** A fix would be a different
+calibration or an operating-point rule. Either would need a new pre-registration and data
+that isn't a test set (see "For Bradley").
+
+### Fix 2: 12 of 13 labels kept, but they almost never fire. Shipped (`7a353e0`).
+
+MoisesDB, 720 windows, raw p95 on the mix, show = ≥ 0.30.
+
+| label → node | windows without / with-evidence | false shows (FA rate, Wilson 95%) | true shows | max score without | verdict |
+|---|---|---|---|---|---|
+| tambourine → percussion.tambourine | 545 / 98 | 0 (0.0%, ≤ 0.7%) | 0 | 0.005 | kept, no recall evidence |
+| shaker → percussion.shaker | 545 / 98 | 0 | 0 | 0.005 | kept, no recall evidence |
+| claps → percussion.claps | 545 / 98 | 0 | 0 | 0.001 | kept, no recall evidence |
+| hand_drums → percussion.hand_drums | 545 / 98 | 0 | 0 | 0.015 | kept, no recall evidence |
+| cowbell → percussion | 530 / 104 | 0 | 0 | 0.005 | kept, no recall evidence |
+| **percussion → percussion** | 530 / 104 | **14 (2.6%, [1.6%, 4.4%])** | 1 | 0.49 | **dropped: FA > 2%, show precision 0.07** |
+| brass → brass | 708 / 9 | 0 | 0 | 0.077 | kept, no recall evidence |
+| french_horn → brass.french_horn | 708 / 9 | 0 | 0 | 0.005 | kept, no recall evidence |
+| string_section → strings.bowed.section | 685 / 23 | 0 | 0 | 0.013 | kept, no recall evidence |
+| bowed_strings → strings.bowed | 685 / 23 | 0 | 0 | 0.080 | kept, no recall evidence |
+| harp → strings.plucked.harp | 718 / 1 | 0 | 0 | 0.245 | kept, no recall evidence |
+| harmonica → woodwinds.harmonica | 702 / 14 | 0 | 0 | 0.014 | kept, no recall evidence |
+| harpsichord → keys.harpsichord | 692 / 19 | 0 | 2 | 0.069 | kept, no recall evidence |
+
+- **What it means:** the 12 kept labels are safe (no false shows in 530–718 windows each),
+  but on real multitracks they almost never reach 0.30. There were 2 true shows in total, both
+  harpsichord. They fix the *coverage* gap (the app can now say "tambourine ?"), not the
+  *detection* gap. Raw PANNs scores sit far below the F15 thresholds (m5 story 4) and there
+  is no non-test data to calibrate them on.
+- **Generic "Percussion"** is the AudioSet parent of drum kits, and it fired on kit-only
+  windows, as expected. It is the only label dropped.
+- **Scope:** every kept label names a node of the approved taxonomy v3 (F27), is shown as a
+  detection (F7) with its own name (F33), and is always "?" (F15). Nothing needed a PRD
+  amendment.
+- **Code (`7a353e0`):**
+  - `tagging.EXTRA_AUDIOSET_MAP` / `EXTRA_LABEL_NODES` / `label_nodes()`;
+  - `calibrated` is now per label (true only for labels the Platt fit covers);
+  - every PANNs entry carries its node;
+  - the stage version names the label map (`+map@<sha8>`);
+  - the UI and `endtoend.shown_as` treat `calibrated: false` as "?";
+  - the library filter finds new labels by name and by family.
+
+### Fix 3: no candidate passes. The vocals stem keeps vouching (R0); nothing ships.
+
+Voice on calibrated PANNs; Δ vs R0 with paired artist bootstrap CIs. MoisesDB: 268 positive
+and 162 negative windows, 43 artists. OpenMIC test: 224 / 150 clips, 794 artist groups in
+the Demucs subset.
+
+| rule | MoisesDB FA@0.6 / FA@0.3 | MoisesDB R@0.6 / R@0.3 | OpenMIC FA@0.6 / FA@0.3 | OpenMIC R@0.6 / R@0.3 | fails |
+|---|---|---|---|---|---|
+| R0 max (current) | 0.031 / 0.074 | 0.978 / 0.996 | 0.153 / 0.247 | 0.991 / 0.996 | – |
+| R1 gate at 0.30 | 0.000 (−0.031 [−0.071, 0.000]) / 0.025 (−0.049 [−0.089, −0.015]) | 0.959 (−0.019 [−0.041, −0.005]) / **0.963 (−0.034 [−0.074, −0.008])** | 0.087 (−0.067 [−0.113, −0.030]) / 0.120 (−0.127) | 0.973 (−0.018) / 0.978 (−0.018) | recall guard: MoisesDB R@0.3 −0.034 |
+| R2 mean | 0.000 / 0.037 | **0.944 (−0.034 [−0.068, −0.012])** / 0.985 (−0.011) | 0.067 (−0.087 [−0.139, −0.042]) / 0.167 | **0.964 (−0.027)** / 0.996 | recall guard: R@0.6 on both |
+| R3 min | 0.000 / 0.000 | **0.840 (−0.138)** / **0.959 (−0.037)** | 0.047 / 0.067 | **0.915 (−0.076)** / **0.964 (−0.031)** | recall guard |
+| R4 mix only | 0.000 / 0.025 | **0.847 (−0.131)** / **0.963 (−0.034)** | 0.080 / 0.120 | **0.955 (−0.036)** / 0.978 | recall guard |
+
+AP guard and false-alarm conditions: every candidate passes them. **Every candidate fails
+the recall guard** (a point drop larger than 0.02 somewhere). By the pre-registered rule
+R0 stays.
+
+**What it shows:**
+- **The vocals stem is a real source of confident false voice.** On OpenMIC, 15% of
+  voiceless clips show confident voice under the current rule, against 8% from the mix
+  alone.
+- **R1 comes closest:**
+  - it halves those OpenMIC false alarms (0.153 → 0.087) and removes all of MoisesDB's;
+  - it costs about 2 recall points on OpenMIC and 2–3.4 on MoisesDB;
+  - the bar was 2.
+- **Shipping R1 anyway would be choosing on test data after seeing it.** The bar stays as
+  written. Whether a ~3-point recall cost is worth halving confident false voice is a
+  product trade-off for Bradley (see below).
