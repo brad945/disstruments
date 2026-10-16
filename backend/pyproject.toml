@@ -36,3 +36,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["disstruments"]
+
+[tool.pytest.ini_options]
+# Test the checked-out package, not whatever the venv's editable install points at (git
+# worktrees share one venv with the main checkout).
+pythonpath = ["."]

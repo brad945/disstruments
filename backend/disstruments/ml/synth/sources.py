@@ -7,7 +7,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 import yaml
 
@@ -53,9 +53,44 @@ class Source:
                                    # playing technique is undocumented); its subtree is unknown
     instrument: str | None = None  # notes: file prefix `<instrument>-<pitch>-<velocity>.wav`
     native_sr: int | None = None   # recording sample rate when band-limited (e.g. NSynth 16 kHz)
+    # Physical instrument / recording identity, for counting *distinct instruments* per leaf
+    # (M4: leaves with 1-2 instruments memorize them). Articulation variants of one recording
+    # (VSCO trumpet sus/vib/stac, FSBS clean/dist) share a group. Default: the source id.
+    group: str = ""
+    status: str = ""               # "" = in use; "pending_approval" = download not approved yet
 
     def file(self, root: Path) -> Path | None:
         return (root / self.path) if self.path else None
+
+    def available(self, root: Path) -> bool:
+        """Its audio is on disk (synths always are). A pending source with no files simply
+        doesn't count; the build never picks it (the engine would fail on a missing file)."""
+        if self.kind == "synth":
+            return True
+        f = self.file(root)
+        if f is None or not f.exists():
+            return False
+        if self.kind == "notes":
+            return (self.instrument or "") in notes_instruments(f)
+        return True
+
+
+_NOTES_DIRS: dict[str, frozenset[str]] = {}
+
+
+def notes_instruments(d: Path) -> frozenset[str]:
+    """Instrument prefixes present in a notes directory (`<inst>-<pitch>-<vel>.wav`); one
+    directory scan, cached (the shared notes dir holds ~300k files)."""
+    key = str(d)
+    if key not in _NOTES_DIRS:
+        names = set()
+        if Path(d).is_dir():
+            for e in os.scandir(d):
+                n = e.name
+                if n.endswith(".wav") and n.count("-") >= 2:
+                    names.add(n.rsplit("-", 2)[0])
+        _NOTES_DIRS[key] = frozenset(names)
+    return _NOTES_DIRS[key]
 
 
 @dataclass(frozen=True)
@@ -64,6 +99,7 @@ class Registry:
     root: Path
     v1_leaves: tuple[str, ...]
     sources: tuple[Source, ...]
+    v8_leaves: tuple[str, ...] = ()        # candidate new leaves; gated by `leaf_gate`
 
     def for_leaf(self, leaf: str, *, commercial_only: bool = False) -> list[Source]:
         return [s for s in self.sources if leaf in s.leaves
@@ -74,6 +110,75 @@ class Registry:
             if s.id == sid:
                 return s
         raise KeyError(sid)
+
+    def instruments(self, leaf: str, *, commercial_only: bool = False,
+                    present_only: bool = True) -> dict[str, list[str]]:
+        """Distinct instruments (group -> source ids) that render `leaf` with an *exact*
+        label. Coarse sources (label_as) don't count: they never produce this leaf's label."""
+        out: dict[str, list[str]] = {}
+        for s in self.for_leaf(leaf, commercial_only=commercial_only):
+            if s.label_as is not None:
+                continue
+            if present_only and (s.status or not s.available(self.root)):
+                continue
+            out.setdefault(s.group or s.id, []).append(s.id)
+        return out
+
+
+def leaf_gate(reg: Registry, leaves: Iterable[str], *, min_instruments: int = 2,
+              commercial_only: bool = False) -> dict[str, dict[str, Any]]:
+    """Per candidate leaf: distinct instruments on disk, pending ones, and whether it is
+    trainable *fairly* (>= `min_instruments` distinct instruments; one source = the model
+    learns that sampler, not the instrument - M4 leave-source-out)."""
+    report = {}
+    for leaf in leaves:
+        have = reg.instruments(leaf, commercial_only=commercial_only)
+        every = reg.instruments(leaf, commercial_only=commercial_only, present_only=False)
+        report[leaf] = {
+            "instruments": sorted(have),
+            "pending": sorted(set(every) - set(have)),
+            "coarse_sources": sorted(s.id for s in reg.for_leaf(leaf, commercial_only=commercial_only)
+                                     if s.label_as is not None),
+            "trainable": len(have) >= min_instruments,
+        }
+    return report
+
+
+SHARED_BANKS = ("fluidr3_gm",)     # GM fallback banks: never held out (they span every family)
+
+
+def v8_holdout(reg: Registry, *, min_instruments: int = 2,
+               commercial_only: bool = False) -> list[str]:
+    """Leave-source-out pairs (`source_id:leaf`) for the v8 LSO model, fixed by rule before
+    any v8 result: for every gated new leaf with >= min_instruments + 1 distinct instruments,
+    hold out the alphabetically first instrument group that isn't a shared GM bank (all of
+    that group's sources). Leaves with fewer instruments are not held out (training would
+    keep < min_instruments)."""
+    gate = leaf_gate(reg, reg.v8_leaves, min_instruments=min_instruments,
+                     commercial_only=commercial_only)
+    out = []
+    for leaf, g in gate.items():
+        if not g["trainable"] or len(g["instruments"]) < min_instruments + 1:
+            continue
+        groups = reg.instruments(leaf, commercial_only=commercial_only)
+        pick = next((k for k in sorted(groups) if k not in SHARED_BANKS), None)
+        if pick is not None:
+            out += [f"{sid}:{leaf}" for sid in groups[pick]]
+    return out
+
+
+def resolve_leaf_set(reg: Registry, name: str, *, min_instruments: int = 2,
+                     commercial_only: bool = False) -> tuple[tuple[str, ...], dict[str, Any]]:
+    """`v1` = the original 20 leaves (unchanged behaviour). `v8` = v1 plus every v8 leaf
+    that passes `leaf_gate`; the rest are left out (their MIDI parts are not rendered)."""
+    if name == "v1":
+        return reg.v1_leaves, {}
+    if name != "v8":
+        raise ValueError(f"unknown leaf set {name!r} (v1 | v8)")
+    gate = leaf_gate(reg, reg.v8_leaves, min_instruments=min_instruments,
+                     commercial_only=commercial_only)
+    new = tuple(l for l in reg.v8_leaves if gate[l]["trainable"] and l not in reg.v1_leaves)
+    return reg.v1_leaves + new, gate
 
 
 def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = None,
@@ -86,6 +191,9 @@ def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = No
     r = Path(os.path.expanduser(str(root or os.environ.get("DISS_SYNTH_SOURCES") or doc["root"])))
     v1 = tuple(doc.get("v1_leaves") or ())
     errs += [f"v1_leaves: {l} is not a taxonomy leaf" for l in v1 if l not in leaves]
+    v8 = tuple(doc.get("v8_leaves") or ())
+    errs += [f"v8_leaves: {l} is not a taxonomy leaf" for l in v8 if l not in leaves]
+    errs += [f"v8_leaves: {l} is already a v1 leaf" for l in v8 if l in v1]
     out, seen = [], set()
     for raw in _expand(doc.get("sources") or [], tax, errs):
         sid = raw.get("id", "?")
@@ -114,6 +222,13 @@ def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = No
             errs.append(f"{sid}: weight must be > 0")
         progs = {k: tuple(v) for k, v in (raw.get("programs") or {}).items()}
         errs += [f"{sid}: programs key {k} not in its leaves" for k in progs if k not in src_leaves]
+        # Without a program the GM bank would play the *MIDI part's* program, which after
+        # cross-rendering within a role can be another instrument than the label says.
+        if kind == "sf2":
+            errs += [f"{sid}: sf2 leaf {l} has no programs entry" for l in src_leaves if l not in progs]
+        status = raw.get("status") or ""
+        if status not in ("", "pending_approval"):
+            errs.append(f"{sid}: status must be empty or pending_approval")
         out.append(Source(id=sid, name=raw.get("name", sid), kind=kind,
                           engine=raw.get("engine") or KINDS[kind] or "", leaves=src_leaves,
                           license=lic, commercial_clean=clean, path=raw.get("path"),
@@ -123,8 +238,9 @@ def load_registry(path: Path | str | None = None, taxonomy: Taxonomy | None = No
                           weight=float(raw.get("weight", 1.0)),
                           note_map={int(k): int(v) for k, v in (raw.get("note_map") or {}).items()},
                           label_as=raw.get("label_as"), instrument=raw.get("instrument"),
-                          native_sr=raw.get("native_sr")))
-    reg = Registry(int(doc.get("version", 1)), r, v1, tuple(out))
+                          native_sr=raw.get("native_sr"), group=str(raw.get("group") or sid),
+                          status=status))
+    reg = Registry(int(doc.get("version", 1)), r, v1, tuple(out), v8)
     uncovered = [l for l in v1 if not reg.for_leaf(l, commercial_only=True)]
     errs += [f"v1 leaf {l} has no commercially clean source" for l in uncovered]
     if errs:
@@ -177,5 +293,6 @@ def _expand(raws: list[dict], tax: Taxonomy, errs: list[str]) -> list[dict]:
                 w = float(raw.get("weight", 1.0)) / max(n_for[x] for x in leaves)
                 out.append({k: v for k, v in raw.items() if k not in ("expand_labels", "leaves", "weight")}
                            | {"id": f"{raw['id']}:{inst}", "leaves": list(leaves), "instrument": inst,
-                              "weight": w, "label_as": coarse})
+                              "weight": w, "label_as": coarse,
+                              "group": f"{raw['id']}:{inst}"})      # each instrument is distinct
     return out

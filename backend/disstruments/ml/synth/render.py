@@ -82,7 +82,10 @@ def render_clip(window: Window, registry: Registry, engines: Mapping[str, Engine
                       and rng.random() < DRIVE_PATH_P)
         src_leaf = "guitar.electric.clean" if drive_path else (part.leaf or "")
         cands = registry.for_leaf(src_leaf, commercial_only=commercial_only)
-        cands = [s for s in cands if s.engine in engines]
+        # pending = not approved; unavailable = files absent (e.g. an NSynth instrument labelled
+        # before its family was downloaded): picking either would only lose the stem
+        cands = [s for s in cands if s.engine in engines and not s.status
+                 and s.available(registry.root)]
         # Leave-source-out (M4 rigor): held-out (source, leaf) pairs never appear in the
         # train pool; the LSO test uses them exclusively wherever a leaf has one.
         held = [s for s in cands if (s.id, src_leaf) in holdout]

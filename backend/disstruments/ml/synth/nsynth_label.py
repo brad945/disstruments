@@ -39,12 +39,31 @@ FAMILIES: dict[str, tuple[list[tuple[str, str]], str, int]] = {
                              ("FM / DX7 e-piano", "keys.electric_piano.fm"),
                              ("acoustic piano", "keys.piano"), ("clavinet", "keys.clavinet"),
                              ("organ", "keys.organ")], "keys.electric_piano", 25),
+    # v8: cap raised 15 -> 70 so the remaining ~46 NSynth reeds get labelled; oboe, bassoon,
+    # accordion choices added. "unsure" stays at the saxophone level (most NSynth reeds are saxes).
     "reed_acoustic": ([("soprano sax", "woodwinds.saxophone.soprano"),
                        ("alto sax", "woodwinds.saxophone.alto"),
                        ("tenor sax", "woodwinds.saxophone.tenor"),
                        ("baritone sax", "woodwinds.saxophone.baritone"),
-                       ("clarinet", "woodwinds.clarinet"), ("harmonica", "woodwinds.harmonica")],
-                      "woodwinds.saxophone", 15),
+                       ("clarinet", "woodwinds.clarinet"), ("oboe / English horn", "woodwinds.oboe"),
+                       ("bassoon", "woodwinds.bassoon"), ("harmonica", "woodwinds.harmonica"),
+                       ("accordion", "keys.accordion")],
+                      "woodwinds.saxophone", 70),
+    # ---- v8 families (docs/debriefs/v8-plan.md). brass_acoustic is already on disk (67
+    # instruments); string/flute/mallet need the NSynth download first (pending approval).
+    "brass_acoustic": ([("trumpet / cornet / flugelhorn", "brass.trumpet"),
+                        ("trombone", "brass.trombone"), ("French horn", "brass.french_horn"),
+                        ("tuba", "brass.tuba")], "brass", 70),
+    "string_acoustic": ([("violin (solo)", "strings.bowed.violin"),
+                         ("viola (solo)", "strings.bowed.viola"),
+                         ("cello (solo)", "strings.bowed.cello"),
+                         ("string section", "strings.bowed.section"),
+                         ("harp", "strings.plucked.harp")], "strings.bowed", 40),
+    "flute_acoustic": ([("flute / piccolo", "woodwinds.flute")], "woodwinds", 20),
+    "mallet_acoustic": ([("glockenspiel", "percussion.mallet.glockenspiel"),
+                         ("vibraphone", "percussion.mallet.vibraphone"),
+                         ("marimba", "percussion.mallet.marimba"),
+                         ("xylophone", "percussion.mallet.xylophone")], "percussion.mallet", 40),
 }
 
 

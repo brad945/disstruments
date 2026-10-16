@@ -29,6 +29,41 @@ v1_leaves:
   - woodwinds.saxophone.tenor
   - brass.trumpet
 
+# v8 (2026-10-16, docs/debriefs/v8-plan.md): candidate new leaves. `build --leaf-set v8` uses a
+# leaf only if >= --min-instruments (default 2) DISTINCT instruments (`group`) render it with
+# an exact label from files on disk and approved (no `status`); the rest stay out and their
+# MIDI parts are not rendered. `python -m disstruments.ml.synth sources --leaf-set v8` prints
+# the gate. Entries with `status: pending_approval` are downloads Bradley has not approved.
+v8_leaves:
+  - strings.bowed.violin
+  - strings.bowed.viola
+  - strings.bowed.cello
+  - strings.bowed.section
+  - strings.plucked.harp
+  - strings.plucked.banjo
+  - strings.plucked.mandolin
+  - brass.trombone
+  - brass.french_horn
+  - brass.tuba
+  - brass.section
+  - woodwinds.saxophone.soprano
+  - woodwinds.saxophone.alto
+  - woodwinds.saxophone.baritone
+  - woodwinds.clarinet
+  - woodwinds.flute
+  - woodwinds.oboe
+  - woodwinds.bassoon
+  - woodwinds.harmonica
+  - keys.accordion
+  - percussion.mallet.glockenspiel
+  - percussion.mallet.vibraphone
+  - percussion.mallet.marimba
+  - percussion.mallet.xylophone
+  - percussion.tambourine
+  - percussion.shaker
+  - percussion.claps
+  - percussion.hand_drums
+
 sources:
   # ------------------------------------------------------------------ synth engines
   - id: surge_xt
@@ -572,7 +607,17 @@ sources:
              guitar.acoustic.steel, guitar.electric.clean, guitar.electric.distorted,
              bass.upright, bass.electric.fingered, bass.electric.picked, bass.synth.analog,
              keys.synth.lead, brass.trumpet, woodwinds.saxophone.tenor,
-             drums.acoustic_kit, drums.electronic.tr808]
+             drums.acoustic_kit, drums.electronic.tr808,
+             # v8 (used only by --leaf-set v8; one bank = ONE instrument per leaf for the gate)
+             strings.bowed.violin, strings.bowed.viola, strings.bowed.cello, strings.bowed.section,
+             strings.plucked.harp, strings.plucked.banjo,
+             brass.trombone, brass.french_horn, brass.tuba, brass.section,
+             woodwinds.saxophone.soprano, woodwinds.saxophone.alto, woodwinds.saxophone.baritone,
+             woodwinds.clarinet, woodwinds.flute, woodwinds.oboe, woodwinds.bassoon,
+             woodwinds.harmonica, keys.accordion,
+             percussion.mallet.glockenspiel, percussion.mallet.vibraphone,
+             percussion.mallet.marimba, percussion.mallet.xylophone,
+             percussion.tambourine, percussion.shaker, percussion.claps, percussion.hand_drums]
     programs:
       keys.piano: [0, 1]                       # Yamaha Grand Piano, Bright Yamaha Grand
       keys.electric_piano.rhodes: [4]          # "Rhodes EP" (5 "Legend EP 2" left out: FM-vs-tine unclear)
@@ -591,6 +636,37 @@ sources:
       woodwinds.saxophone.tenor: [66]
       drums.acoustic_kit: [0, 8, 16, 32, 40]   # bank 128: Standard, Room, Power, Jazz, Brush
       drums.electronic.tr808: [25]             # bank 128: TR-808
+      # v8, GM names (0-based). Not audited by ear yet (M2 audit covered only the v1 leaves).
+      strings.bowed.violin: [40]
+      strings.bowed.viola: [41]
+      strings.bowed.cello: [42]
+      strings.bowed.section: [48, 49, 44]      # String Ensemble 1/2, Tremolo Strings (45 pizz excluded)
+      strings.plucked.harp: [46]
+      strings.plucked.banjo: [105]
+      brass.trombone: [57]
+      brass.french_horn: [60]
+      brass.tuba: [58]
+      brass.section: [61]                      # Brass Section (62/63 synth brass excluded)
+      woodwinds.saxophone.soprano: [64]
+      woodwinds.saxophone.alto: [65]
+      woodwinds.saxophone.baritone: [67]
+      woodwinds.oboe: [68, 69]                 # Oboe, English Horn (leaf "Oboe / English horn")
+      woodwinds.bassoon: [70]
+      woodwinds.clarinet: [71]
+      woodwinds.flute: [73, 72]                # Flute, Piccolo (leaf "Flute / piccolo")
+      woodwinds.harmonica: [22]
+      keys.accordion: [21, 23]                 # Accordion, Tango Accordion
+      percussion.mallet.glockenspiel: [9]
+      percussion.mallet.vibraphone: [11]
+      percussion.mallet.marimba: [12]
+      percussion.mallet.xylophone: [13]
+      # percussion parts are drum-channel parts holding only their own GM notes
+      # (midi.PERC_ROLE_NOTES), so a bank-128 kit plays just that instrument. TR-808 kit (25)
+      # excluded: its clap/maracas/congas are synthetic (claps get drum808_clap instead).
+      percussion.tambourine: [0, 8, 16, 32, 40]
+      percussion.shaker: [0, 8, 16, 32, 40]
+      percussion.claps: [0, 8, 16, 32, 40]
+      percussion.hand_drums: [0, 8, 16, 32, 40]
     license: MIT
     license_url: https://ftp.osuosl.org/pub/musescore/soundfont/MuseScore_General/MuseScore_General_License.md
     commercial_clean: true
@@ -640,27 +716,25 @@ sources:
     kind: notes
     path: notes
     instrument: iowa_altosax
-    leaves: [woodwinds.saxophone.tenor]
-    label_as: woodwinds.saxophone
+    leaves: [woodwinds.saxophone.alto]
     license: LicenseRef-IowaMIS-any-use
     license_url: https://theremin.music.uiowa.edu/MIS.html
     commercial_clean: true
     attribution: "University of Iowa Electronic Music Studios"
     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISEbAltoSaxophone2012.html", sha256: null}
-    notes: "Alto, not tenor: plays tenor parts but is labelled at the saxophone level (tenor/alto masked)."
+    notes: "v8: exact alto leaf. Until v8 (M4 v7) it played TENOR parts labelled coarse `woodwinds.saxophone`; renders made before this change used it that way (renderer_sha). A v1 build no longer uses it (alto is not a v1 leaf)."
   - id: iowa_sopranosax
     name: Univ. of Iowa MIS Bb soprano saxophone
     kind: notes
     path: notes
     instrument: iowa_sopranosax
-    leaves: [woodwinds.saxophone.tenor]
-    label_as: woodwinds.saxophone
+    leaves: [woodwinds.saxophone.soprano]
     license: LicenseRef-IowaMIS-any-use
     license_url: https://theremin.music.uiowa.edu/MIS.html
     commercial_clean: true
     attribution: "University of Iowa Electronic Music Studios"
     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISBbSopranoSaxophone2012.html", sha256: null}
-    notes: "Soprano, not tenor: labelled at the saxophone level, like iowa_altosax."
+    notes: "v8: exact soprano leaf (was: tenor parts labelled coarse, like iowa_altosax)."
   - id: nsynth
     name: NSynth (Google Magenta), hand-labelled instruments
     kind: notes
@@ -671,10 +745,250 @@ sources:
     leaves: [guitar.acoustic.nylon, guitar.acoustic.steel, guitar.electric.clean, guitar.electric.distorted,
              bass.electric.fingered, bass.electric.picked, bass.upright, bass.synth.analog, bass.synth.sub_808,
              keys.piano, keys.electric_piano.rhodes, keys.electric_piano.fm, keys.organ.drawbar,
-             woodwinds.saxophone.tenor]
+             woodwinds.saxophone.tenor,
+             # v8: NSynth brass/reed/string/flute/mallet instruments, once Bradley labels them
+             # (nsynth_label page). Today: 3 baritone, 1 alto, 1 soprano, 4 clarinet labels exist
+             # (before v8 they served tenor parts at the saxophone/woodwinds level).
+             woodwinds.saxophone.soprano, woodwinds.saxophone.alto, woodwinds.saxophone.baritone,
+             woodwinds.clarinet, woodwinds.oboe, woodwinds.bassoon, woodwinds.flute,
+             woodwinds.harmonica, keys.accordion,
+             brass.trumpet, brass.trombone, brass.french_horn, brass.tuba,
+             strings.bowed.violin, strings.bowed.viola, strings.bowed.cello, strings.bowed.section,
+             strings.plucked.harp,
+             percussion.mallet.glockenspiel, percussion.mallet.vibraphone,
+             percussion.mallet.marimba, percussion.mallet.xylophone]
     license: CC-BY-4.0
     license_url: https://magenta.tensorflow.org/datasets/nsynth
     commercial_clean: true
     attribution: "NSynth Dataset (Engel et al. 2017, Google Magenta), CC BY 4.0"
     download: {url: "http://download.magenta.tensorflow.org/datasets/nsynth/", sha256: null}
     notes: "16 kHz single notes from ~1000 instruments; leaf labels by Bradley's listening (nsynth_label). Renders with NSynth need --bandlimit-p so bandwidth is not a source giveaway."
+
+  # ================================================================== v8: new families
+  # Licences re-read 2026-10-16: VSCO-2 CE LICENSE file = CC0 1.0 (Readme: "use these samples
+  # for ANY purpose", credit requested, don't sell the samples themselves); VCSL LICENSE file
+  # (raw.githubusercontent, master) = CC0 1.0; Iowa MIS.html: "may be downloaded and used for
+  # any projects, without restrictions". Every entry below except drum808_clap is `status: pending_approval`:
+  # NOT downloaded (Bradley approves sizes first; docs/debriefs/v8-plan.md). After download,
+  # delete the status line; `sources --leaf-set v8` then counts it.
+  - id: drum808_clap
+    name: TR-808-style clap (ours, numpy)
+    kind: synth
+    engine: drum808
+    group: drum808_clap
+    leaves: [percussion.claps]
+    license: LicenseRef-engine-output
+    commercial_clean: true
+    attribution: ""
+    notes: "drum808.py clap voice (3-4 band-passed noise bursts + tail), randomized per clip. A SYNTHETIC clap: pop records use 808/909 claps as much as real ones, but flag for Bradley (v8-plan): it is one of only two clap instruments on disk today."
+
+  # ------------------------------------------------------------------ VSCO-2 CE (CC0), sparse checkout
+  # Same repo as vsco2_trumpet_* / vsco2_contrabass_pizz (ref SFZ); add the sparse paths to the
+  # existing checkout in sources/vsco2_ce. Sizes from the GitHub tree API (2026-10-16).
+  - {id: vsco2_violin_solo, name: "VSCO-2 CE Solo Violin (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/SViolinVib.sfz,
+     leaves: [strings.bowed.violin], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/SViolinVib.sfz", "/Strings/Solo Violin/"], bytes: 135500000}}
+  - {id: vsco2_violin_section, name: "VSCO-2 CE Violin Section (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/ViolinEnsSusVib.sfz,
+     leaves: [strings.bowed.section], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/ViolinEnsSusVib.sfz", "/Strings/Violin Section/"], bytes: 99400000}}
+  - {id: vsco2_viola_section, name: "VSCO-2 CE Viola Section (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/ViolaEnsSusVib.sfz,
+     leaves: [strings.bowed.section], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/ViolaEnsSusVib.sfz", "/Strings/Viola Section/"], bytes: 143100000}}
+  - {id: vsco2_cello_section, name: "VSCO-2 CE Cello Section (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/CelloEnsSusVib.sfz,
+     leaves: [strings.bowed.section], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/CelloEnsSusVib.sfz", "/Strings/Cello Section/"], bytes: 186100000},
+     notes: "A cello SECTION: section leaf, not strings.bowed.cello (taxonomy: cello = solo)."}
+  - {id: vsco2_harp, name: "VSCO-2 CE Harp", kind: sfz, engine: sfizz, path: vsco2_ce/Harp.sfz,
+     leaves: [strings.plucked.harp], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Harp.sfz", "/Strings/Harp/"], bytes: 35300000}}
+  - {id: vsco2_horn, name: "VSCO-2 CE French Horn (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/FHornSus.sfz,
+     leaves: [brass.french_horn], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/FHornSus.sfz", "/Brass/F Horn/"], bytes: 84100000}}
+  - {id: vsco2_trombone, name: "VSCO-2 CE Tenor Trombone (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/TromboneSus.sfz,
+     leaves: [brass.trombone], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/TromboneSus.sfz", "/Brass/Tenor Trombone/"], bytes: 85600000}}
+  - {id: vsco2_tuba, name: "VSCO-2 CE Tuba (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/TubaSus.sfz,
+     leaves: [brass.tuba], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/TubaSus.sfz", "/Brass/Tuba/"], bytes: 40600000}}
+  - {id: vsco2_flute, name: "VSCO-2 CE Flute (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/FluteSusVib.sfz,
+     leaves: [woodwinds.flute], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/FluteSusVib.sfz", "/Woodwinds/Flute/"], bytes: 120500000}}
+  - {id: vsco2_piccolo, name: "VSCO-2 CE Piccolo (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/PiccoloSus.sfz,
+     leaves: [woodwinds.flute], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/PiccoloSus.sfz", "/Woodwinds/Piccolo/"], bytes: 12500000}}
+  - {id: vsco2_oboe, name: "VSCO-2 CE Oboe (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/OboeSusVib.sfz,
+     leaves: [woodwinds.oboe], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/OboeSusVib.sfz", "/Woodwinds/Oboe/"], bytes: 66000000}}
+  - {id: vsco2_clarinet, name: "VSCO-2 CE Clarinet (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/ClarinetSus.sfz,
+     leaves: [woodwinds.clarinet], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/ClarinetSus.sfz", "/Woodwinds/Clarinet/"], bytes: 66100000}}
+  - {id: vsco2_bassoon, name: "VSCO-2 CE Bassoon (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/BassoonSus.sfz,
+     leaves: [woodwinds.bassoon], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/BassoonSus.sfz", "/Woodwinds/Bassoon/"], bytes: 69400000}}
+  - {id: vsco2_glockenspiel, name: "VSCO-2 CE Glockenspiel", kind: sfz, engine: sfizz, path: vsco2_ce/Glockenspiel.sfz,
+     leaves: [percussion.mallet.glockenspiel], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Glockenspiel.sfz", "/Percussion/Glock/"], bytes: 6400000}}
+  - {id: vsco2_marimba, name: "VSCO-2 CE Marimba", kind: sfz, engine: sfizz, path: vsco2_ce/Marimba.sfz,
+     leaves: [percussion.mallet.marimba], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Marimba.sfz", "/Percussion/Marimba/"], bytes: 11800000}}
+  - {id: vsco2_xylophone, name: "VSCO-2 CE Xylophone", kind: sfz, engine: sfizz, path: vsco2_ce/Xylophone.sfz,
+     leaves: [percussion.mallet.xylophone], status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Xylophone.sfz", "/Percussion/Xylo/"], bytes: 4500000}}
+  # GM-StylePerc.sfz is NOT the GM map (39 = snare roll, 69/70 = ratchets), so each leaf maps
+  # only its own GM notes onto the sfz keys (keys read from the sfz text, 2026-10-16).
+  - {id: vsco2_tambourine, name: "VSCO-2 CE Tambourine (GM-StylePerc)", kind: sfz, engine: sfizz, path: vsco2_ce/GM-StylePerc.sfz,
+     leaves: [percussion.tambourine], note_map: {54: 54}, status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/GM-StylePerc.sfz", "/Percussion/*.wav"], bytes: 60000000}}
+  - {id: vsco2_congas, name: "VSCO-2 CE Congas (quinto/conga/tumba, GM-StylePerc)", kind: sfz, engine: sfizz, path: vsco2_ce/GM-StylePerc.sfz,
+     leaves: [percussion.hand_drums], note_map: {60: 60, 61: 61, 62: 62, 63: 63, 64: 65}, status: pending_approval, license: CC0-1.0,
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
+     download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/GM-StylePerc.sfz", "/Percussion/*.wav"], bytes: 60000000},
+     notes: "GM bongos (60/61) play the quinto (high conga); 64 low conga -> tumba hit. The label is the hand_drums leaf, so bongo-vs-conga doesn't matter."}
+
+  # ------------------------------------------------------------------ Iowa MIS v8 (any use), notes_prep iowa --set v8
+  # 2012 per-pitch pages, ff only (one dynamic). bytes = AIFF download estimate (HEAD on a
+  # sample of files); prepared notes are mono + trimmed (~1/3 of that).
+  - {id: iowa_violin_arco, name: "Univ. of Iowa MIS violin (arco)", kind: notes, path: notes, instrument: iowa_violin_arco,
+     leaves: [strings.bowed.violin], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISViolin2012.html", bytes: 55000000}}
+  - {id: iowa_viola_arco, name: "Univ. of Iowa MIS viola (arco)", kind: notes, path: notes, instrument: iowa_viola_arco,
+     leaves: [strings.bowed.viola], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISViola2012.html", bytes: 95000000}}
+  - {id: iowa_cello_arco, name: "Univ. of Iowa MIS cello (arco)", kind: notes, path: notes, instrument: iowa_cello_arco,
+     leaves: [strings.bowed.cello], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISCello2012.html", bytes: 120000000}}
+  - {id: iowa_flute, name: "Univ. of Iowa MIS flute", kind: notes, path: notes, instrument: iowa_flute,
+     leaves: [woodwinds.flute], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISFlute2012.html", bytes: 53000000}}
+  - {id: iowa_oboe, name: "Univ. of Iowa MIS oboe", kind: notes, path: notes, instrument: iowa_oboe,
+     leaves: [woodwinds.oboe], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISOboe2012.html", bytes: 17000000}}
+  - {id: iowa_clarinet, name: "Univ. of Iowa MIS Bb clarinet", kind: notes, path: notes, instrument: iowa_clarinet,
+     leaves: [woodwinds.clarinet], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISBbClarinet2012.html", bytes: 37000000}}
+  - {id: iowa_bassoon, name: "Univ. of Iowa MIS bassoon", kind: notes, path: notes, instrument: iowa_bassoon,
+     leaves: [woodwinds.bassoon], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISBassoon2012.html", bytes: 23000000}}
+  - {id: iowa_horn, name: "Univ. of Iowa MIS French horn", kind: notes, path: notes, instrument: iowa_horn,
+     leaves: [brass.french_horn], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISHorn2012.html", bytes: 32000000}}
+  - {id: iowa_trombone, name: "Univ. of Iowa MIS tenor trombone", kind: notes, path: notes, instrument: iowa_trombone,
+     leaves: [brass.trombone], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISTenorTrombone2012.html", bytes: 22000000}}
+  - {id: iowa_tuba, name: "Univ. of Iowa MIS tuba", kind: notes, path: notes, instrument: iowa_tuba,
+     leaves: [brass.tuba], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISTuba2012.html", bytes: 18000000}}
+  - {id: iowa_marimba, name: "Univ. of Iowa MIS marimba (yarn mallets)", kind: notes, path: notes, instrument: iowa_marimba,
+     leaves: [percussion.mallet.marimba], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISMarimba2012.html", bytes: 150000000}}
+  - {id: iowa_vibraphone, name: "Univ. of Iowa MIS vibraphone (sustain)", kind: notes, path: notes, instrument: iowa_vibraphone,
+     leaves: [percussion.mallet.vibraphone], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISVibraphone2012.html", bytes: 90000000}}
+  - {id: iowa_xylophone, name: "Univ. of Iowa MIS xylophone", kind: notes, path: notes, instrument: iowa_xylophone,
+     leaves: [percussion.mallet.xylophone], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISxylophone2012.html", bytes: 69000000}}
+  - {id: iowa_bells, name: "Univ. of Iowa MIS orchestra bells (glockenspiel, brass mallets)", kind: notes, path: notes, instrument: iowa_bells,
+     leaves: [percussion.mallet.glockenspiel], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISBells2012.html", bytes: 96000000},
+     notes: "Orchestra bells = glockenspiel. Octave of the file names (written vs sounding) to be checked by ear in the audition page before use."}
+  - {id: iowa_tambourine1, name: "Univ. of Iowa MIS tambourine 1 (one-shots)", kind: notes, path: notes, instrument: iowa_tambourine1,
+     leaves: [percussion.tambourine], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISTambourines2012.html", bytes: 8000000}}
+  - {id: iowa_tambourine2, name: "Univ. of Iowa MIS tambourine 2 (one-shots)", kind: notes, path: notes, instrument: iowa_tambourine2,
+     leaves: [percussion.tambourine], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISTambourines2012.html", bytes: 8000000}}
+  - {id: iowa_tambourine3, name: "Univ. of Iowa MIS tambourine 3 (one-shots)", kind: notes, path: notes, instrument: iowa_tambourine3,
+     leaves: [percussion.tambourine], status: pending_approval, license: LicenseRef-IowaMIS-any-use,
+     license_url: "https://theremin.music.uiowa.edu/MIS.html", commercial_clean: true, attribution: "University of Iowa Electronic Music Studios",
+     download: {url: "https://theremin.music.uiowa.edu/MIS-Pitches-2012/MISTambourines2012.html", bytes: 8000000}}
+
+  # ------------------------------------------------------------------ VCSL (CC0), notes_prep vcsl
+  # Versilian Community Sample Library: raw WAVs (no SFZ in the repo), sparse checkout of the
+  # listed folders. Sizes from the GitHub tree API (2026-10-16).
+  - {id: vcsl_shaker_small, name: "VCSL small shaker", kind: notes, path: notes, instrument: vcsl_shaker_small,
+     leaves: [percussion.shaker], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Shaker, Small/"], bytes: 1800000}}
+  - {id: vcsl_shaker_large, name: "VCSL large shaker", kind: notes, path: notes, instrument: vcsl_shaker_large,
+     leaves: [percussion.shaker], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Shaker, Large/"], bytes: 1400000}}
+  - {id: vcsl_cabasa, name: "VCSL cabasa", kind: notes, path: notes, instrument: vcsl_cabasa,
+     leaves: [percussion.shaker], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Cabasa/"], bytes: 1000000}}
+  - {id: vcsl_claps, name: "VCSL hand claps", kind: notes, path: notes, instrument: vcsl_claps,
+     leaves: [percussion.claps], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Claps/"], bytes: 1200000},
+     notes: "Real claps (group + solo takes), one session: ONE instrument."}
+  - {id: vcsl_tambourine1, name: "VCSL tambourine 1", kind: notes, path: notes, instrument: vcsl_tambourine1,
+     leaves: [percussion.tambourine], group: vsco2_tambourine, status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Tambourine 1/"], bytes: 6500000},
+     notes: "Probably the same tambourine as vsco2_tambourine (both Versilian, same 'Tamb1' sample names): group shared on purpose so it isn't counted twice."}
+  - {id: vcsl_tambourine2, name: "VCSL tambourine 2", kind: notes, path: notes, instrument: vcsl_tambourine2,
+     leaves: [percussion.tambourine], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Tambourine 2/"], bytes: 6300000}}
+  - {id: vcsl_bongos, name: "VCSL bongos", kind: notes, path: notes, instrument: vcsl_bongos,
+     leaves: [percussion.hand_drums], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Membranophones/Struck Membranophones/Bongos/"], bytes: 6800000}}
+  - {id: vcsl_conga, name: "VCSL conga", kind: notes, path: notes, instrument: vcsl_conga,
+     leaves: [percussion.hand_drums], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Membranophones/Struck Membranophones/Conga/"], bytes: 4900000}}
+  - {id: vcsl_darbuka, name: "VCSL darbuka", kind: notes, path: notes, instrument: vcsl_darbuka,
+     leaves: [percussion.hand_drums], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Membranophones/Struck Membranophones/Darbuka/"], bytes: 2500000}}
+  - {id: vcsl_glockenspiel, name: "VCSL glockenspiel", kind: notes, path: notes, instrument: vcsl_glockenspiel,
+     leaves: [percussion.mallet.glockenspiel], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Glockenspiel/"], bytes: 17200000}}
+  - {id: vcsl_marimba, name: "VCSL marimba", kind: notes, path: notes, instrument: vcsl_marimba,
+     leaves: [percussion.mallet.marimba], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Marimba/"], bytes: 32000000}}
+  - {id: vcsl_vibraphone, name: "VCSL vibraphone (hard + soft mallets)", kind: notes, path: notes, instrument: vcsl_vibraphone,
+     leaves: [percussion.mallet.vibraphone], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Vibraphone/"], bytes: 99500000}}
+  - {id: vcsl_xylophone, name: "VCSL xylophone", kind: notes, path: notes, instrument: vcsl_xylophone,
+     leaves: [percussion.mallet.xylophone], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Idiophones/Struck Idiophones/Xylophone/"], bytes: 26800000}}
+  - {id: vcsl_harmonica_special20, name: "VCSL Hohner Special 20 harmonica (C + F)", kind: notes, path: notes, instrument: vcsl_harmonica_special20,
+     leaves: [woodwinds.harmonica], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/", "/Aerophones/Free Aerophones/Harmonica-Hohner-Special20-F/"], bytes: 55900000},
+     notes: "Diatonic 'blues harp', the rock/folk harmonica. The C and F harps are one model: one instrument."}
+  - {id: vcsl_harmonica_super64, name: "VCSL Hohner Super 64 chromatic harmonica", kind: notes, path: notes, instrument: vcsl_harmonica_super64,
+     leaves: [woodwinds.harmonica], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Aerophones/Free Aerophones/Harmonica-Hohner-Super64/"], bytes: 28900000}}
+  - {id: vcsl_concert_harp, name: "VCSL concert harp", kind: notes, path: notes, instrument: vcsl_concert_harp,
+     leaves: [strings.plucked.harp], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Chordophones/Composite Chordophones/Concert Harp/"], bytes: 76700000}}
+  - {id: vcsl_folk_harp, name: "VCSL folk harp", kind: notes, path: notes, instrument: vcsl_folk_harp,
+     leaves: [strings.plucked.harp], status: pending_approval, license: CC0-1.0, license_url: "https://github.com/sgossner/VCSL",
+     commercial_clean: true, attribution: "", download: {url: "https://github.com/sgossner/VCSL", sparse: ["/Chordophones/Composite Chordophones/Folk Harp/"], bytes: 83200000}}

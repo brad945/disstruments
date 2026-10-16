@@ -19,10 +19,10 @@ from typing import Any, Iterable
 import numpy as np
 
 from ..taxonomy import Taxonomy
-from .midi import LeafBalancer, Window, assign_leaves, load_windows, split_of
+from .midi import LeafBalancer, Window, active_roles, assign_leaves, load_windows, split_of
 from .procedural import midi_licence
 from .render import renderer_sha, render_clip
-from .sources import load_registry
+from .sources import load_registry, resolve_leaf_set
 
 FRACTIONS = {"train": 0.8, "val": 0.1, "test": 0.1}
 
@@ -34,12 +34,14 @@ def plan_windows(midi_files: Iterable[Path], midi_root: Path, leaves: Iterable[s
     rng = np.random.default_rng(seed)
     files = list(midi_files)
     rng.shuffle(files)
+    leaves = list(leaves)
+    roles = active_roles(leaves)        # parse only roles that can yield an active leaf
     bal = LeafBalancer(leaves, rng)
     plan: list[tuple[Window, str, int]] = []
     for f in files:
         if len(plan) >= n_clips:
             break
-        wins = load_windows(f, midi_root)
+        wins = load_windows(f, midi_root, roles=roles)
         if not wins:
             continue
         for k in rng.choice(len(wins), size=min(windows_per_file, len(wins)), replace=False):
@@ -81,12 +83,16 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
           workers: int = 1, registry_path: str | None = None, sources_root: str | None = None,
           commercial_only: bool = False, fake: bool = False, limit_files: int | None = None,
           windows_per_file: int = 2, stem_fraction: float = 1.0, fx_profile: str = "v1",
-          holdout: Iterable[str] = (), patch_profile: str = "v1", bandlimit_p: float = 0.0) -> dict:
+          holdout: Iterable[str] = (), patch_profile: str = "v1", bandlimit_p: float = 0.0,
+          leaf_set: str = "v1", min_instruments: int = 2) -> dict:
     tax = Taxonomy.load()
     reg = load_registry(registry_path, tax, root=sources_root)
+    # v8: new leaves only where >= min_instruments distinct instruments are on disk
+    leaves, gate = resolve_leaf_set(reg, leaf_set, min_instruments=min_instruments,
+                                    commercial_only=commercial_only)
     files = sorted(midi_root.rglob("*.mid"))[: limit_files or None]
     t0 = time.monotonic()
-    plan = plan_windows(files, midi_root, reg.v1_leaves, n_clips, seed,
+    plan = plan_windows(files, midi_root, leaves, n_clips, seed,
                         windows_per_file=windows_per_file)
     t_plan = time.monotonic() - t0
     out.mkdir(parents=True, exist_ok=True)
@@ -94,6 +100,14 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
     # Stems are saved for a deterministic subset (stable hash of the clip seed) to save disk;
     # labels.json always describes every stem.
     hold = frozenset(tuple(h.rsplit(":", 1)) for h in holdout)   # source ids may contain ":"
+    # A gated new leaf must keep >= min_instruments distinct *training* instruments after
+    # leave-source-out holdouts, or LSO would test a leaf trained on one sampler.
+    for leaf in (l for l in leaves if l in gate):
+        groups = reg.instruments(leaf, commercial_only=commercial_only)
+        train = [g for g, ids in groups.items() if any((i, leaf) not in hold for i in ids)]
+        if len(train) < min_instruments:
+            raise ValueError(f"holdout leaves {leaf} with {len(train)} training instrument(s) "
+                             f"(< {min_instruments}): hold out only leaves with more instruments")
     # MIDI licence comes from the folder's MIDI_LICENSE.json (procedural MIDI); none = Lakh
     midi_clean, midi_license = midi_licence(midi_root)
     lic = (midi_clean, midi_license)
@@ -124,6 +138,8 @@ def build(midi_root: Path, out: Path, n_clips: int, *, seed: int = 0, sr: int = 
         "windows_per_file": windows_per_file, "stem_fraction": stem_fraction, "fx_profile": fx_profile,
         "holdout": sorted(":".join(h) for h in hold), "patch_profile": patch_profile,
         "bandlimit_p": bandlimit_p, "midi_commercial_clean": midi_clean, "midi_license": midi_license,
+        "leaf_set": leaf_set, "min_instruments": min_instruments, "active_leaves": list(leaves),
+        "leaf_gate": gate,
         "splits": dict(Counter(r["split"] for r in ok)),
         "leaf_counts": dict(sorted(leaf_counts.items())),
         "source_counts": dict(sorted(src_counts.items())),
