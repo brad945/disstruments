@@ -56,3 +56,13 @@ def test_stems_only_vouch_for_their_own_instrument():
     assert set(out) == {"voice", "guitar", "drums"}
     assert out["voice"]["stem"] == "vocals" and out["voice"]["confidence"] == 0.9
     assert out["guitar"]["stem"] == "mix", "the residual stem never vouches"
+
+
+def test_vocals_stem_cannot_create_voice_alone():
+    """R1: on an instrumental the vocals stem (bleed) can't make voice appear by itself."""
+    def t(label, conf, stem):
+        return {"label": label, "confidence": conf, "stem": stem, "activations": []}
+    no_mix_voice = tagging.combine([t("guitar", 0.7, "mix")], [t("voice", 0.98, "vocals"), t("bass", 0.9, "bass")])
+    assert {x["label"] for x in no_mix_voice} == {"guitar", "bass"}   # other stems still vouch alone
+    raised = {x["label"]: x for x in tagging.combine([t("voice", 0.35, "mix")], [t("voice", 0.9, "vocals")])}
+    assert raised["voice"]["confidence"] == 0.9 and raised["voice"]["stem"] == "vocals"

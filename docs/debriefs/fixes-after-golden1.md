@@ -427,3 +427,12 @@ The golden-1 problems (organ, percussion, voice on instrumentals) are still open
 3. **New labels that never fire.** They are honest ("?") and harmless, but nearly silent.
    Making them useful needs real calibration data for tambourine / shaker / brass / strings
    that isn't a test set, e.g. a small labelled set of your own, disjoint from golden-2.
+
+## Decision (Bradley, 2026-10-16): ship R1 for voice
+
+R1 failed the pre-registered recall guard (MoisesDB recall at 0.3: -0.034 vs a 0.02 bar)
+while halving confident false voice on voiceless clips (OpenMIC 15.3% -> 8.7%; MoisesDB
+3.1% -> 0%). Bradley accepted the ~2-3 point recall cost: a confident wrong "voice" breaks
+the F15 honesty rule, an occasional miss doesn't. This is a product trade-off made by the
+owner, not a gate pass, and it is recorded as such. Shipped in `tagging.STEM_NEEDS_MIX`.
+Its fair test is golden-2 (amended "after" definition in `golden2.md`), not golden-1.

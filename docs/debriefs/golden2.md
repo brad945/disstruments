@@ -42,3 +42,12 @@ Essentia excluded (Jamendo source = its training data).
   cross-validated by artist and reported as such; golden-2 reports their effect once.
 - If a fix makes golden-2 worse, it is reported, not quietly reverted; reverting needs a
   decision recorded here.
+
+## Amendment (2026-10-16, before any golden-2 labels exist)
+
+The fixes round shipped Fix 2 (new "?" labels) and, by Bradley's decision, R1 for voice
+(`fixes-after-golden1.md`); Fix 1 (organ) failed its gate and did not ship. So **"after" =
+the app at the commit that adds R1**, plus v8 only if v8 passes its own pre-registered
+adoption rule (`v8-plan.md`) and Bradley promotes it before golden-2 scoring starts.
+"Before" stays commit `4d24033`. The R1 comparison (voice false alarms on songs Bradley
+marks voiceless, and voice recall) is the primary Q1 item.

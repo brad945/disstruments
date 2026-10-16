@@ -172,13 +172,20 @@ def calibrate(per_label: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
 # calibrated: on pooled MoisesDB, max over mix + all stems showed 2238 false detections at
 # 0.3 vs 471 with this rule, at the same voice/drums/bass recall (M5 debrief, story 8).
 STEM_ROLES = {"vocals": {"voice"}, "drums": {"drums", "cymbals"}, "bass": {"bass"}}
+# R1 (docs/debriefs/fixes-after-golden1.md; Bradley chose it 2026-10-16): separation bleed
+# makes the vocals stem non-silent on instrumentals, so the stem may only *raise* a voice
+# the mix already shows (>= the show threshold); it can't create one on its own.
+STEM_NEEDS_MIX = {"voice"}
 
 
 def combine(mix_tags: list[dict], stem_tags: list[dict]) -> list[dict]:
     """Per label, the most confident of the mix entry and its dedicated stem's entry (which
     also says *where* it was heard)."""
+    in_mix = {t["label"] for t in mix_tags}
+    vouching = [t for t in stem_tags if t["label"] in STEM_ROLES.get(t["stem"], ())
+                and (t["label"] not in STEM_NEEDS_MIX or t["label"] in in_mix)]
     best: dict[str, dict] = {}
-    for t in mix_tags + [t for t in stem_tags if t["label"] in STEM_ROLES.get(t["stem"], ())]:
+    for t in mix_tags + vouching:
         if t["label"] not in best or t["confidence"] > best[t["label"]]["confidence"]:
             best[t["label"]] = t
     return sorted(best.values(), key=lambda r: -r["confidence"])
