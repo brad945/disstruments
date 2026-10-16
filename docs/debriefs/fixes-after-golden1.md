@@ -357,3 +357,65 @@ R0 stays.
 - **Shipping R1 anyway would be choosing on test data after seeing it.** The bar stays as
   written. Whether a ~3-point recall cost is worth halving confident false voice is a
   product trade-off for Bradley (see below).
+
+### Golden-1 re-run: a dev-set number, not a test
+
+- **Run:** the shipped code (Fix 2 only) through the same in-process driver, real models,
+  25/25 jobs `done`, every stage `ok`.
+- **Provenance:** `cnn14+platt@b8a3369efc68+map@936f00e7`, leaf `v7sg@0a1df16e1827`.
+- **Label hash:** `8573c426904fab5b` before and after.
+- **Scoring:** the same scorer on the archived "before" reports and the new ones, with
+  cymbals unobserved on both. Outputs: `~/datasets/golden/eval/{reports_after,
+  dev_after/compare.json}`.
+
+| dev-set measure | before | after |
+|---|---|---|
+| organ recall (3 songs) | 0/3 | 0/3 |
+| voice shown on the 7 voiceless songs | 2 (both confident: *Whippy* 0.98, *Friday Night* 0.88, vocals stem) | 2 (0.98, 0.88) |
+| voice recall (18 songs) | 18/18 confident | 18/18 confident |
+| new percussion / brass / strings / harmonica / harpsichord labels shown | – | **none** (no new label reached 0.30 on any song) |
+| percussion family recall (20 songs) | 1/20 | 1/20 |
+| confident entries: hits / false alarms / unlabelled | 51 / 4 / 21 | 51 / 4 / 21 |
+| confident precision (cymbals unobserved) | 0.927 | 0.927 |
+
+The confident precision here is 51/55 rather than the addendum's 64/68 because "unobserved"
+also turns the 13 confident cymbal *hits* into unlabelled entries, not only the 8 false
+alarms. Both are the same 76 entries.
+
+**Nothing visible changed on golden-1.** That is what the gates predicted:
+- Fixes 1 and 3 shipped nothing.
+- Fix 2's labels can now be expressed, but their raw scores stay below 0.30, as on MoisesDB.
+
+The golden-1 problems (organ, percussion, voice on instrumentals) are still open.
+
+### What didn't go as planned, and caveats
+
+- **Two of three fixes failed their gates.** That is the gates doing their job: organ
+  ownership would have been chosen on golden-1 alone, and it doesn't replicate on 2
+  independent sets.
+- **OpenMIC's incumbent for non-stem labels came from the archived mix-only predictions**
+  (ogg decode, not the canonical transcode), as pre-registered. Platt is monotone, so AP is
+  unaffected; the decode path may move AP slightly.
+- **MoisesDB and OpenMIC test already shaped M5's routing** (disclosed above). They are
+  independent of golden-1, not of M5.
+- **Fix 2's "with-evidence" is an upper bound for percussion.** MoisesDB only says
+  "a-tonal percussion", not which kind. With 0 true shows, it didn't matter.
+- **Demucs on MPS isn't bit-reproducible** (vocals stem up to 0.30 raw on one window vs
+  M5's run). Each gate uses a single run for both sides, so pairs are consistent.
+
+### For Bradley (decisions, nothing decided here)
+
+1. **Organ.** Neither model is a usable organ detector on real multitracks: PANNs is under
+   threshold (recall@0.3 = 0.05 on MoisesDB), and ours is imprecise (12% precision at 0.3).
+   Options, each needing a new pre-registration:
+   - recalibrate PANNs organ on real non-test multitrack data (none is available locally
+     now);
+   - change the ownership rule to include the operating point (m5 story 4's lesson), and
+     test it on golden-2.
+2. **Voice on instrumentals.** R1 (the stem may only *raise* a voice the mix already shows)
+   halves confident false voice on OpenMIC (15% → 9%) at a ~2–3.4-point recall cost; the
+   pre-registered bar was 2. If you'd accept ~3 points, pre-register R1 with that bar and
+   judge it on golden-2. Don't decide it from these numbers alone.
+3. **New labels that never fire.** They are honest ("?") and harmless, but nearly silent.
+   Making them useful needs real calibration data for tambourine / shaker / brass / strings
+   that isn't a test set, e.g. a small labelled set of your own, disjoint from golden-2.
