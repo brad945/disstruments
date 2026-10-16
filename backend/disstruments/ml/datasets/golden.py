@@ -3,7 +3,9 @@ labelling page (`python -m disstruments.ml.golden page`) + local audio in `<root
 
 Per leaf: present -> positive (ancestor-closed); unsure -> that leaf unknown (its ancestors
 stay observed only through other evidence); absent -> negative *only if* the labeller
-confirmed `listened_fully`, otherwise every non-present leaf is unknown. Evaluation only.
+confirmed `listened_fully`, otherwise every non-present leaf is unknown. A non-leaf node
+("Electric guitar (type not sure)") marked present is positive with every subtype unknown,
+unless a subtype is also marked present. Evaluation only.
 """
 from __future__ import annotations
 
@@ -35,6 +37,10 @@ def load(root: Path | str, *, strict: bool = True, taxonomy: Taxonomy | None = N
         pos = frozenset(tax.close_upward(present))
         if d.get("listened_fully"):
             unknown = set(unsure)
+            # "Electric guitar (type not sure)": the instrument is known, its subtype is not.
+            for n in present + unsure:
+                if not tax.is_leaf(n) and not pos & set(tax.descendants(n)):
+                    unknown |= set(tax.descendants(n))
         else:                                   # only positives are trustworthy
             unknown = set(tax.leaves()) - set(present)
         # A node is unknown if it is an unknown leaf, or an ancestor whose status rests
