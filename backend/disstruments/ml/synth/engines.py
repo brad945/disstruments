@@ -277,6 +277,7 @@ class NotesEngine:
     name = "notes"
     MAX_SHIFT = 3
     RELEASE_S = 0.12
+    ONESHOT_MAX_S = 2.0
 
     def render(self, part, source, root, sr, duration, rng):
         part = _jitter_velocity(part, rng)
@@ -284,14 +285,19 @@ class NotesEngine:
         if not idx:
             raise FileNotFoundError(f"notes: no files for {source.instrument} under {source.file(root)}")
         pitches = sorted({p for p, _ in idx})
-        shift = fit_octaves([n.pitch for n in part.notes], pitches[0], pitches[-1])
+        # Percussion one-shots (v8): files are keyed by GM drum note; a note plays only its own
+        # key (no octave fit, no resampling) and rings out naturally instead of being cut at
+        # the MIDI note-off. Unmapped notes are skipped (counted).
+        oneshot = part.is_drum
+        shift = 0 if oneshot else fit_octaves([n.pitch for n in part.notes], pitches[0], pitches[-1])
+        max_shift = 0 if oneshot else self.MAX_SHIFT
         n_out = int(sr * duration)
         out = np.zeros(n_out, np.float32)
         skipped = 0
         for note in part.notes:
             want = note.pitch + shift
             have = min(pitches, key=lambda p: (abs(p - want), p))
-            if abs(have - want) > self.MAX_SHIFT:
+            if abs(have - want) > max_shift:
                 skipped += 1
                 continue
             vels = sorted(v for p, v in idx if p == have)
@@ -300,12 +306,13 @@ class NotesEngine:
             ratio = 2 ** ((want - have) / 12)                       # >1: play faster/higher
             step = ratio * fsr / sr                                 # source samples per output sample
             a = int(note.start * sr)
-            length = min(int((note.end - note.start + self.RELEASE_S) * sr), int((len(x) - 1) / step), n_out - a)
+            ring = self.ONESHOT_MAX_S if oneshot else note.end - note.start + self.RELEASE_S
+            length = min(int(ring * sr), int((len(x) - 1) / step), n_out - a)
             if length <= 0:
                 continue
             y = np.interp(np.arange(length) * step, np.arange(len(x)), x).astype(np.float32)
             rel = min(int(self.RELEASE_S * sr), length)
             y[-rel:] *= np.linspace(1, 0, rel, dtype=np.float32)
-            out[a:a + length] += y
+            out[a:a + length] += y * (note.velocity / 100 if oneshot else 1.0)
         return out, {"engine": "notes", "instrument": source.instrument, "octave_shift": shift // 12,
-                     "velocity_jitter": 12, "skipped_out_of_range": skipped}
+                     "velocity_jitter": 12, "skipped_out_of_range": skipped, "oneshot": oneshot}

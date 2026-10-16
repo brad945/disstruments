@@ -64,7 +64,9 @@ def registry_file(tmp_path):
 # ------------------------------------------------------------------- midi
 def test_roles_and_hints():
     assert M.role_of(33, False) == "bass" and M.role_of(0, True) == "drums"
-    assert M.role_of(48, False) is None                     # strings: dropped in v1
+    assert M.role_of(48, False) == "strings_section"        # v8 role ...
+    assert "strings_section" not in M.active_roles(V1)      # ... that a v1 build never parses
+    assert M.role_of(120, False) is None                    # guitar fret noise: no role at all
     assert M.PROGRAM_HINTS[29] == ("guitar.electric.distorted",)
 
 
@@ -83,10 +85,14 @@ def test_split_is_deterministic_and_proportional():
 
 
 def test_windows_keep_only_v1_roles(midi_root):
-    wins = M.load_windows(midi_root / "Band A" / "Song 1.mid", midi_root)
-    assert wins and all(p.role in M.ROLE_LEAVES for w in wins for p in w.parts)
+    v1_roles = M.active_roles(V1)
+    wins = M.load_windows(midi_root / "Band A" / "Song 1.mid", midi_root, roles=v1_roles)
+    assert wins and all(p.role in v1_roles for w in wins for p in w.parts)
     assert all(n.start >= 0 and n.end <= 10.0 for w in wins for p in w.parts for n in p.notes)
-    assert M.load_windows(midi_root / "Band D" / "NoRoles.mid", midi_root) == []
+    assert M.load_windows(midi_root / "Band D" / "NoRoles.mid", midi_root, roles=v1_roles) == []
+    # without a role filter the strings part is parsed (v8), with its own role
+    assert {p.role for w in M.load_windows(midi_root / "Band D" / "NoRoles.mid", midi_root)
+            for p in w.parts} == {"strings_section"}
 
 
 def test_assign_leaves_unique_per_clip_and_balanced(midi_root):
