@@ -765,9 +765,10 @@ sources:
     notes: "16 kHz single notes from ~1000 instruments; leaf labels by Bradley's listening (nsynth_label). Renders with NSynth need --bandlimit-p so bandwidth is not a source giveaway."
 
   # ================================================================== v8: new families
-  # Licences re-checked 2026-10-16 (VSCO-2 CE LICENSE/Readme: CC0, "use these samples for ANY
-  # purpose"; VCSL LICENSE: CC0; Iowa MIS page: "may be downloaded and used for any projects,
-  # without restrictions"). Every entry below except drum808_clap is `status: pending_approval`:
+  # Licences re-read 2026-10-16: VSCO-2 CE LICENSE file = CC0 1.0 (Readme: "use these samples
+  # for ANY purpose", credit requested, don't sell the samples themselves); VCSL LICENSE file
+  # (raw.githubusercontent, master) = CC0 1.0; Iowa MIS.html: "may be downloaded and used for
+  # any projects, without restrictions". Every entry below except drum808_clap is `status: pending_approval`:
   # NOT downloaded (Bradley approves sizes first; docs/debriefs/v8-plan.md). After download,
   # delete the status line; `sources --leaf-set v8` then counts it.
   - id: drum808_clap
@@ -786,78 +787,78 @@ sources:
   # existing checkout in sources/vsco2_ce. Sizes from the GitHub tree API (2026-10-16).
   - {id: vsco2_violin_solo, name: "VSCO-2 CE Solo Violin (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/SViolinVib.sfz,
      leaves: [strings.bowed.violin], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/SViolinVib.sfz", "/Strings/Solo Violin/"], bytes: 135500000}}
   - {id: vsco2_violin_section, name: "VSCO-2 CE Violin Section (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/ViolinEnsSusVib.sfz,
      leaves: [strings.bowed.section], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/ViolinEnsSusVib.sfz", "/Strings/Violin Section/"], bytes: 99400000}}
   - {id: vsco2_viola_section, name: "VSCO-2 CE Viola Section (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/ViolaEnsSusVib.sfz,
      leaves: [strings.bowed.section], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/ViolaEnsSusVib.sfz", "/Strings/Viola Section/"], bytes: 143100000}}
   - {id: vsco2_cello_section, name: "VSCO-2 CE Cello Section (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/CelloEnsSusVib.sfz,
      leaves: [strings.bowed.section], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/CelloEnsSusVib.sfz", "/Strings/Cello Section/"], bytes: 186100000},
      notes: "A cello SECTION: section leaf, not strings.bowed.cello (taxonomy: cello = solo)."}
   - {id: vsco2_harp, name: "VSCO-2 CE Harp", kind: sfz, engine: sfizz, path: vsco2_ce/Harp.sfz,
      leaves: [strings.plucked.harp], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Harp.sfz", "/Strings/Harp/"], bytes: 35300000}}
   - {id: vsco2_horn, name: "VSCO-2 CE French Horn (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/FHornSus.sfz,
      leaves: [brass.french_horn], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/FHornSus.sfz", "/Brass/F Horn/"], bytes: 84100000}}
   - {id: vsco2_trombone, name: "VSCO-2 CE Tenor Trombone (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/TromboneSus.sfz,
      leaves: [brass.trombone], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/TromboneSus.sfz", "/Brass/Tenor Trombone/"], bytes: 85600000}}
   - {id: vsco2_tuba, name: "VSCO-2 CE Tuba (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/TubaSus.sfz,
      leaves: [brass.tuba], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/TubaSus.sfz", "/Brass/Tuba/"], bytes: 40600000}}
   - {id: vsco2_flute, name: "VSCO-2 CE Flute (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/FluteSusVib.sfz,
      leaves: [woodwinds.flute], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/FluteSusVib.sfz", "/Woodwinds/Flute/"], bytes: 120500000}}
   - {id: vsco2_piccolo, name: "VSCO-2 CE Piccolo (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/PiccoloSus.sfz,
      leaves: [woodwinds.flute], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/PiccoloSus.sfz", "/Woodwinds/Piccolo/"], bytes: 12500000}}
   - {id: vsco2_oboe, name: "VSCO-2 CE Oboe (sustain, vibrato)", kind: sfz, engine: sfizz, path: vsco2_ce/OboeSusVib.sfz,
      leaves: [woodwinds.oboe], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/OboeSusVib.sfz", "/Woodwinds/Oboe/"], bytes: 66000000}}
   - {id: vsco2_clarinet, name: "VSCO-2 CE Clarinet (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/ClarinetSus.sfz,
      leaves: [woodwinds.clarinet], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/ClarinetSus.sfz", "/Woodwinds/Clarinet/"], bytes: 66100000}}
   - {id: vsco2_bassoon, name: "VSCO-2 CE Bassoon (sustain)", kind: sfz, engine: sfizz, path: vsco2_ce/BassoonSus.sfz,
      leaves: [woodwinds.bassoon], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/BassoonSus.sfz", "/Woodwinds/Bassoon/"], bytes: 69400000}}
   - {id: vsco2_glockenspiel, name: "VSCO-2 CE Glockenspiel", kind: sfz, engine: sfizz, path: vsco2_ce/Glockenspiel.sfz,
      leaves: [percussion.mallet.glockenspiel], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Glockenspiel.sfz", "/Percussion/Glock/"], bytes: 6400000}}
   - {id: vsco2_marimba, name: "VSCO-2 CE Marimba", kind: sfz, engine: sfizz, path: vsco2_ce/Marimba.sfz,
      leaves: [percussion.mallet.marimba], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Marimba.sfz", "/Percussion/Marimba/"], bytes: 11800000}}
   - {id: vsco2_xylophone, name: "VSCO-2 CE Xylophone", kind: sfz, engine: sfizz, path: vsco2_ce/Xylophone.sfz,
      leaves: [percussion.mallet.xylophone], status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/Xylophone.sfz", "/Percussion/Xylo/"], bytes: 4500000}}
   # GM-StylePerc.sfz is NOT the GM map (39 = snare roll, 69/70 = ratchets), so each leaf maps
   # only its own GM notes onto the sfz keys (keys read from the sfz text, 2026-10-16).
   - {id: vsco2_tambourine, name: "VSCO-2 CE Tambourine (GM-StylePerc)", kind: sfz, engine: sfizz, path: vsco2_ce/GM-StylePerc.sfz,
      leaves: [percussion.tambourine], note_map: {54: 54}, status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/GM-StylePerc.sfz", "/Percussion/*.wav"], bytes: 60000000}}
   - {id: vsco2_congas, name: "VSCO-2 CE Congas (quinto/conga/tumba, GM-StylePerc)", kind: sfz, engine: sfizz, path: vsco2_ce/GM-StylePerc.sfz,
      leaves: [percussion.hand_drums], note_map: {60: 60, 61: 61, 62: 62, 63: 63, 64: 65}, status: pending_approval, license: CC0-1.0,
-     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "",
+     license_url: "https://versilian-studios.com/vsco-community/", commercial_clean: true, attribution: "VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner (CC0; credit requested)",
      download: {url: "https://github.com/sgossner/VSCO-2-CE", ref: SFZ, sparse: ["/GM-StylePerc.sfz", "/Percussion/*.wav"], bytes: 60000000},
      notes: "GM bongos (60/61) play the quinto (high conga); 64 low conga -> tumba hit. The label is the hand_drums leaf, so bongo-vs-conga doesn't matter."}
 

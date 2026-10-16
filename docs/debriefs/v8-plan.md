@@ -250,8 +250,11 @@ min(85%, 1,000) rather than 85% alone.
 1. **Downloads**: approve VSCO-2 CE (~1.2 GB), Iowa v8 (~0.9-1.2 GB raw), VCSL (~0.45 GB)?
    NSynth strings/flute (~3.4 GB)? (Recommend: yes, yes, yes, and strings/flute only if
    viola/cello should be more than thin.)
-2. **Timbales** (GM 65/66): dropped, because they're played with sticks and the leaf says
-   "hand drums". You asked for them under hand drums; say so and it's a one-line change.
+2. **Timbales** (GM 65/66): dropped, a deviation from the brief ("bongo/conga/timbale").
+   Main reason: only FluidR3 has timbale samples (VCSL hand drums are written to keys 60-64,
+   the VSCO note map has no 65/66), so timbale notes inside `hand_drums` would be a
+   one-instrument shortcut within the leaf. Secondary: they're played with sticks, and the
+   leaf says "hand drums". Say so and it's a one-line change (`PERC_ROLE_NOTES`).
 3. **808 clap** as a claps instrument: synthetic, but it's the clap most pop records use.
    Keep, or real claps only (then claps needs VCSL + one more)?
 4. **Viola / cello** with 2 instruments: train them thin, wait for NSynth strings, or label

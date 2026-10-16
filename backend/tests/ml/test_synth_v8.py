@@ -272,6 +272,33 @@ def test_v8_build_renders_new_families_and_cymbals_stay_kit_only(tmp_path, tax):
     assert all(r.observed == frozenset(tax.nodes) for r in idx.records)
 
 
+def test_labelled_notes_without_files_are_never_picked(tmp_path, tax):
+    """An approved notes source whose instrument has no files (e.g. an NSynth instrument
+    labelled before its family is downloaded) doesn't count for the gate and is never
+    picked at render time (it would only lose the stem)."""
+    import soundfile as sf
+
+    from disstruments.ml.synth.engines import FakeEngine, NotesEngine
+    from disstruments.ml.synth.render import render_clip
+    notes = tmp_path / "src" / "notes"
+    notes.mkdir(parents=True)
+    sf.write(notes / "other-060-100.wav", np.zeros(1600, np.float32), 16000)
+    extra = [{"id": "ghost", "name": "g", "kind": "notes", "path": "notes", "instrument": "ghost",
+              "leaves": ["percussion.claps"], "license": "CC0-1.0", "commercial_clean": True,
+              "weight": 100.0},
+             _synth("clap_a", ["percussion.claps"])]
+    reg = load_registry(_save(tmp_path, _reg_doc(tmp_path, extra)), tax)
+    assert not reg.by_id("ghost").available(reg.root)
+    assert leaf_gate(reg, ["percussion.claps"])["percussion.claps"]["instruments"] == ["clap_a"]
+    part = M.Part(0, 0, True, "perc_claps", [M.Note(39, t, t + 0.05, 100) for t in np.arange(0, 9, 0.5)],
+                  leaf="percussion.claps")
+    w = M.Window("m", "a/b", "p", 0.0, 10.0, 120.0, [part])
+    eng = {"fake": FakeEngine(), "notes": NotesEngine()}
+    for seed in range(5):
+        lab = render_clip(w, reg, eng, seed=seed, out_dir=tmp_path / "o", sr=16000)
+        assert [s["source_id"] for s in lab["stems"]] == ["clap_a"] and not lab["failures"]
+
+
 # ------------------------------------------------------------------- notes engine: one-shots
 def test_notes_engine_plays_drum_one_shots_key_exact(tmp_path):
     import soundfile as sf

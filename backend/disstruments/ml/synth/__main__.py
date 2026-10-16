@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
                                       commercial_only=a.commercial_only)))
             return 0
         missing = [x.id for x in reg.sources if x.path and not x.status
-                   and not x.file(reg.root).exists()]
+                   and not x.available(reg.root)]      # notes: the instrument's files, not just the dir
         print(f"{len(reg.sources)} sources, root {reg.root}")
         for leaf in reg.v1_leaves:
             srcs = reg.for_leaf(leaf)
