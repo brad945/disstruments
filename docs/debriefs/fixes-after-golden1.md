@@ -290,7 +290,7 @@ a usable organ detector on real multitracks today.** A fix would be a different
 calibration or an operating-point rule. Either would need a new pre-registration and data
 that isn't a test set (see "For Bradley").
 
-### Fix 2: 12 of 13 labels kept, but they almost never fire. Shipped (`7a353e0`).
+### Fix 2: 12 of 13 labels kept, but they almost never fire. Shipped (`d45cac9`).
 
 MoisesDB, 720 windows, raw p95 on the mix, show = ≥ 0.30.
 
@@ -320,7 +320,7 @@ MoisesDB, 720 windows, raw p95 on the mix, show = ≥ 0.30.
 - **Scope:** every kept label names a node of the approved taxonomy v3 (F27), is shown as a
   detection (F7) with its own name (F33), and is always "?" (F15). Nothing needed a PRD
   amendment.
-- **Code (`7a353e0`):**
+- **Code (`d45cac9`):**
   - `tagging.EXTRA_AUDIOSET_MAP` / `EXTRA_LABEL_NODES` / `label_nodes()`;
   - `calibrated` is now per label (true only for labels the Platt fit covers);
   - every PANNs entry carries its node;
