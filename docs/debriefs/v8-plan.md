@@ -344,4 +344,105 @@ normalization), with 0 unmapped or out-of-range notes.
 
 ## Results
 
-(empty until run)
+> Run 2026-10-16 15:34-22:25 at `fe9ff6f`: `N_CLIPS=30000 SKIP_LSO=1 run_v8.sh`.
+> - **Render**: 30,000 clips (train 24,670 / val 2,742 / test 2,588), 54 silent stems.
+> - **Old-leaf guard**: passed (trumpet 1,123, tenor 709; nothing under the floor).
+> - **Training**: 40 epochs, best synthetic val mAP 0.807, 1.22M params.
+>
+> All numbers come from `preds/v8adopt/*.json`: paired artist bootstrap, 1,000 resamples,
+> seed 0, deltas are candidate − incumbent. Nothing was re-tuned after seeing them.
+
+### Verdict: ADOPTION RULE FAILED, v7sg stays served
+
+A1/A2 failed, so nothing was exported. The served model is byte-identical before and after:
+sha256 `0a1df16e…` (onnx) and `acb34374…` (json).
+
+| gate | test set | nodes | result | pass? |
+|---|---|---|---|---|
+| A1 no forgetting, overall | MoisesDB pooled | 21 | subset ΔmAP **−0.0227**, CI [−0.0412, +0.0090]; allowed −0.0119 (2% × incumbent 0.595) | **FAIL** |
+| A2 no forgetting, per node | MoisesDB pooled | 21 | `keys.synth.lead` Δ −0.159, CI [−0.301, −0.026], entirely below −0.01 | **FAIL** |
+| A3 clean vs distorted | IDMT-SMT-FX | 6 | ΔmAP **+0.073**, CI [+0.031, +0.096]; no node below the floor | pass |
+| A4 old coarse classes | OpenMIC test | 9 | ΔmAP **+0.013**, CI [−0.000, +0.025]; no node below the floor (organ −0.034, CI [−0.100, +0.029]) | pass |
+| B1 new families learned | OpenMIC test | 6 | vs v7sg **+0.351**, CI [+0.310, +0.387]; vs chance **+0.275**, CI [+0.243, +0.310] | pass |
+| B2 (report) | MoisesDB pooled, ≥ 3 artists | 5 | vs v7sg +0.064, CI [+0.002, +0.271]; vs chance +0.056, CI [+0.020, +0.265] | (reported) |
+| IDMT-Bass (report) | IDMT-SMT-Bass | 2 | ΔmAP +0.088, CI [+0.061, +0.120] (fingered +0.158) | (reported) |
+
+**What sank A1.**
+- Two nodes carry the whole shortfall:
+  - `woodwinds`: AP 0.649 → 0.334, Δ −0.315, CI [−0.446, +0.039]. Only 14 positives, from
+    **1 artist**.
+  - `keys.synth.lead`: AP 0.325 → 0.165.
+- Without `woodwinds`, the 20-node mean is −0.008, inside the tolerance. Without both, it is
+  −0.000.
+- Read as a diagnosis, not a re-scoring:
+  - On one artist's woodwind parts, v7sg's "everything reedy is tenor sax" scores ranked
+    better than v8's split across 9 woodwind leaves.
+  - Synth lead most likely lost ground to the new sustained timbres it now competes with
+    (harmonica, flute, oboe, bowed strings). This is unconfirmed: it needs synthetic val/LSO
+    confusion analysis, not test-set probing.
+- The rule was fixed before the run, and v8 fails it as written.
+
+**Other old nodes on MoisesDB** that moved without crossing the floor:
+- `guitar.electric.clean` −0.045, CI [−0.107, +0.008];
+- `drums.electronic` −0.054, CI [−0.113, +0.016];
+- `guitar.electric.distorted` +0.035, CI [+0.006, +0.073];
+- `drums` +0.013, CI [+0.002, +0.023].
+
+### New families on real music (vs chance = constant scores = prevalence AP)
+
+**OpenMIC test (B1 nodes).** Every node's AP beats chance, with the CI lower bound > 0. v7sg
+had never been trained on any of these nodes.
+
+| node | positives | AP | chance (prevalence) | normalized lift | AP − chance, 95% CI |
+|---|---|---|---|---|---|
+| strings.bowed.violin | 394 | **0.903** | 0.624 | 0.74 | [+0.219, +0.336] |
+| percussion.mallet | 211 | **0.794** | 0.441 | 0.63 | [+0.300, +0.408] |
+| strings.bowed.cello | 226 | **0.723** | 0.466 | 0.48 | [+0.199, +0.312] |
+| woodwinds.flute | 175 | **0.614** | 0.311 | 0.44 | [+0.193, +0.410] |
+| brass.trombone | 228 | **0.552** | 0.317 | 0.34 | [+0.165, +0.310] |
+| woodwinds.clarinet | 137 | **0.437** | 0.214 | 0.28 | [+0.162, +0.301] |
+
+All six clear the M5 routing bar (lift ≥ 0.1) on real data.
+
+**MoisesDB pooled (B2, ≥ 3 positive artists).** Detection is real but weak. AP is above
+chance, but absolute AP is low:
+
+| node | positives | AP | chance | AP − chance, CI |
+|---|---|---|---|---|
+| percussion | 104 | 0.203 | 0.164 | [+0.006, +0.149] |
+| percussion.mallet | 9 | 0.054 | 0.014 | [+0.001, +0.093] |
+| strings / strings.bowed | 23 | 0.101 | 0.032 | [+0.010, +0.346] |
+| strings.bowed.section | 17 | 0.088 | 0.024 | [+0.004, +0.493] |
+
+**No real test set scores these nodes**, so there is no real-music evidence for them:
+- viola, French horn, tuba, oboe, bassoon, harp, harmonica;
+- the 3 new sax subtypes;
+- the 4 mallet subtypes;
+- tambourine, shaker, claps, hand drums.
+
+They exist only in the 25-song golden set. The plan keeps that set report-only, and this
+round didn't score it.
+
+**Synthetic test** (seen sources; report only, not generalization): mAP 0.803. New-leaf AP:
+- above 0.9: section, harmonica, tambourine, shaker, claps, hand drums, glockenspiel, flute;
+- 0.6-0.9: violin, viola, cello, trombone, tuba, alto sax, oboe, vibraphone;
+- below 0.6: harp 0.37, horn 0.43, soprano 0.53, baritone 0.30, clarinet 0.23, bassoon 0.41,
+  marimba 0.36, xylophone 0.57.
+
+**Not run: LSO** (`SKIP_LSO=1`). There are no unseen-instrument numbers, so it is unknown
+whether the thin leaves (viola/cello with 2 instruments) learned the instrument or the
+sampler.
+
+### What this means
+
+- **v8 is a real advance on the new families**: six OpenMIC families, from nothing to strong.
+  It is also better on distorted/clean guitar and bass (IDMT).
+- **But it forgets** one artist's woodwinds and synth lead on MoisesDB beyond the pre-set
+  tolerance. By the rule, v7sg stays.
+- **Any fix is a new pre-registered round**, diagnosed on synthetic val/LSO only. Candidates:
+  - keep a coarse `woodwinds` output trained on all reeds;
+  - balance synth-lead data against the new sustained families;
+  - run the LSO model when disk allows.
+- **Artifacts** (all research-only, outside the repo): `preds/v8serve/scratch_cnn_synthetic_v8sg.pt`;
+  eval runs `eval_runs/20261017T0339*`; adoption JSONs `preds/v8adopt/`; render `v8serve/`
+  (about 10.5 GB) plus mels `emb/mels/synthetic_v8s_*`.
