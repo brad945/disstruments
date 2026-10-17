@@ -76,8 +76,11 @@ notes, in one export. See ML_ENGINEERING §10.
 
 ## Questions for Bradley
 
-1. Which DAW first: FL Studio (MIDI export, recommended, works everywhere) or MuseScore
-   (sheet music)?
+1. ~~Which DAW first?~~ **Answered 2026-10-17:** both. The interface should feel like
+   MuseScore: beginner-friendly, intuitive, clean and interactive. That's the top design
+   priority. Under the hood it keeps FL Studio-style power: MIDI export (piano roll) and
+   other DAW features. So F35 (MIDI) and F36 (MuseScore/notation) are both in scope, and
+   the UI is designed simplicity-first.
 2. "Vocal type": what do you want shown? E.g. male/female/range, singing vs rap vs spoken,
    falsetto. The male/female split was removed in taxonomy v2 pending this decision.
 3. Approve I1 now, or wait until the accuracy fixes and golden-2 are done?
