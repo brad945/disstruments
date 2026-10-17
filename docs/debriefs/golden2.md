@@ -61,3 +61,18 @@ against v7sg, with the same metrics, so we learn whether its new families (strin
 woodwinds, mallets, hand percussion) work on real full songs. This report cannot by itself
 promote v8; any later serving decision (e.g. using v8 only for nodes v7sg never learned)
 needs its own pre-registration and Bradley's approval.
+
+## Amendment 3 (2026-10-17, before any golden-2 labels exist): labeller slack
+
+Bradley (2026-10-17): he can easily confuse woodwinds and synths by ear, so if he marked
+one, he may have meant the other. Golden-2 therefore reports every Q1/Q2 number **twice**:
+- **strict** (primary, as above): his labels as written;
+- **lenient** (secondary): within each confusable pair below, a detection of either side
+  counts as a hit if he marked either side, and is not a false alarm. Lenient labels are
+  the union of the pair (positive if either is present; unknown if either is unsure).
+
+Confusable pairs, fixed now: woodwinds <-> keys.synth; brass <-> keys.synth;
+strings.bowed <-> keys.synth.pad; keys.organ <-> keys.synth. (Rhodes/Wurlitzer/FM and other
+same-family subtypes already have "type not sure".) The labelling page now also shows tips
+from golden-1 (skip cymbals; spoken word = talking; mark both unsure when torn).
+Golden-1 is not re-scored under these rules (it stays as reported).
