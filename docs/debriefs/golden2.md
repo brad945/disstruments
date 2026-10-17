@@ -51,3 +51,13 @@ the app at the commit that adds R1**, plus v8 only if v8 passes its own pre-regi
 adoption rule (`v8-plan.md`) and Bradley promotes it before golden-2 scoring starts.
 "Before" stays commit `4d24033`. The R1 comparison (voice false alarms on songs Bradley
 marks voiceless, and voice recall) is the primary Q1 item.
+
+## Amendment 2 (2026-10-17, before any golden-2 labels exist): v8 as report-only
+
+v8 failed its adoption rule (`v8-plan.md` Results: MoisesDB A1/A2 forgetting on woodwinds
+and synth lead; new families clearly learned on OpenMIC). It is **not** promoted, so it is
+not part of "after". Golden-2 will score v8 at model level **as a report-only comparison**
+against v7sg, with the same metrics, so we learn whether its new families (strings, brass,
+woodwinds, mallets, hand percussion) work on real full songs. This report cannot by itself
+promote v8; any later serving decision (e.g. using v8 only for nodes v7sg never learned)
+needs its own pre-registration and Bradley's approval.
