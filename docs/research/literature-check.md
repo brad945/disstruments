@@ -28,7 +28,10 @@ Citations marked (U) = not opened / venue unverified; confirm before citing.
 - Confounded: composition change (procedural vs Lakh) + dropped jRhodes3d (CC BY-NC) source. Synthetic tests overstate cost (0.14 on Lakh-composed test vs 0.02 real) — itself a nice finding.
 - AAM (Ostermann 2023) already offers algorithmically composed, freely licensed multitracks; cite as the procedural precedent.
 
-## AAM check (claim 1 novelty threat)
+## AAM check (claim 1 novelty threat) — RESOLVED 2026-10-18
+- Full text read (TU Dortmund repository copy: https://eldorado.tu-dortmund.de/handle/2003/42402). Instrument case study = 9 coarse groups, 6-fold CV **within AAM only**; RF vs CNN-Han/AlexNet/VGG16, balanced error. No real-music test, no foundation-model baseline; authors state AAM "will probably not generalize well". Verdict: not a threat to claim 1; cite as procedural-data precedent for claim 3. Follow-up EvoMUSART 2023 (Fricke, Vatolkin, Ostermann) still unread.
+
+### Original note
 - Crossref abstract: "3000 artificial music tracks ... real instrument samples ... algorithmic composition ... three case studies ... instrument recognition". Abstract does NOT state real-music evaluation; full text inaccessible (Springer auth wall). Follow-up: Fricke, Vatolkin, Ostermann, "Application of Neural Architecture Search to Instrument Recognition in Polyphonic Audio", EvoMUSART 2023, LNCS 13988 pp.117-131 (abstract unavailable). Must read both before submission.
 
 ## Coordinator correction (mid-task)
