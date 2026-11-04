@@ -64,7 +64,9 @@ def registry_file(tmp_path):
 # ------------------------------------------------------------------- midi
 def test_roles_and_hints():
     assert M.role_of(33, False) == "bass" and M.role_of(0, True) == "drums"
-    assert M.role_of(48, False) is None                     # strings: dropped in v1
+    assert M.role_of(48, False) == "strings_section"        # v8 role ...
+    assert "strings_section" not in M.active_roles(V1)      # ... that a v1 build never parses
+    assert M.role_of(120, False) is None                    # guitar fret noise: no role at all
     assert M.PROGRAM_HINTS[29] == ("guitar.electric.distorted",)
 
 
@@ -83,10 +85,14 @@ def test_split_is_deterministic_and_proportional():
 
 
 def test_windows_keep_only_v1_roles(midi_root):
-    wins = M.load_windows(midi_root / "Band A" / "Song 1.mid", midi_root)
-    assert wins and all(p.role in M.ROLE_LEAVES for w in wins for p in w.parts)
+    v1_roles = M.active_roles(V1)
+    wins = M.load_windows(midi_root / "Band A" / "Song 1.mid", midi_root, roles=v1_roles)
+    assert wins and all(p.role in v1_roles for w in wins for p in w.parts)
     assert all(n.start >= 0 and n.end <= 10.0 for w in wins for p in w.parts for n in p.notes)
-    assert M.load_windows(midi_root / "Band D" / "NoRoles.mid", midi_root) == []
+    assert M.load_windows(midi_root / "Band D" / "NoRoles.mid", midi_root, roles=v1_roles) == []
+    # without a role filter the strings part is parsed (v8), with its own role
+    assert {p.role for w in M.load_windows(midi_root / "Band D" / "NoRoles.mid", midi_root)
+            for p in w.parts} == {"strings_section"}
 
 
 def test_assign_leaves_unique_per_clip_and_balanced(midi_root):
@@ -390,3 +396,82 @@ def test_drive2_only_converts_distorted_parts(midi_root, tmp_path):
     assert driven and all(s["part_leaf"] == "guitar.electric.distorted" for s in driven)
     if any(s["part_leaf"] == "guitar.electric.clean" for s in stems):
         assert all(not s.get("drive") for s in stems if s["part_leaf"] == "guitar.electric.clean")
+
+
+# ------------------------------------------------------------------- note collections (M4 L3c)
+def _note_dir(root: Path, inst: str, pitches=range(40, 61, 2), vels=(50, 100), sr=16000):
+    import soundfile as sf
+    root.mkdir(parents=True, exist_ok=True)
+    t = np.arange(sr) / sr
+    for p in pitches:
+        for v in vels:
+            f = 440 * 2 ** ((p - 69) / 12)
+            sf.write(root / f"{inst}-{p:03d}-{v:03d}.wav", (v / 127 * 0.3 * np.sin(2 * np.pi * f * t)).astype(np.float32), sr)
+
+
+def test_expand_labels_weights_and_coarse(tmp_path, tax):
+    import yaml
+    labels = {"labels": {"g1": "guitar.acoustic.nylon", "g2": "guitar.acoustic.nylon",
+                         "g3": "guitar.acoustic", "g4": "skip"}}
+    (tmp_path / "lab.json").write_text(json.dumps(labels))
+    doc = {"version": 1, "root": str(tmp_path), "v1_leaves": [], "sources": [
+        {"id": "ns", "name": "n", "kind": "notes", "path": "notes", "license": "CC-BY-4.0",
+         "commercial_clean": True, "native_sr": 16000, "weight": 1.0,
+         "leaves": ["guitar.acoustic.nylon", "guitar.acoustic.steel"],
+         "expand_labels": str(tmp_path / "lab.json")}]}
+    p = tmp_path / "reg.yaml"
+    p.write_text(yaml.safe_dump(doc))
+    reg = load_registry(p, tax)
+    by = {s.id: s for s in reg.sources}
+    assert set(by) == {"ns:g1", "ns:g2", "ns:g3"}                       # skip dropped
+    assert by["ns:g1"].leaves == ("guitar.acoustic.nylon",) and by["ns:g1"].label_as is None
+    assert by["ns:g3"].leaves == ("guitar.acoustic.nylon", "guitar.acoustic.steel")
+    assert by["ns:g3"].label_as == "guitar.acoustic"                      # unsure -> coarse
+    assert abs(sum(s.weight for s in reg.for_leaf("guitar.acoustic.nylon")) - 1.0) < 1e-9
+    assert by["ns:g1"].instrument == "g1" and by["ns:g1"].native_sr == 16000
+    labels["labels"]["g5"] = "bass.upright"                                # outside the entry
+    (tmp_path / "lab.json").write_text(json.dumps(labels))
+    with pytest.raises(SourceError, match="covers none"):
+        load_registry(p, tax)
+
+
+def test_notes_engine_pitch_and_range(tmp_path):
+    from disstruments.ml.synth.engines import NotesEngine
+    from disstruments.ml.synth.midi import Note, Part
+    from disstruments.ml.synth.sources import Source
+    _note_dir(tmp_path / "notes", "inst")
+    src = Source(id="x", name="x", kind="notes", engine="notes", leaves=("keys.piano",),
+                 license="CC0-1.0", commercial_clean=True, path="notes", instrument="inst")
+    sr = 24000
+    part = Part(track_index=0, program=0, is_drum=False, gm_name="x", role="keys", leaf="keys.piano",
+                notes=[Note(pitch=45, velocity=100, start=0.1, end=0.6)])   # 45 not recorded: 44/46
+    y, meta = NotesEngine().render(part, src, tmp_path, sr, 1.0, np.random.default_rng(0))
+    seg = y[int(0.15 * sr):int(0.55 * sr)]
+    spec = np.abs(np.fft.rfft(seg))
+    f_peak = np.argmax(spec) * sr / len(seg)
+    assert abs(f_peak - 440 * 2 ** ((45 - 69) / 12)) < 5                  # resampled to exact pitch
+    assert np.abs(y[int(0.75 * sr):]).max() < 1e-6                        # cut after release
+    assert meta["skipped_out_of_range"] == 0
+
+
+def test_bandlimit_applies_only_when_asked(midi_root, registry_file, tmp_path):
+    from disstruments.ml.synth.build import build
+    out = tmp_path / "bl"
+    build(midi_root, out, 8, seed=3, sr=16000, registry_path=str(registry_file), fake=True, bandlimit_p=1.0)
+    stems = [s for f in (out / "clips").glob("*/labels.json") for s in json.loads(f.read_text())["stems"]]
+    assert stems and all(s["fx_chain"][0]["plugin"] == "LowpassFilter"
+                         and 7000 <= s["fx_chain"][0]["params"]["cutoff_frequency_hz"] <= 8000 for s in stems)
+    out0 = tmp_path / "bl0"
+    build(midi_root, out0, 8, seed=3, sr=16000, registry_path=str(registry_file), fake=True)
+    assert json.loads((out0 / "manifest.json").read_text())["bandlimit_p"] == 0.0
+
+
+def test_notes_prep_parsing_and_trim():
+    from disstruments.ml.synth.notes_prep import note_to_midi, parse_tokens, trim
+    assert note_to_midi("C4") == 60 and note_to_midi("A4") == 69 and note_to_midi("Bb3") == 58
+    assert parse_tokens("Bass.pizz.ff.sulA.C2.stereo") == ([36], 112)
+    assert parse_tokens("Guitar.pp.sulE.E2B2.stereo") == ([40, 47], 40)
+    assert parse_tokens("SopSax.vib.mf.Ab3.stereo") == ([56], 80)
+    y = np.concatenate([np.zeros(1000), np.ones(500), np.zeros(800)]).astype(np.float32)
+    t = trim(y, 44100, pre_s=0.0)
+    assert len(t) == 500

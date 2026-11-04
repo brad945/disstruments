@@ -87,7 +87,9 @@ table.songs tr:hover td { background: var(--panel-2); }
 
 /* lanes */
 .lane { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
-.lane .label { width: 130px; font-size: 12px; display: flex; justify-content: space-between; }
+.lane .label { width: 200px; flex-shrink: 0; font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
+.lane .label .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 600px) { .lane .label { width: 120px; } }
 .lane .conf { color: var(--muted); font-size: 11px; }
 .lane .track {
   position: relative; flex: 1; height: 22px;

@@ -14,7 +14,7 @@ def test_upload_analyze_report(client, wav_file):
     assert status == "done"
 
     report = client.get(f"/api/v1/songs/{body['song_id']}/analysis").json()
-    assert report["schema_version"] == 1
+    assert report["schema_version"] == 2
     assert report["global"]["key"]["value"]
     assert report["global"]["bpm"]["value"] > 0
     assert report["stems_status"] == "ok"
@@ -25,7 +25,22 @@ def test_upload_analyze_report(client, wav_file):
         assert tag["activations"], "every tag needs time regions"
     assert report["structure"]["status"] == "skipped"  # draft-2 slot, never guessed
     stages = {s["stage"] for s in report["provenance"]["stages"]}
-    assert {"transcode", "separation", "tagging_mix", "attributes"} <= stages
+    assert {"transcode", "separation", "tagging_mix", "tagging_leaf", "attributes"} <= stages
+
+    # M5 routing (fake leaf model): bass presence is ours, subtypes are flagged uncalibrated,
+    # one lane per family, and a family with no clear subtype falls back to "(subtype uncertain)".
+    by_label = {t["label"]: t for t in report["instruments"]}
+    for tag in report["instruments"]:
+        assert {"node", "model", "calibrated"} <= tag.keys()
+    assert "bass" not in by_label, "PANNs bass is replaced by the leaf model's presence"
+    assert by_label["Electric bass"]["model"] == "disstruments-cnn"
+    nylon = by_label["Nylon-string acoustic guitar"]
+    assert nylon["subtype"] and nylon["calibrated"] is False
+    assert all(t["stem"] == "mix" for t in report["instruments"] if t["model"] == "disstruments-cnn")
+    assert sum(1 for t in report["instruments"] if (t.get("node") or "").startswith("guitar")) == 1
+    assert "guitar" not in by_label
+    assert by_label["drums (subtype uncertain)"]["subtype_uncertain"]
+    assert report["provenance"]["leaf_model"]["sha256"] == "fake"
 
 
 def test_stem_download_owner_only(client, wav_file):
@@ -64,8 +79,44 @@ def test_rejects_garbage_file(client, tmp_path):
     assert r.status_code == 422
 
 
+def test_library_instrument_filter_matches_subtree(client):
+    # fake report has a nylon-guitar subtype (node guitar.acoustic.nylon) and "Electric bass"
+    assert client.get("/api/v1/songs", params={"instrument": "guitar"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "guitar.acoustic"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "bass"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "voice"}).json()
+    assert client.get("/api/v1/songs", params={"instrument": "banjo"}).json() == []
+
+
+def test_library_filter_finds_new_labels_by_label_and_family(client, wav_file):
+    """Rows hold the label when no node was attached (no leaf model, v1); a new label such as
+    "tambourine" must be found by its own name and by its taxonomy family."""
+    from disstruments.db import Analysis, Instrument, get_session
+    with get_session() as s:
+        a = s.query(Analysis).first()
+        s.add(Instrument(analysis_id=a.id, song_id=a.song_id, label="tambourine", confidence=0.4, stem="mix"))
+        s.commit()
+        sid = a.song_id
+    for q in ("tambourine", "percussion", "percussion.tambourine"):
+        assert sid in [r["id"] for r in client.get("/api/v1/songs", params={"instrument": q}).json()], q
+
+
 def test_library_filters(client):
     assert any(s["genres"] == ["indie rock", "pop"] or "indie rock" in s["genres"]
                for s in client.get("/api/v1/songs").json())
     hits = client.get("/api/v1/songs", params={"genre": "indie rock"}).json()
     assert len(hits) >= 1
+
+
+def test_job_work_dir_is_removed(client, wav_file):
+    import tempfile
+    from pathlib import Path
+    tmp = Path(tempfile.gettempdir())
+    before = set(tmp.glob("diss-job*"))                  # leftovers from older runs don't count
+    with open(wav_file, "rb") as f:
+        body = client.post("/api/v1/songs", files={"file": ("tone.wav", f, "audio/wav")}).json()
+    assert wait_job(client, body["job_id"]) == "done"
+    assert set(tmp.glob("diss-job*")) <= before
+    # stems were copied to storage first, so they still download
+    report = client.get(f"/api/v1/songs/{body['song_id']}/analysis").json()
+    assert client.get(f"/api/v1/songs/{body['song_id']}/stems/{report['stems'][0]['name']}").status_code == 200

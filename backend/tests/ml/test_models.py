@@ -72,6 +72,56 @@ def test_scratch_cnn_learns_toy_task():
     assert S.n_params(model) > 0 and len(hist) >= 1
 
 
+def test_scratch_init_state_starts_from_saved_weights():
+    """Triangle corner 3: fine-tuning starts from the given weights, not a random init."""
+    from disstruments.ml.models import scratch as S
+    rng = np.random.default_rng(0)
+    n, F, T = 160, 128, 64
+    X = rng.standard_normal((n, F, T)).astype(np.float16) * 0.1
+    Y = np.zeros((n, 2), bool)
+    Y[: n // 2, 0] = True
+    X[: n // 2, 20:30, :] += 2.0
+    Y[:, 1] = ~Y[:, 0]
+    M = np.ones_like(Y)
+    quiet = dict(device="cpu", log=lambda *_: None)
+    cfg = S.ScratchConfig(epochs=6, batch_size=32, crop_frames=48, channels=(8, 16), patience=6)
+    base, _ = S.train(X[::2], Y[::2], M[::2], X[1::2], Y[1::2], M[1::2], cfg, **quiet)
+    init = {k: t.detach().clone() for k, t in base.state_dict().items()}
+    ft_cfg = S.ScratchConfig(epochs=1, batch_size=32, crop_frames=48, channels=(8, 16), lr=1e-9, seed=7)
+    ft, _ = S.train(X[::2], Y[::2], M[::2], X[1::2], Y[1::2], M[1::2], ft_cfg, init_state=init, **quiet)
+    w0 = next(k for k in init if k.endswith("weight") and init[k].dim() == 4)
+    assert np.allclose(ft.state_dict()[w0].cpu().numpy(), init[w0].numpy(), atol=1e-6)
+    s = S.predict(ft, X[1::2], "cpu")
+    yv = Y[1::2, 0]
+    assert s[yv, 0].min() > s[~yv, 0].max()            # kept what the base model learned
+
+
+def test_probe_load_init_keeps_head_and_normalisation(tmp_path):
+    """Triangle corner 3 for the probe: start from a saved probe and keep its input
+    scaling (keep_norm), so a near-zero-LR fine-tune predicts like the original."""
+    rng = np.random.default_rng(2)
+    n, L, D, K = 400, 3, 8, 2
+    X = rng.standard_normal((n, L, D)).astype(np.float32) * 3 + 1
+    Y = np.stack([X[:, 1, 0] > 1, X[:, 1, 1] > 1], 1)
+    M = np.ones_like(Y)
+    p = LinearProbe(L, D, K, ProbeConfig(epochs=40, patience=20)).fit(X[:300], Y[:300], M[:300],
+                                                                   X[300:], Y[300:], M[300:])
+    p.save(tmp_path / "p.pt")
+    Xs = X[:300] * 0.5                                # different stats: must not re-normalise
+    q = LinearProbe(L, D, K, ProbeConfig(epochs=1, lr=1e-9, seed=5)).load_init(tmp_path / "p.pt")
+    q.fit(Xs, Y[:300], M[:300], X[300:], Y[300:], M[300:], keep_norm=True)
+    assert torch.allclose(q.mu, p.mu) and torch.allclose(q.sd, p.sd)
+    assert np.allclose(q.predict(X[300:]), p.predict(X[300:]), atol=1e-4)
+
+
+def test_limit_is_nested_and_deterministic():
+    from disstruments.ml.models.__main__ import _limit
+    recs = list(range(100))
+    small, big = _limit(recs, 10), _limit(recs, 40)
+    assert len(small) == 10 and len(big) == 40 and set(small) <= set(big)
+    assert _limit(recs, 10) == small and _limit(recs, None) == recs and _limit(recs, 500) == recs
+
+
 def test_temperature_scaling_fixes_overconfidence_and_keeps_ranking():
     from disstruments.ml.models.calibrate import apply_temperatures, fit_temperatures
     rng = np.random.default_rng(0)

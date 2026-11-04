@@ -23,6 +23,7 @@ audio{width:100%;margin-top:8px}
 .sticky{position:sticky;top:0;z-index:2;background:var(--bg);padding-top:6px}
 .summary span{display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:999px;font-size:12px}
 .summary .p{background:#173826;color:#8ee3b4}.summary .u{background:#3a2f12;color:#f0cf7a}
+.song{display:block;width:100%;text-align:left;background:#0f1114;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 10px;margin:3px 0;cursor:pointer;font-size:13px}.song:hover{border-color:#555}.song.cur{border-color:var(--accent)}.song .st{float:right;font-size:12px;color:var(--muted)}.song .st.ok{color:var(--present)}
 code{background:#0f1114;padding:1px 5px;border-radius:4px}
 </style></head><body><div class="wrap">
 <h1>Golden set labeller</h1>
@@ -32,18 +33,34 @@ Taxonomy __TAXVER__. Nothing leaves your computer.</div>
 <div class="panel">
  <b>How to:</b>
  <ol class="muted" style="margin:6px 0 0 18px;padding:0">
-  <li>Copy the song file into <code>~/datasets/golden/audio/</code> and pick it here.</li>
-  <li>Mark each instrument you hear as <b>present</b>, or <b>unsure</b> if you can't tell
-   (e.g. Rhodes vs Wurlitzer). Everything else counts as <b>absent</b>.</li>
+  <li>Click a song in the list (or copy a file into <code>~/datasets/golden/audio/</code> and pick it).
+   Play the whole song.</li>
+  <li>Mark each instrument you hear as <b>present</b>. Sure it's there but not which type?
+   Mark the "(type not sure)" row instead. Think you heard it? <b>unsure</b>.
+   Everything else counts as <b>absent</b>.</li>
   <li>Optional: while it plays, press <b>⏱</b> on a present instrument to mark when it
    starts, and again when it stops.</li>
   <li>Tick "listened to the whole song", then <b>Save</b>. Move the downloaded
    <code>.labels.json</code> into <code>~/datasets/golden/labels/</code>, or tell Claude
    and it will collect it.</li>
  </ol>
+ <b style="display:block;margin-top:10px">Tips (learned from golden set 1):</b>
+ <ul class="muted" style="margin:6px 0 0 18px;padding:0">
+  <li><b>Skip cymbals</b>: they're not scored (a drum kit already includes them).</li>
+  <li><b>Spoken word</b> = talking or narration only. Sung vocals = "Singing"; rapping = "Rap".</li>
+  <li>Can't tell a woodwind (sax, flute, clarinet) from a synth, or similar? Mark <b>both unsure</b>
+   instead of picking one.</li>
+  <li>Always tick "I listened to the whole song" when you did.</li>
+ </ul>
+</div>
+
+<div class="panel" id="songs" style="display:none">
+ <b>Songs</b> <span class="muted" id="prog"></span>
+ <div id="songlist" style="margin-top:8px"></div>
 </div>
 
 <div class="panel">
+ <div class="muted" id="now">Pick a song above, or choose a file:</div>
  <input type="file" id="file" accept="audio/*">
  <audio id="au" controls></audio>
  <div class="row" style="margin-top:8px">
@@ -67,6 +84,26 @@ Taxonomy __TAXVER__. Nothing leaves your computer.</div>
 </div>
 <script>
 const LEAVES = /*__LEAVES__*/[];
+const SONGS = /*__SONGS__*/[];
+function savedKey(f){ return "golden:saved:" + f; }
+function isSaved(f){ try{ return !!localStorage.getItem(savedKey(f)) }catch(e){ return false } }
+function hasDraft(f){ try{ return !!localStorage.getItem("golden:" + f) }catch(e){ return false } }
+function renderSongs(){
+  if (!SONGS.length) return; $("songs").style.display = "";
+  const L = $("songlist"); L.innerHTML = ""; let done = 0;
+  SONGS.forEach((s, i) => { const ok = isSaved(s.file); done += ok;
+    const b = document.createElement("button"); b.className = "song" + (s.file===fileName ? " cur" : "");
+    b.innerHTML = `${i+1}. ${s.artist} – ${s.title}<span class="st ${ok?"ok":""}">${ok ? "✓ saved" : hasDraft(s.file) ? "in progress" : ""}</span>`;
+    b.onclick = () => loadSong(i); L.appendChild(b); });
+  $("prog").textContent = `${done} / ${SONGS.length} saved`;
+}
+function loadSong(i){ const s = SONGS[i]; fileName = s.file;
+  const au = $("au"); au.src = "audio/" + encodeURIComponent(s.file);
+  au.onerror = () => { $("msg").textContent = ""; $("now").textContent = "Can't find audio/" + s.file + " (tell Claude)"; };
+  $("now").textContent = `Now labelling ${i+1} of ${SONGS.length}: ${s.artist} – ${s.title}`;
+  $("artist").value = s.artist; $("title").value = s.title; $("genre").value = s.genre || ""; $("notes").value = "";
+  $("full").checked = false; $("msg").textContent = "";
+  for (const k in state) delete state[k]; recording = {}; loadDraft(); render(); renderSongs(); window.scrollTo(0, 0); }
 const state = {}; let fileName = "", recording = {};
 const $ = id => document.getElementById(id);
 const fmt = t => (Math.floor(t/60)) + ":" + String(Math.round(t%60)).padStart(2,"0");
@@ -114,6 +151,11 @@ $("save").onclick = () => {
   const blob = new Blob([JSON.stringify(doc,null,1)], {type:"application/json"}); const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = (doc.artist? doc.artist+" - " : "") + (doc.title||fileName) + ".labels.json"; a.click();
   $("msg").textContent = "saved: " + a.download + (doc.listened_fully ? "" : " (not marked as fully listened: unmarked instruments will count as unknown)");
+  try{ localStorage.setItem(savedKey(fileName), doc.labelled_at) }catch(e){}
+  renderSongs();
+  const i = SONGS.findIndex(s => s.file === fileName);
+  if (i >= 0 && i + 1 < SONGS.length){ const nb = document.createElement("button"); nb.className = "btn"; nb.style.marginLeft = "8px";
+    nb.textContent = "Next song →"; nb.onclick = () => loadSong(i + 1); $("msg").appendChild(nb); }
 };
-render();
+render(); renderSongs();
 </script></body></html>

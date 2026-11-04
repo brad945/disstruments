@@ -40,8 +40,21 @@ ML track, in order (milestones in ML_ENGINEERING.md §8):
    - a from-scratch 1.2M CNN ties frozen and LoRA MERT on real OpenMIC (coarse classes);
    - calibration = one global temperature fit on real held-out data;
    - 10x more synthetic data doesn't move real-music scores, so M4 = diversity.
-4. M4–M5: domain-gap work (source and production diversity, separation-artifact
-   augmentation, real co-training), then ONNX serving
+4. M4 (`docs/debriefs/m4.md`, branch `m4` pushed): domain-gap work; NSynth/Iowa v7 nearly
+   doubles unseen nylon/steel; real MoisesDB ties MERT.
+5. M5 built (branch `m5`, `docs/debriefs/m5.md`): our CNN served via ONNX (stage
+   `tagging_leaf`, schema v2) next to PANNs.
+   - PANNs decides presence for all instruments; ours names one subtype per instrument
+     (relative descent rule). Bass presence went back to PANNs: it tied once PANNs was
+     calibrated and used the bass stem.
+   - The model lives at `~/.disstruments/models/leaf` (research-only, `make leaf-model`).
+   - PANNs is now Platt-calibrated per class (`pipeline/panns_calibration.json`, fit on
+     OpenMIC train). A Demucs stem vouches only for its own instrument
+     (`tagging.STEM_ROLES`).
+   - Served model `v7sg` = v7s + ±12 dB gain augmentation (MoisesDB leaf mAP 0.41 →
+     0.49); mono upmix −3 dB fixed.
+   - Licence-clean path: `ml/synth/procedural.py` (owned MIDI) + `--commercial-only`
+     renders; the procedural-vs-Lakh ablation is in the debrief.
 
 Deferred to draft 3: structure (F9), chords (F10), MIDI export (F11), genre profiles (F19).
 

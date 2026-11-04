@@ -1,4 +1,4 @@
-"""CLI: python -m disstruments.ml.synth {sources,build}."""
+"""CLI: python -m disstruments.ml.synth {sources,build,procedural,audition}."""
 from __future__ import annotations
 
 import argparse
@@ -16,6 +16,12 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("sources", help="validate sources.yaml and print leaf coverage")
     s.add_argument("--registry")
     s.add_argument("--sources-root")
+    s.add_argument("--leaf-set", default="v1", choices=("v1", "v8"),
+                   help="v8: also print the per-leaf distinct-instrument gate for the new leaves")
+    s.add_argument("--min-instruments", type=int, default=2)
+    s.add_argument("--commercial-only", action="store_true")
+    s.add_argument("--print-holdout", action="store_true",
+                   help="print only the v8 leave-source-out pairs (SOURCE:LEAF), for build --holdout")
     b = sub.add_parser("build", help="render a synthetic dataset")
     b.add_argument("--midi-root", required=True, type=Path)
     b.add_argument("--out", required=True, type=Path)
@@ -31,6 +37,9 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--windows-per-file", type=int, default=2)
     b.add_argument("--fx-profile", default="v1", choices=("v1", "v2", "drive", "drive2"),
                    help="drive: v1 + random drive amount on clean electric guitars, labelled by measured distortion; drive2: same, distorted parts only")
+    b.add_argument("--bandlimit-p", type=float, default=0.0,
+                   help="share of full-band stems low-passed to 7-8 kHz, so band-limited sources "
+                        "(NSynth, 16 kHz) aren't identifiable by bandwidth alone")
     b.add_argument("--patch-profile", default="v1", choices=("v1", "v2"),
                    help="synth recipe family width (v2: many oscillator/filter engines)")
     b.add_argument("--holdout", nargs="*", default=[], metavar="SOURCE:LEAF",
@@ -38,36 +47,70 @@ def main(argv: list[str] | None = None) -> int:
                         "re-rendered with them as split 'test_lso'")
     b.add_argument("--stem-fraction", type=float, default=1.0,
                    help="save stem audio for this fraction of clips (labels always complete)")
+    b.add_argument("--leaf-set", default="v1", choices=("v1", "v8"),
+                   help="v1: the original 20 leaves; v8: + new families with >= --min-instruments "
+                        "distinct instruments on disk (manifest records the gate)")
+    b.add_argument("--min-instruments", type=int, default=2)
+    pr = sub.add_parser("procedural", help="write licence-clean procedural MIDI songs (PRD A2)")
+    pr.add_argument("--out", required=True, type=Path)
+    pr.add_argument("--n-songs", type=int, default=3000)
+    pr.add_argument("--seed", type=int, default=0)
     au = sub.add_parser("audition", help="dry examples per source -> local HTML listening page")
     au.add_argument("--midi-root", required=True, type=Path)
     au.add_argument("--out", required=True, type=Path)
     au.add_argument("--n", type=int, default=3)
     a = p.parse_args(argv)
+    if a.cmd == "procedural":
+        from .procedural import generate
+        print(generate(a.out, a.n_songs, seed=a.seed))
+        return 0
     if a.cmd == "audition":
         from .audition import build_audition
         print(build_audition(a.midi_root, a.out, n=a.n))
         return 0
     if a.cmd == "sources":
         reg = load_registry(a.registry, root=a.sources_root)
-        missing = [x.id for x in reg.sources if x.path and not x.file(reg.root).exists()]
+        if a.print_holdout:
+            from .sources import v8_holdout
+            print(" ".join(v8_holdout(reg, min_instruments=a.min_instruments,
+                                      commercial_only=a.commercial_only)))
+            return 0
+        missing = [x.id for x in reg.sources if x.path and not x.status
+                   and not x.available(reg.root)]      # notes: the instrument's files, not just the dir
         print(f"{len(reg.sources)} sources, root {reg.root}")
         for leaf in reg.v1_leaves:
             srcs = reg.for_leaf(leaf)
             clean = sum(x.commercial_clean for x in srcs)
             print(f"  {leaf:32s} {len(srcs)} sources ({clean} commercial-clean): "
                   + ", ".join(x.id for x in srcs))
+        if a.leaf_set == "v8":
+            from .sources import leaf_gate
+            gate = leaf_gate(reg, reg.v8_leaves, min_instruments=a.min_instruments,
+                             commercial_only=a.commercial_only)
+            print(f"\nv8 leaf gate (>= {a.min_instruments} distinct instruments on disk, exact labels):")
+            for leaf, g in gate.items():
+                flag = "TRAINABLE" if g["trainable"] else "not trainable fairly yet"
+                print(f"  {leaf:32s} {len(g['instruments'])} on disk, {len(g['pending'])} pending  {flag}")
+                print(f"      on disk: {', '.join(g['instruments']) or '-'}")
+                if g["pending"]:
+                    print(f"      pending: {', '.join(g['pending'])}")
         print("licences:", dict(Counter(x.license for x in reg.sources)))
+        pending = [x.id for x in reg.sources if x.status]
+        if pending:
+            print(f"pending approval ({len(pending)}):", ", ".join(pending))
         if missing:
             print("MISSING FILES:", missing)
             return 1
         return 0
     from .build import build
-    m = build(a.midi_root, a.out, a.n_clips, seed=a.seed, sr=a.sr, workers=a.workers,
+    m = build(a.midi_root, a.out, a.n_clips, seed=a.seed, sr=a.sr, workers=a.workers, bandlimit_p=a.bandlimit_p,
               registry_path=a.registry, sources_root=a.sources_root,
               commercial_only=a.commercial_only, fake=a.fake, limit_files=a.limit_files,
               windows_per_file=a.windows_per_file, stem_fraction=a.stem_fraction,
-              fx_profile=a.fx_profile, holdout=a.holdout, patch_profile=a.patch_profile)
-    print(json.dumps({k: m[k] for k in ("n_rendered", "splits", "timing_s", "stem_failures")}, indent=1))
+              fx_profile=a.fx_profile, holdout=a.holdout, patch_profile=a.patch_profile,
+              leaf_set=a.leaf_set, min_instruments=a.min_instruments)
+    print(json.dumps({k: m[k] for k in ("n_rendered", "splits", "timing_s", "stem_failures",
+                                        "active_leaves")}, indent=1))
     return 0
 
 

@@ -36,3 +36,23 @@ def test_loader_semantics(tmp_path):
     assert "bass.electric.fingered" in b.positive and "bass" in b.observed
     assert "guitar.electric.clean" not in b.observed                # not fully listened -> unknown
     assert "mix" in a.audio and a.split == "test"
+
+
+def test_parent_present_type_not_sure(tmp_path):
+    _write(tmp_path, "c", audio_filename="c.mp3", artist="Band", title="Three", listened_fully=True,
+           labels={"guitar.electric": {"state": "present", "intervals": []},
+                   "keys.organ": {"state": "present", "intervals": []},
+                   "keys.organ.drawbar": {"state": "present", "intervals": []}})
+    r = load_dataset("golden", tmp_path).records[0]
+    assert {"guitar", "guitar.electric"} <= r.positive
+    assert "guitar.electric.clean" not in r.observed and "guitar.electric.distorted" not in r.observed
+    assert "guitar.acoustic.nylon" in r.negative                    # other branches still absent
+    assert "keys.organ.pipe" in r.negative                          # subtype named -> siblings absent
+    html = build_page(tmp_path / "page").read_text()
+    assert "Electric guitar (type not sure)" in html
+
+
+def test_page_embeds_song_list(tmp_path):
+    (tmp_path / "songs.json").write_text(json.dumps([{"file": "A - B.mp3", "artist": "A", "title": "B", "genre": "rock"}]))
+    html = build_page(tmp_path).read_text()
+    assert "/*__SONGS__*/" not in html and '"file": "A - B.mp3"' in html

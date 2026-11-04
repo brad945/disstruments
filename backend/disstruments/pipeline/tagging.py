@@ -1,12 +1,16 @@
 """Stages B/A1 (F7): instrument tagging with per-second activations.
 
 Real path: PANNs sound-event detection (AudioSet, framewise) with AudioSet-label →
-instrument-taxonomy mapping. Taxonomy = OpenMIC-20 (PRD F7). Confidence and
-activation intervals propagate to the report (F15 honesty rule).
+instrument-taxonomy mapping. Labels = OpenMIC-20 (PRD F7) plus a few AudioSet classes
+that name other taxonomy nodes (F27; `EXTRA_LABEL_NODES`). Confidence and activation
+intervals propagate to the report (F15 honesty rule): a label is `calibrated` only if the
+Platt fit covers it.
 """
 from __future__ import annotations
 
 import hashlib
+import json
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +35,45 @@ AUDIOSET_MAP = {
     "Singing": "voice", "Female singing": "voice", "Male singing": "voice",
     "Choir": "voice", "Speech": "voice",
 }
+# Fix 2 after golden-1 (docs/debriefs/fixes-after-golden1.md): AudioSet classes the app
+# used to ignore, each a new label naming a taxonomy node. There is no clean real data to
+# calibrate them on (OpenMIC lacks them; MoisesDB/MedleyDB are test-only), so they stay
+# raw and `calibrated: false`, which the UI always shows as "?". Only labels that passed
+# the pre-registered MoisesDB false-alarm bar are here: AudioSet "Percussion" failed it
+# (it fired on 2.6% of percussion-free windows, mostly drum kits) and is left out. Classes
+# that would feed an existing (calibrated) label, e.g. Electronic organ or Vibraphone, are
+# left out on purpose: they would change the input its Platt fit was made on.
+EXTRA_AUDIOSET_MAP = {
+    "Tambourine": "tambourine", "Maraca": "shaker", "Rattle (instrument)": "shaker",
+    "Clapping": "claps", "Tabla": "hand_drums", "Cowbell": "cowbell",
+    "Brass instrument": "brass", "French horn": "french_horn",
+    "String section": "string_section", "Bowed string instrument": "bowed_strings",
+    "Harp": "harp", "Harmonica": "harmonica", "Harpsichord": "harpsichord",
+}
+EXTRA_LABEL_NODES = {
+    "tambourine": "percussion.tambourine", "shaker": "percussion.shaker",
+    "claps": "percussion.claps", "hand_drums": "percussion.hand_drums",
+    "cowbell": "percussion",
+    "brass": "brass", "french_horn": "brass.french_horn",
+    "string_section": "strings.bowed.section", "bowed_strings": "strings.bowed",
+    "harp": "strings.plucked.harp", "harmonica": "woodwinds.harmonica",
+    "harpsichord": "keys.harpsichord",
+}
+AUDIOSET_MAP = {**AUDIOSET_MAP, **EXTRA_AUDIOSET_MAP}
+MAP_SHA = hashlib.sha256(json.dumps(AUDIOSET_MAP, sort_keys=True).encode()).hexdigest()
+
+
+@lru_cache(maxsize=1)
+def label_nodes() -> dict[str, str]:
+    """Every label this stage can emit -> its taxonomy node (OpenMIC-20 via mappings.yaml,
+    the rest from `EXTRA_LABEL_NODES`)."""
+    from ..ml.datasets.openmic import class_to_node
+    return {**class_to_node(), **EXTRA_LABEL_NODES}
+
+# M5: per-class Platt scaling fit on OpenMIC train (`panns-calibrate`). Applied framewise
+# in `tag()`, so confidences *and* activation regions use calibrated probabilities.
+CALIBRATION_PATH = Path(__file__).with_name("panns_calibration.json")
+_calib: dict | None = None
 
 _sed = None  # lazy singleton (model load is slow)
 _sed_device = "cpu"
@@ -80,19 +123,13 @@ def _probs_to_intervals(probs: np.ndarray, hop_s: float, enter: float, exit_: fl
     return intervals
 
 
-def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
-    """-> [{label, confidence, stem, activations}] sorted by confidence desc."""
-    if settings.fake_ml:
-        return _fake_tag(audio_path, source_stem)
-
-    import librosa
+def panns_framewise(y: np.ndarray) -> tuple[dict[str, np.ndarray], float]:
+    """32 kHz mono audio -> ({label: framewise prob}, hop seconds); a label's prob is the
+    max over its AudioSet classes."""
     from panns_inference.config import labels as audioset_labels
 
-    y, _ = librosa.load(audio_path, sr=32000, mono=True)
-    sed = _get_sed()
-    framewise = sed.inference(y[None, :])[0]  # (frames, 527); ~0.32 s hop (10ms*32)
+    framewise = _get_sed().inference(y[None, :])[0]  # (frames, 527); ~0.32 s hop (10ms*32)
     hop_s = (len(y) / 32000) / framewise.shape[0]
-
     per_label: dict[str, np.ndarray] = {}
     for idx, as_name in enumerate(audioset_labels):
         ours = AUDIOSET_MAP.get(as_name)
@@ -100,6 +137,72 @@ def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
             continue
         col = framewise[:, idx]
         per_label[ours] = np.maximum(per_label[ours], col) if ours in per_label else col
+    return per_label, hop_s
+
+
+def calibration() -> dict | None:
+    """The fitted Platt parameters, or None (calibration off or not fitted yet)."""
+    global _calib
+    if settings.fake_ml or not settings.panns_calibrated or not CALIBRATION_PATH.exists():
+        return None
+    if _calib is None:
+        raw = CALIBRATION_PATH.read_bytes()
+        _calib = json.loads(raw) | {"sha256": hashlib.sha256(raw).hexdigest()}
+    return _calib
+
+
+def version() -> str:
+    """Stage version for provenance (F13): which scores the report's PANNs tags are, and
+    which AudioSet -> label map made them."""
+    c = calibration()
+    return (f"cnn14+platt@{c['sha256'][:12]}" if c else "cnn14") + f"+map@{MAP_SHA[:8]}"
+
+
+def calibrate(per_label: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    from ..ml.models.calibrate import apply_platt
+    c = calibration()
+    if c is None:
+        return per_label
+    return {k: apply_platt(v, c["classes"][k]["a"], c["classes"][k]["b"]) if k in c["classes"] else v
+            for k, v in per_label.items()}
+
+
+# A Demucs stem may vouch only for the instrument it was separated *for*. The residual
+# "other" stem (and off-role labels on any stem) invent instruments once scores are
+# calibrated: on pooled MoisesDB, max over mix + all stems showed 2238 false detections at
+# 0.3 vs 471 with this rule, at the same voice/drums/bass recall (M5 debrief, story 8).
+STEM_ROLES = {"vocals": {"voice"}, "drums": {"drums", "cymbals"}, "bass": {"bass"}}
+# R1 (docs/debriefs/fixes-after-golden1.md; Bradley chose it 2026-10-16): separation bleed
+# makes the vocals stem non-silent on instrumentals, so the stem may only *raise* a voice
+# the mix already shows (>= the show threshold); it can't create one on its own.
+STEM_NEEDS_MIX = {"voice"}
+
+
+def combine(mix_tags: list[dict], stem_tags: list[dict]) -> list[dict]:
+    """Per label, the most confident of the mix entry and its dedicated stem's entry (which
+    also says *where* it was heard)."""
+    in_mix = {t["label"] for t in mix_tags}
+    vouching = [t for t in stem_tags if t["label"] in STEM_ROLES.get(t["stem"], ())
+                and (t["label"] not in STEM_NEEDS_MIX or t["label"] in in_mix)]
+    best: dict[str, dict] = {}
+    for t in mix_tags + vouching:
+        if t["label"] not in best or t["confidence"] > best[t["label"]]["confidence"]:
+            best[t["label"]] = t
+    return sorted(best.values(), key=lambda r: -r["confidence"])
+
+
+def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
+    """-> [{label, node, confidence, stem, activations, calibrated}] sorted by confidence desc."""
+    if settings.fake_ml:
+        return _fake_tag(audio_path, source_stem)
+
+    import librosa
+
+    y, _ = librosa.load(audio_path, sr=32000, mono=True)
+    per_label, hop_s = panns_framewise(y)
+    per_label = calibrate(per_label)
+    c = calibration()
+    fitted = set(c["classes"]) if c else set()
 
     results = []
     show = settings.tag_threshold_show
@@ -109,9 +212,12 @@ def tag(audio_path: Path, source_stem: str = "mix") -> list[dict]:
             continue
         results.append({
             "label": label,
+            "node": label_nodes().get(label),
             "confidence": round(conf, 3),
             "stem": source_stem,
             "activations": _probs_to_intervals(probs, hop_s, enter=show, exit_=show * 0.7),
+            # only labels the Platt fit covers; the rest are raw scores, shown as "?" (F15)
+            "calibrated": label in fitted,
         })
     return sorted(results, key=lambda r: -r["confidence"])
 
@@ -130,6 +236,7 @@ def _fake_tag(audio_path: Path, source_stem: str) -> list[dict]:
     for label in pool.get(source_stem, pool["mix"]):
         conf = round(float(rng.uniform(0.35, 0.98)), 3)
         start = round(float(rng.uniform(0, dur * 0.2)), 2)
-        out.append({"label": label, "confidence": conf, "stem": source_stem,
-                    "activations": [[start, round(dur, 2)]]})
+        out.append({"label": label, "node": label_nodes().get(label), "confidence": conf,
+                    "stem": source_stem, "activations": [[start, round(dur, 2)]],
+                    "calibrated": True})   # stands in for the calibrated OpenMIC labels
     return sorted(out, key=lambda r: -r["confidence"])

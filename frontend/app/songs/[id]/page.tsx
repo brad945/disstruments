@@ -3,7 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 
 type Activation = [number, number];
-type InstrumentTag = { label: string; confidence: number; stem: string; activations: Activation[] };
+type InstrumentTag = {
+  label: string; confidence: number; stem: string; activations: Activation[];
+  // schema v2 (M5); absent on v1 reports
+  node?: string | null; model?: string; calibrated?: boolean; subtype?: boolean; subtype_uncertain?: boolean;
+};
+type LeafModel = { name: string; version: string; sha256: string; licence?: { status: string; attribution: string } };
 type Report = {
   song: { id: number; title: string; artist: string; duration_s: number };
   global: any;
@@ -12,7 +17,7 @@ type Report = {
   stems: { name: string }[];
   stems_status: string;
   structure: { status: string };
-  provenance: { stages: { stage: string; model: string; status: string }[] };
+  provenance: { stages: { stage: string; model: string; version?: string; status: string }[]; leaf_model?: LeafModel | null };
 };
 
 const LANE_COLORS: Record<string, string> = {
@@ -21,7 +26,10 @@ const LANE_COLORS: Record<string, string> = {
   bass: "var(--lane-bass)",
 };
 const laneColor = (t: InstrumentTag) =>
-  LANE_COLORS[t.label] ?? LANE_COLORS[t.stem] ?? "var(--lane-other)";
+  LANE_COLORS[t.node?.split(".")[0] ?? ""] ?? LANE_COLORS[t.label] ?? LANE_COLORS[t.stem] ?? "var(--lane-other)";
+// F15 + F33: subtypes from our model, and any label whose score isn't calibrated
+// (`calibrated: false`, e.g. tambourine), are always "?". v1 reports have no flag.
+const isUncertain = (t: InstrumentTag) => t.confidence < 0.6 || !!t.subtype || t.calibrated === false;
 
 export default function SongPage() {
   const { id } = useParams<{ id: string }>();
@@ -67,9 +75,9 @@ export default function SongPage() {
         )}
         {report.instruments.length === 0 && <div className="footnote">none detected above threshold</div>}
         {report.instruments.map((t) => (
-          <div key={`${t.stem}-${t.label}`} className={`lane ${t.confidence < 0.6 ? "uncertain" : ""}`}>
-            <div className="label">
-              <span>{t.label}{t.confidence < 0.6 ? " ?" : ""}</span>
+          <div key={`${t.stem}-${t.label}`} className={`lane ${isUncertain(t) ? "uncertain" : ""}`}>
+            <div className="label" title={`${t.label} · ${t.model ?? "panns-sed"}`}>
+              <span className="name">{t.label}{isUncertain(t) ? " ?" : ""}</span>
               <span className="conf mono">{t.confidence.toFixed(2)}</span>
             </div>
             <div className="track">
@@ -82,6 +90,13 @@ export default function SongPage() {
         ))}
         <div className="footnote">
           “?” = confidence 0.30–0.60, treat as uncertain. Detections below 0.30 are hidden. Lane position shows when the instrument is audible.
+          {report.instruments.some((t) => t.subtype) && (
+            <> Specific types (e.g. nylon vs steel-string) come from Disstruments’ own model and stay marked “?” until
+            they are checked against hand-labelled real songs.</>
+          )}
+          {report.instruments.some((t) => !t.subtype && t.calibrated === false) && (
+            <> Instruments with no real calibration data yet (e.g. tambourine, shaker) are always marked “?”, whatever their score.</>
+          )}
         </div>
       </div>
 
@@ -96,11 +111,23 @@ export default function SongPage() {
         <h2 style={{ marginTop: 0 }}>Provenance</h2>
         {report.provenance?.stages?.map((s, i) => (
           <div className="progress-stage" key={i}>
-            <span className={`dot ${s.status === "ok" ? "ok" : "failed"}`} />
+            <span className={`dot ${s.status === "ok" ? "ok" : s.status === "skipped" ? "" : "failed"}`} />
             <span className="mono">{s.stage}</span>
-            <span style={{ color: "var(--muted)" }}>{s.model} · {s.status}</span>
+            <span style={{ color: "var(--muted)" }}>{s.model}{s.version ? ` ${s.version}` : ""} · {s.status}</span>
           </div>
         ))}
+        {report.provenance?.stages?.some((s) => s.version?.includes("+platt")) && (
+          <div className="footnote">
+            PANNs scores are calibrated per instrument on OpenMIC-2018 (Humphrey et al. 2018).
+          </div>
+        )}
+        {report.provenance?.leaf_model && (
+          <div className="footnote mono">
+            {report.provenance.leaf_model.name} {report.provenance.leaf_model.version} ·
+            sha256 {report.provenance.leaf_model.sha256.slice(0, 12)}
+            {report.provenance.leaf_model.licence && <> · {report.provenance.leaf_model.licence.status}. {report.provenance.leaf_model.licence.attribution}</>}
+          </div>
+        )}
       </div>
     </div>
   );

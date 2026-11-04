@@ -45,6 +45,23 @@ def _matrix(ids: list[str], cache_ids: list[str], emb: np.ndarray) -> np.ndarray
     return emb[[pos[i] for i in ids]].astype(np.float32)
 
 
+def _openmic_trainval(a):
+    """OpenMIC train with an artist-disjoint val carve-out (fixed seed 0, so every
+    triangle arm sees the same train/val clips)."""
+    if a.openmic_root is None:
+        raise SystemExit("--train-source openmic needs --openmic-root")
+    return load_dataset("openmic", a.openmic_root, val_fraction=a.openmic_val_fraction, seed=0,
+                        check_split_leakage=False)
+
+
+def _limit(records, n):
+    """Nested random subset of N records (seed 0: a smaller N is a subset of a larger)."""
+    if not n or n >= len(records):
+        return list(records)
+    keep = np.sort(np.random.default_rng(0).permutation(len(records))[:n])
+    return [records[k] for k in keep]
+
+
 def cmd_embed(a) -> int:
     opts = {"audio_root": a.audio_root} if a.audio_root else {}
     if a.dataset == "openmic" and a.no_split_leakage_check:
@@ -81,11 +98,26 @@ def cmd_probe(a) -> int:
         return (None, np.concatenate([p[0] for p in parts]), np.concatenate([p[1] for p in parts]),
                 np.concatenate([p[2] for p in parts]))
 
-    _, X, Y, Mk = xy(train_idx.split("train"))
+    if a.train_source == "openmic":
+        # Triangle corners 2/3 (docs/debriefs/triangle-plan.md): real OpenMIC train clips,
+        # early stopping on an artist-disjoint val carve-out of OpenMIC train.
+        train_idx = _openmic_trainval(a)
+        oids, oemb, _ = load_cache(cache_path(a.cache, a.backbone, "openmic", "mix"))
+        units = ["mix"]
+
+        def xy(records):  # noqa: F811 - real clips, mix only
+            ids, y, m = label_matrices(label_items(records, "mix"), tax)
+            return None, _matrix(ids, oids, oemb), y, m
+
+    tr_recs = _limit(train_idx.split("train"), a.train_limit)
+    _, X, Y, Mk = xy(tr_recs)
     _, Xv, Yv, Mv = xy(train_idx.split("val"))
     cfg = ProbeConfig(seed=a.seed, hidden=a.hidden, lr=a.lr if a.lr else (1e-3 if a.hidden else 1e-2))
-    probe = LinearProbe(X.shape[1], X.shape[2], len(nodes), cfg).fit(X, Y, Mk, Xv, Yv, Mv)
-    train_hash = hashlib.sha256("\n".join(sorted(r.item_id for r in train_idx.split("train")))
+    probe = LinearProbe(X.shape[1], X.shape[2], len(nodes), cfg)
+    if a.init_from:
+        probe.load_init(a.init_from)
+    probe.fit(X, Y, Mk, Xv, Yv, Mv, keep_norm=bool(a.init_from))
+    train_hash = hashlib.sha256("\n".join(sorted(r.item_id for r in tr_recs))
                                 .encode()).hexdigest()[:16]
     tag = ("" if units == ["mix"] else "_" + "+".join(units)) + (f"_mlp{a.hidden}" if a.hidden else "")
     meta = {"model": f"{a.backbone}+" + (f"mlp{a.hidden}" if a.hidden else "linear_probe"),
@@ -93,9 +125,10 @@ def cmd_probe(a) -> int:
             "train_units": units,
             "backbone_license": cmeta["license"],
             "commercial_clean": bool(cmeta["commercial_clean"] and a.commercial_only),
-            "train": {"dataset": "synthetic", "root_name": Path(a.train_root).name,
+            "train": {"dataset": a.train_source, "root_name": Path(a.train_root).name,
                       "n_train": len(X), "n_val": len(Xv), "items_sha": train_hash,
-                      "commercial_only": a.commercial_only},
+                      "commercial_only": a.commercial_only, "train_limit": a.train_limit,
+                      "init_from": str(a.init_from) if a.init_from else None},
             "probe": {"layer_weights": probe.layer_weights(), "epochs_run": len(probe.history),
                       "best_val_map": max(h["val_map"] for h in probe.history)}}
     a.out.mkdir(parents=True, exist_ok=True)
@@ -106,7 +139,7 @@ def cmd_probe(a) -> int:
         if root is None:
             print(f"skip {spec}: --{ds}-root not given")
             continue
-        idx = train_idx if ds == "synthetic" else load_dataset(
+        idx = train_idx if ds == "synthetic" == a.train_source else load_dataset(
             ds, root, **({"audio_root": a.medleydb_audio_root} if ds == "medleydb" else
                          {"check_split_leakage": False} if ds == "openmic" else
                          {"window_start": a.moisesdb_window} if ds == "moisesdb" else {}))
@@ -118,7 +151,7 @@ def cmd_probe(a) -> int:
         scores = probe.predict(_matrix(ids, eids, eemb))
         p = save_predictions(a.out / f"{a.backbone}{tag}_{ds}_{split}_{a.unit}.npz", ids, nodes, scores,
                              tax.version, dataset=ds, meta=meta)
-        print(f"wrote {p} ({len(ids)} items; best synthetic val mAP {meta['probe']['best_val_map']:.3f})")
+        print(f"wrote {p} ({len(ids)} items; best {a.train_source} val mAP {meta['probe']['best_val_map']:.3f})")
     return 0
 
 
@@ -205,6 +238,20 @@ def cmd_scratch(a) -> int:
             rows, y, m = rows[np.sort(keep)], y[np.sort(keep)], m[np.sort(keep)]
         return _Rows(X, rows), y, m
 
+    if a.train_source == "openmic":
+        # Triangle corners 2/3 (docs/debriefs/triangle-plan.md): real OpenMIC train clips
+        # only, early stopping on an artist-disjoint val carve-out of OpenMIC train.
+        oidx = _openmic_trainval(a)
+        ocids, OX = S.load_mel_cache(a.cache / "mels" / "openmic_train_mix.npz")
+        opos = {i: k for k, i in enumerate(ocids)}
+
+        def xy(split):  # noqa: F811
+            recs = oidx.split(split)
+            if split == "train":
+                recs = _limit(recs, a.train_limit)        # real-data curve: nested subsets
+            ids, y, m = label_matrices(label_items(recs, "mix"), tax)
+            return _Rows(OX, [opos[i] for i in ids]), y, m
+
     X, Y, Mk = xy("train")
     Xv, Yv, Mv = xy("val")
     Xv = Xv.materialize()                                  # val is small: keep in RAM
@@ -226,16 +273,23 @@ def cmd_scratch(a) -> int:
         cot = {"dataset": "openmic", "split": "train", "licence": a.cotrain_licence,
                "n": len(keep)}
         print(f"co-training with {len(keep)} OpenMIC train clips (licence={a.cotrain_licence})")
-    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs)
-    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg)
+    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db,
+                          **({"lr": a.lr} if a.lr else {}))
+    init = None
+    if a.init_from:                                   # triangle corner 3: fine-tune
+        import torch
+        init = torch.load(a.init_from, map_location="cpu", weights_only=False)["state"]
+    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg, init_state=init)
     meta = {"model": "scratch_cnn", "n_params": S.n_params(model), "backbone": None,
             "backbone_license": "none (random init)", "commercial_clean": a.commercial_only,
-            "train": {"dataset": "synthetic", "n_train": len(X), "n_val": len(Xv),
-                      "commercial_only": a.commercial_only},
+            "train": {"dataset": a.train_source, "n_train": len(X), "n_val": len(Xv),
+                      "commercial_only": a.commercial_only, "train_limit": a.train_limit,
+                      "init_from": str(a.init_from) if a.init_from else None},
             "best_val_map": max(h["val_map"] for h in hist), "epochs_run": len(hist),
             "cotrain": cot}
     a.out.mkdir(parents=True, exist_ok=True)
-    tag = (f"_{a.mel_prefix}" + (f"_n{a.train_limit}" if a.train_limit else "")
+    tag = (f"_{a.mel_prefix if a.train_source == 'synthetic' else 'openmic'}"
+           + ("_ft" if a.init_from else "") + (f"_n{a.train_limit}" if a.train_limit else "")
            + (f"_cot{a.cotrain_licence}" if a.cotrain_openmic else ""))
     S.save(model, a.out / f"scratch_cnn{tag}.pt", cfg, hist, meta)
     from .embed import _device
@@ -371,6 +425,140 @@ def cmd_scratch_predict(a) -> int:
     return 0
 
 
+def cmd_panns_predict(a) -> int:
+    """M5: score the app's incumbent tagger (PANNs SED, exactly as `pipeline.tagging` uses it:
+    framewise -> 95th percentile per OpenMIC-20 label) so a model swap is judged against it
+    on the same clips. Labels map to taxonomy nodes via the OpenMIC projection."""
+    import time
+
+    import librosa
+
+    from ...pipeline import tagging
+    from ..datasets.openmic import class_to_node
+    tax = Taxonomy.load()
+    c2n = class_to_node(tax)
+    labels = sorted(c2n)
+    opts = ({"check_split_leakage": False} if a.dataset == "openmic" else   # same as `mels`
+            {"window_start": a.moisesdb_window} if a.dataset == "moisesdb" else {})
+    items = _audio_items(load_dataset(a.dataset, a.root, **opts).split(a.split), "mix")
+    scores = np.zeros((len(items), len(labels)), np.float32)
+    t0 = time.time()
+    for k, (_, path) in enumerate(items):
+        y, _ = librosa.load(path, sr=32000, mono=True)
+        per, _ = tagging.panns_framewise(y)
+        scores[k] = [float(np.percentile(per[l], 95)) if l in per else 0.0 for l in labels]
+    ds = "moisesdb" if a.dataset == "moisesdb" else a.dataset
+    meta = {"model": "panns-sed", "version": "cnn14", "aggregate": "p95 framewise",
+            "latency_s": round((time.time() - t0) / max(1, len(items)), 3)}
+    a.out.mkdir(parents=True, exist_ok=True)
+    out = a.out / f"panns__{a.prefix or a.dataset}_{a.split}_mix.npz"
+    save_predictions(out, [i for i, _ in items], [c2n[l] for l in labels], scores, tax.version,
+                     dataset=ds, meta=meta)
+    print(f"wrote {out} ({len(items)} items)")
+    return 0
+
+
+def cmd_panns_calibrate(a) -> int:
+    """M5: per-class Platt scaling for the incumbent PANNs tagger, fit on its OpenMIC-train
+    scores (`panns-predict --split train`; real, never trained on). Writes the JSON the app
+    applies framewise in `pipeline.tagging`."""
+    import datetime as dt
+    import json as _json
+
+    from ..datasets.openmic import class_to_node
+    from ..eval.predictions import load_predictions
+    from .calibrate import fit_platt
+    tax = Taxonomy.load()
+    node_of = class_to_node(tax)
+    label_of = {n: l for l, n in node_of.items()}
+    pred = load_predictions(a.predictions)
+    opts = {"check_split_leakage": False}
+    recs = load_dataset("openmic", a.root, **opts).split("train")
+    if a.licence == "commercial":                   # licence-clean end state: no NC/ND clips
+        lic = openmic_licences(a.root)
+        recs = [r for r in recs if commercial_ok(lic.get(r.item_id, ""))]
+    items = label_items(recs, "mix")
+    ids, y, m = label_matrices(items, tax)
+    pos = {i: k for k, i in enumerate(pred.item_ids)}
+    keep = [k for k, i in enumerate(ids) if i in pos]
+    rows = [pos[ids[k]] for k in keep]
+    ix = tax.index()
+    cols = [ix[n] for n in pred.nodes]
+    fits = fit_platt(pred.scores[rows], y[keep][:, cols], m[keep][:, cols])
+    doc = {"format": "disstruments.panns_calibration/v1",
+           "model": "panns-sed cnn14 (Cnn14_DecisionLevelMax)",
+           "map": "p' = sigmoid(a * logit(p) + b), applied to framewise probs",
+           "fit": {"dataset": "openmic", "split": "train", "n_clips": len(keep), "licence": a.licence,
+                   "statistic": "p95 over frames per 10 s clip (as the app aggregates)",
+                   "predictions": a.predictions.name,
+                   "created": dt.date.today().isoformat()},
+           "classes": {label_of[n]: {k: (round(v, 4) if isinstance(v, float) else v)
+                                     for k, v in f.items()} for n, f in zip(pred.nodes, fits)}}
+    a.out.write_text(_json.dumps(doc, indent=1) + "\n")
+    for lab, f in doc["classes"].items():
+        print(f"{lab:18s} a={f['a']:6.3f} b={f['b']:+7.3f} n_pos={f['n_pos']:5d} "
+              + (f"nll {f['nll_before']:.3f} -> {f['nll_after']:.3f}" if f["fitted"] else "(identity)"))
+    print(f"wrote {a.out} ({len(keep)} clips)")
+    return 0
+
+
+def cmd_export_onnx(a) -> int:
+    """M5: checkpoint -> ONNX + sidecar (see `export.py`), with a global temperature fit on
+    real held-out clips and an ONNX-vs-torch parity check on real mels."""
+    import json as _json
+    import shutil
+
+    from . import export as EX
+    from . import scratch as S
+    from .embed import _device
+    tax = Taxonomy.load()
+    nodes = list(tax.nodes)
+    manifest = _json.loads(a.manifest.read_text())
+    ckpt_meta = _json.loads(a.model.with_suffix(".json").read_text())
+    trained = EX.trained_nodes(manifest, tax)
+    tmp = a.out.with_name(a.out.name + ".tmp")
+    shutil.rmtree(tmp, ignore_errors=True)
+    tmp.mkdir(parents=True)
+    model = S.load_model(a.model, len(nodes), "cpu")
+    onnx_path = EX.to_onnx(model, tmp / EX.ONNX_NAME)
+
+    # temperature: OpenMIC train (real, never trained on), trained nodes only. A licence-clean
+    # model is calibrated on the commercially licensed clips only (most OpenMIC clips are
+    # NC/ND); the all-clips T is recorded next to it for comparison.
+    clean = bool(ckpt_meta.get("commercial_clean", False))
+    opts = {"check_split_leakage": False}
+    recs = load_dataset("openmic", a.calib_root, **opts).split("train")
+    lic = openmic_licences(a.calib_root)
+    cids, Xc = S.load_mel_cache(a.calib_cache / "mels" / "openmic_train_mix.npz")
+    pos = {i: k for k, i in enumerate(cids)}
+    items = [it for it in label_items(recs, "mix") if it[0] in pos]
+    ids, y, m = label_matrices(items, tax)
+    rows = np.array([pos[i] for i in ids])
+    Xr = np.asarray(Xc[np.sort(rows)])[np.argsort(np.argsort(rows))]
+    scores = S.predict(S.load_model(a.model, len(nodes), _device()), Xr, _device())
+    scores = tax.max_propagate(scores, nodes)       # fit T on what is served (and evaluated)
+    ok = np.array([commercial_ok(lic.get(i, "")) for i in ids])
+    t_all = EX.fit_global_temperature(scores, y, m, nodes, set(trained))
+    if clean:
+        temp = EX.fit_global_temperature(scores[ok], y[ok], m[ok], nodes, set(trained))
+        temp |= {"fit_dataset": "openmic", "fit_split": "train", "fit_licence": "commercial",
+                 "n_fit": int(ok.sum()), "T_all_clips": t_all["T"]}
+    else:
+        temp = t_all | {"fit_dataset": "openmic", "fit_split": "train", "fit_licence": "all",
+                        "n_fit": len(ids)}
+    diff = EX.parity(model, onnx_path, Xr[:64].astype(np.float32))
+    if diff > 1e-4:
+        raise SystemExit(f"ONNX parity failed: max |dp| = {diff:.2e}")
+    doc = EX.sidecar(tax=tax, onnx_path=onnx_path, ckpt_meta=ckpt_meta, manifest=manifest,
+                     trained=trained, temperature=temp, parity_max=diff, source=str(a.model))
+    (tmp / EX.SIDECAR_NAME).write_text(_json.dumps(doc, indent=1))
+    shutil.rmtree(a.out, ignore_errors=True)
+    tmp.rename(a.out)
+    print(f"wrote {a.out}: sha256 {doc['sha256'][:12]}, T={temp['T']:.3f} (n={temp['n_fit']}, {temp['fit_licence']} clips), "
+          f"onnx parity {diff:.1e}")
+    return 0
+
+
 def cmd_shortcut(a) -> int:
     """M4 rigor: non-timbre shortcut baseline (see ml/eval/shortcut.py)."""
     from ..eval import shortcut as SC
@@ -439,6 +627,12 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--seed", type=int, default=0)
     q.add_argument("--hidden", type=int, default=0, help="MLP head width (0 = linear probe)")
     q.add_argument("--lr", type=float, default=0.0)
+    q.add_argument("--train-source", default="synthetic", choices=("synthetic", "openmic"),
+                     help="triangle: train on real OpenMIC train clips instead of synthetic")
+    q.add_argument("--openmic-val-fraction", type=float, default=0.15,
+                     help="--train-source openmic: artist-disjoint val share of OpenMIC train")
+    q.add_argument("--init-from", type=Path, help="triangle corner 3: start from this checkpoint")
+    q.add_argument("--train-limit", type=int, help="nested random subset of N train clips")
     q.add_argument("--out", required=True, type=Path)
     q.set_defaults(fn=cmd_probe)
     mm = sub.add_parser("mels", help="cache log-mel spectrograms for the from-scratch CNN")
@@ -462,6 +656,13 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--cotrain-licence", default="all", choices=("all", "commercial"))
     sc.add_argument("--openmic-root", type=Path)
     sc.add_argument("--seed", type=int, default=0)
+    sc.add_argument("--gain-db", type=float, default=0.0, help="random input gain, +/- dB per clip")
+    sc.add_argument("--train-source", default="synthetic", choices=("synthetic", "openmic"),
+                     help="triangle: train on real OpenMIC train clips instead of synthetic")
+    sc.add_argument("--openmic-val-fraction", type=float, default=0.15,
+                     help="--train-source openmic: artist-disjoint val share of OpenMIC train")
+    sc.add_argument("--init-from", type=Path, help="triangle corner 3: start from this checkpoint")
+    sc.add_argument("--lr", type=float, default=0.0, help="peak LR override (0 = config default)")
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)
@@ -479,6 +680,29 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--eval", nargs="+", required=True, help="mel-prefix:split pairs")
     sp.add_argument("--out", required=True, type=Path)
     sp.set_defaults(fn=cmd_scratch_predict)
+    pp = sub.add_parser("panns-predict", help="M5: score the incumbent PANNs tagger on a dataset")
+    pp.add_argument("--dataset", required=True)
+    pp.add_argument("--root", required=True, type=Path)
+    pp.add_argument("--split", default="test")
+    pp.add_argument("--moisesdb-window", type=lambda v: v if v == "all" else float(v), default=20.0)
+    pp.add_argument("--prefix", help="output name prefix (default: dataset name)")
+    pp.add_argument("--out", required=True, type=Path)
+    pp.set_defaults(fn=cmd_panns_predict)
+    pc = sub.add_parser("panns-calibrate", help="M5: per-class Platt scaling for PANNs (OpenMIC train)")
+    pc.add_argument("--predictions", required=True, type=Path, help="panns-predict output, OpenMIC train")
+    pc.add_argument("--root", required=True, type=Path, help="OpenMIC root (labels)")
+    pc.add_argument("--licence", default="all", choices=("all", "commercial"),
+                    help="fit on all OpenMIC train clips or the commercially licensed ones only")
+    pc.add_argument("--out", type=Path,
+                    default=Path(__file__).resolve().parents[2] / "pipeline" / "panns_calibration.json")
+    pc.set_defaults(fn=cmd_panns_calibrate)
+    ex = sub.add_parser("export-onnx", help="M5: package a scratch CNN for the app (ONNX + sidecar)")
+    ex.add_argument("--model", required=True, type=Path)
+    ex.add_argument("--manifest", required=True, type=Path, help="render manifest the model trained on")
+    ex.add_argument("--calib-cache", required=True, type=Path, help="cache dir with mels/openmic_train_mix")
+    ex.add_argument("--calib-root", required=True, type=Path, help="OpenMIC root (labels)")
+    ex.add_argument("--out", required=True, type=Path)
+    ex.set_defaults(fn=cmd_export_onnx)
     lr = sub.add_parser("lora", help="M3 R3: LoRA fine-tune + head on synthetic audio")
     lr.add_argument("--backbone", required=True, choices=("mert95m", "clap"))
     lr.add_argument("--train-root", required=True, type=Path)

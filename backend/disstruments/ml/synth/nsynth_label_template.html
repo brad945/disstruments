@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NSynth Instrument Labeller</title>
+<style>
+:root{--bg:#121417;--panel:#1b1e23;--line:#2a2e35;--text:#e6e8eb;--muted:#9aa1ab;--accent:#5b9cff;--ok:#2fbf71;--warn:#e0a930}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:20px;margin:0 0 4px}.muted{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--accent)}
+.fam{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.id{font-size:18px;font-weight:600;margin:2px 0 10px}
+audio{width:100%}
+.ch{display:grid;gap:8px;margin-top:12px}
+.ch button{display:flex;gap:10px;align-items:center;text-align:left;background:#0f1114;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px;cursor:pointer}
+.ch button:hover{border-color:#555}.ch button.on{border-color:var(--ok);background:#173826}
+.ch kbd{min-width:22px;text-align:center;background:var(--line);border-radius:4px;padding:1px 6px;font-size:12px}
+.nav{display:flex;gap:8px;margin-top:12px}.nav button,.save{background:#0f1114;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}
+.save{background:var(--accent);color:#06101f;border:0;font-weight:600}
+code{background:#0f1114;padding:1px 5px;border-radius:4px}
+</style></head><body><div class="wrap">
+<h1>NSynth instrument labeller</h1>
+<div class="muted">Each clip is one instrument: four notes going up, then one held note. Pick what it is.
+Choose <b>unsure</b> if you can't tell (that's fine, and it stays useful), or <b>skip</b> if it's broken or not
+that instrument family. Keys: <kbd>1</kbd>–<kbd>9</kbd> choose, <kbd>space</kbd> replay, <kbd>←</kbd> back.
+Your progress is saved in this browser.</div>
+<div class="panel">
+ <div class="bar"><i id="bar"></i></div><div class="muted" id="prog"></div>
+ <div class="fam" id="fam"></div><div class="id" id="id"></div>
+ <audio id="au" controls></audio>
+ <div class="ch" id="ch"></div>
+ <div class="nav"><button id="back">← back</button><button id="next">next →</button></div>
+</div>
+<div class="panel"><button class="save" id="save">Save labels</button> <span class="muted" id="msg"></span>
+<div class="muted" style="margin-top:6px">Saving downloads <code>nsynth_labels.json</code>. Then tell Claude "nsynth labels done".</div></div>
+</div>
+<script>
+const ITEMS = /*__ITEMS__*/[];
+const KEY = "nsynth-labels-v1";
+let lab = {}; try { lab = JSON.parse(localStorage.getItem(KEY) || "{}") } catch (e) {}
+let i = ITEMS.findIndex(it => !(it.id in lab)); if (i < 0) i = 0;
+const $ = id => document.getElementById(id);
+function store(){ try { localStorage.setItem(KEY, JSON.stringify(lab)) } catch (e) {} }
+function show(){
+  const it = ITEMS[i]; if (!it) return;
+  const done = ITEMS.filter(x => x.id in lab).length;
+  $("bar").style.width = (100 * done / ITEMS.length) + "%";
+  $("prog").textContent = `${i + 1} / ${ITEMS.length}  ·  ${done} labelled`;
+  $("fam").textContent = it.family.replace("_", " · "); $("id").textContent = it.id;
+  $("au").src = it.audio; $("au").play().catch(() => {});
+  $("ch").innerHTML = "";
+  it.choices.forEach(([name, node], k) => {
+    const b = document.createElement("button");
+    b.innerHTML = `<kbd>${k + 1}</kbd><span>${name}</span>`;
+    if (lab[it.id] === node) b.className = "on";
+    b.onclick = () => choose(node); $("ch").appendChild(b);
+  });
+}
+function choose(node){ lab[ITEMS[i].id] = node; store(); if (i < ITEMS.length - 1) i++; show(); }
+$("back").onclick = () => { if (i > 0) i--; show(); };
+$("next").onclick = () => { if (i < ITEMS.length - 1) i++; show(); };
+document.addEventListener("keydown", e => {
+  const it = ITEMS[i]; if (!it) return;
+  if (e.code === "Space"){ e.preventDefault(); $("au").currentTime = 0; $("au").play(); }
+  else if (e.key === "ArrowLeft"){ $("back").click(); }
+  else if (e.key === "ArrowRight"){ $("next").click(); }
+  else if (/^[1-9]$/.test(e.key)){ const c = it.choices[+e.key - 1]; if (c) choose(c[1]); }
+});
+$("save").onclick = () => {
+  const doc = {schema: 1, source: "nsynth", labelled_at: new Date().toISOString(), labels: lab};
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(doc, null, 1)], {type: "application/json"}));
+  a.download = "nsynth_labels.json"; a.click();
+  $("msg").textContent = `saved ${Object.keys(lab).length} of ${ITEMS.length}`;
+};
+show();
+</script></body></html>

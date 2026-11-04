@@ -198,3 +198,55 @@ pipeline and evaluation rigor are where the engineering hours go.
 
 Every claim in that paragraph maps to a milestone above and is backed by an archived
 eval report — nothing is vibes.
+
+## 10. Related work, and what is actually new
+
+Almost every ingredient here has prior work. The contribution is the combination, measured
+honestly, not any single technique. Citations are to the work each piece builds on.
+
+**Building blocks we use as-is**
+- Source separation: Demucs v4 (Rouard, Massa & Défossez, "Hybrid Transformers for Music
+  Source Separation", ICASSP 2023). Stems are a product feature and an input to tagging.
+- Coarse tagging: PANNs (Kong et al., IEEE/ACM TASLP 2020), Platt-calibrated here.
+- Baselines: MERT (Li et al., ICLR 2024; CC-BY-NC, research-only) and LAION-CLAP
+  (Wu et al., ICASSP 2023).
+- Data: OpenMIC-2018 (Humphrey, Durand & McFee, ISMIR 2018), MedleyDB, MoisesDB
+  (Pereira et al., ISMIR 2023), IDMT-SMT-Bass / -Audio-Effects (Fraunhofer IDMT).
+
+**Prior work our methods follow**
+- Synthetic multitrack rendering from MIDI is the **Slakh2100** recipe (Manilow et al.,
+  "Cutting Music Source Separation Some Slakh", WASPAA 2019). §3.2 generalizes it to our
+  taxonomy, effects chains and mastering randomization; the idea is theirs.
+- Pre-training on isolated notes for real-mix recognition: Zhong et al., 2023 (NSynth-style
+  notes → IRMAS). Our v7 NSynth/Iowa mix-in is the same idea.
+- Guitar effect / distortion recognition on isolated guitar: Comunità, Stowell & Reiss
+  (JAES 2021); Open-Amp (2025); IDMT-SMT-Audio-Effects.
+- Bass playing-technique recognition on isolated bass: Abeßer et al. (Fraunhofer IDMT,
+  2010–11).
+- Hierarchical instrument taxonomies: Flores Garcia et al., ISMIR 2021.
+- Synthetic-to-real gap: measured for drum transcription by Zehren et al., 2024.
+
+**Closest systems**
+- Essentia `mtg_jamendo_instrument` (MTG-Jamendo, Bogdanov et al., 2019): 40 instrument
+  tags including rhodes, electricpiano, classicalguitar, drummachine, pad. Trained on noisy
+  uploader tags; no distortion, bass technique or 808; CC BY-NC-SA. Run as an eval-only
+  external baseline (M5 debrief), never shipped.
+- Products: AudioShake and Moises split electric vs acoustic guitar (and keys) as stems;
+  RipX decomposes songs into note-level editable layers; Fadr gives stems + MIDI + key/BPM;
+  Synplant 2 matches a sound to a synth patch. None names fine-grained instrument types
+  with calibrated confidence.
+- Audio-language models (e.g. NVIDIA Music Flamingo) describe music in free text; no
+  calibrated per-instrument confidence or published fine-grained instrument accuracy that
+  we found. A candidate future baseline.
+
+**What is new here (and what is not)**
+- New: one model naming fine-grained types (distortion, nylon vs steel, synth-bass vs
+  808, synth pad/lead/pluck, …) *inside real full mixes*, trained only on our renders,
+  with calibrated confidence that the UI respects ("?" for uncertain, F15).
+- New in rigor, not in method: real music is test-only and artist-disjoint; promotion
+  gates are pre-registered with paired bootstrap CIs; the licence cost of going
+  commercial-clean is measured (MoisesDB leaf mAP 0.490 → 0.471).
+- Not new: separation, coarse tagging, synthetic rendering, isolated-note pretraining,
+  hierarchical labels. We cite and use them.
+- Weak spots stated plainly: modest absolute scores (leaf mAP ~0.49), small real test
+  sets, few external baselines, no standard fine-grained benchmark exists to report on.

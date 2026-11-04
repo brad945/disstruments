@@ -59,3 +59,36 @@ def apply_temperatures(scores: np.ndarray, node_levels: Sequence[int],
     z = _logit(np.asarray(scores, float))
     T = np.array([temps.get(lv, {"T": 1.0})["T"] for lv in node_levels])
     return 1.0 / (1.0 + np.exp(-z / T[None, :]))
+
+
+def fit_platt(scores: np.ndarray, y: np.ndarray, m: np.ndarray, *,
+              a_bounds=(1e-3, 50.0), b_bounds=(-50.0, 50.0)) -> list[dict]:
+    """Per-column Platt scaling p' = sigmoid(a * logit(p) + b), fit by masked BCE.
+
+    For the incumbent PANNs tagger (M5): its scores rank well but sit far below F15's fixed
+    thresholds, and one temperature can't fix that (scaling a logit of -2 never crosses 0),
+    so each class gets a bias too. `a > 0` keeps the map monotone: AP is unchanged.
+    Columns without both classes, or with constant scores, keep the identity map."""
+    from scipy.optimize import minimize
+
+    z = _logit(np.asarray(scores, float))
+    y = np.asarray(y, float)
+    m = np.asarray(m, float)
+    out = []
+    for j in range(z.shape[1]):
+        mm = m[:, j] > 0
+        zj, yj = z[mm, j], y[mm, j]
+        n, n_pos = int(mm.sum()), int(yj.sum())
+        if n_pos == 0 or n_pos == n or np.ptp(zj) == 0:
+            out.append({"a": 1.0, "b": 0.0, "n_obs": n, "n_pos": n_pos, "fitted": False})
+            continue
+        ones = np.ones_like(yj)
+        f = lambda ab: _bce(ab[0] * zj + ab[1], yj, ones, 1.0)  # noqa: E731
+        r = minimize(f, x0=[1.0, 0.0], method="L-BFGS-B", bounds=[a_bounds, b_bounds])
+        out.append({"a": float(r.x[0]), "b": float(r.x[1]), "n_obs": n, "n_pos": n_pos,
+                    "fitted": True, "nll_before": f([1.0, 0.0]), "nll_after": float(r.fun)})
+    return out
+
+
+def apply_platt(p: np.ndarray, a: float, b: float) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-(a * _logit(np.asarray(p, float)) + b)))

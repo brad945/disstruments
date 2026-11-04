@@ -13,11 +13,18 @@ DEFAULT_DIR = Path.home() / "datasets" / "golden"
 
 def build_page(out_dir: Path) -> Path:
     tax = Taxonomy.load()
-    leaves = [{"id": l, "name": tax.info[l].name, "family": l.split(".")[0],
-               "path": " › ".join(tax.info[a].name for a in reversed(tax.ancestors(l)))}
-              for l in tax.leaves()]
+    # Every node, pre-order. A non-leaf row means "this instrument, exact type not sure":
+    # its subtypes become unknown instead of absent (see datasets/golden.py).
+    leaves = [{"id": n, "family": n.split(".")[0],
+               "name": tax.info[n].name + ("" if tax.is_leaf(n) else " (type not sure)"),
+               "path": " › ".join(tax.info[a].name for a in reversed(tax.ancestors(n)))}
+              for n in tax.nodes]
+    # Optional local playlist: [{"file", "artist", "title", "genre"}], audio in <out>/audio/.
+    songs_file = out_dir / "songs.json"
+    songs = json.loads(songs_file.read_text()) if songs_file.exists() else []
     html = (Path(__file__).with_name("label_template.html").read_text()
             .replace("/*__LEAVES__*/[]", json.dumps(leaves))
+            .replace("/*__SONGS__*/[]", json.dumps(songs))
             .replace("__TAXVER__", tax.version))
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "labels").mkdir(exist_ok=True)
