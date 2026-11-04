@@ -60,14 +60,27 @@ class LinearProbe:
     def logits(self, x):
         return self.head(self._feats(x))
 
+    def load_init(self, path: Path) -> "LinearProbe":
+        """Start from a saved probe (triangle fine-tune corner): its layer weights, head and
+        input normalisation. Use with fit(..., keep_norm=True) so the head keeps seeing
+        inputs scaled the way it was trained."""
+        import torch
+        ck = torch.load(path, map_location="cpu", weights_only=False)
+        with torch.no_grad():
+            self.layer_logits.copy_(ck["layer_logits"])
+        self.head.load_state_dict(ck["head"])
+        self.mu, self.sd = ck["mu"], ck["sd"]
+        return self
+
     def fit(self, X: np.ndarray, Y: np.ndarray, Mk: np.ndarray,
-            Xv: np.ndarray, Yv: np.ndarray, Mv: np.ndarray) -> "LinearProbe":
+            Xv: np.ndarray, Yv: np.ndarray, Mv: np.ndarray, keep_norm: bool = False) -> "LinearProbe":
         import torch
 
         cfg = self.cfg
         Xt = torch.from_numpy(X.astype(np.float32))
-        self.mu = Xt.mean(dim=0)
-        self.sd = Xt.std(dim=0).clamp_min(1e-4)
+        if not keep_norm:
+            self.mu = Xt.mean(dim=0)
+            self.sd = Xt.std(dim=0).clamp_min(1e-4)
         Yt, Mt = torch.from_numpy(Y.astype(np.float32)), torch.from_numpy(Mk.astype(np.float32))
         pos = (Yt * Mt).sum(0)
         neg = ((1 - Yt) * Mt).sum(0)

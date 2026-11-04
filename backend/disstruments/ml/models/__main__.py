@@ -45,6 +45,23 @@ def _matrix(ids: list[str], cache_ids: list[str], emb: np.ndarray) -> np.ndarray
     return emb[[pos[i] for i in ids]].astype(np.float32)
 
 
+def _openmic_trainval(a):
+    """OpenMIC train with an artist-disjoint val carve-out (fixed seed 0, so every
+    triangle arm sees the same train/val clips)."""
+    if a.openmic_root is None:
+        raise SystemExit("--train-source openmic needs --openmic-root")
+    return load_dataset("openmic", a.openmic_root, val_fraction=a.openmic_val_fraction, seed=0,
+                        check_split_leakage=False)
+
+
+def _limit(records, n):
+    """Nested random subset of N records (seed 0: a smaller N is a subset of a larger)."""
+    if not n or n >= len(records):
+        return list(records)
+    keep = np.sort(np.random.default_rng(0).permutation(len(records))[:n])
+    return [records[k] for k in keep]
+
+
 def cmd_embed(a) -> int:
     opts = {"audio_root": a.audio_root} if a.audio_root else {}
     if a.dataset == "openmic" and a.no_split_leakage_check:
@@ -81,11 +98,26 @@ def cmd_probe(a) -> int:
         return (None, np.concatenate([p[0] for p in parts]), np.concatenate([p[1] for p in parts]),
                 np.concatenate([p[2] for p in parts]))
 
-    _, X, Y, Mk = xy(train_idx.split("train"))
+    if a.train_source == "openmic":
+        # Triangle corners 2/3 (docs/debriefs/triangle-plan.md): real OpenMIC train clips,
+        # early stopping on an artist-disjoint val carve-out of OpenMIC train.
+        train_idx = _openmic_trainval(a)
+        oids, oemb, _ = load_cache(cache_path(a.cache, a.backbone, "openmic", "mix"))
+        units = ["mix"]
+
+        def xy(records):  # noqa: F811 - real clips, mix only
+            ids, y, m = label_matrices(label_items(records, "mix"), tax)
+            return None, _matrix(ids, oids, oemb), y, m
+
+    tr_recs = _limit(train_idx.split("train"), a.train_limit)
+    _, X, Y, Mk = xy(tr_recs)
     _, Xv, Yv, Mv = xy(train_idx.split("val"))
     cfg = ProbeConfig(seed=a.seed, hidden=a.hidden, lr=a.lr if a.lr else (1e-3 if a.hidden else 1e-2))
-    probe = LinearProbe(X.shape[1], X.shape[2], len(nodes), cfg).fit(X, Y, Mk, Xv, Yv, Mv)
-    train_hash = hashlib.sha256("\n".join(sorted(r.item_id for r in train_idx.split("train")))
+    probe = LinearProbe(X.shape[1], X.shape[2], len(nodes), cfg)
+    if a.init_from:
+        probe.load_init(a.init_from)
+    probe.fit(X, Y, Mk, Xv, Yv, Mv, keep_norm=bool(a.init_from))
+    train_hash = hashlib.sha256("\n".join(sorted(r.item_id for r in tr_recs))
                                 .encode()).hexdigest()[:16]
     tag = ("" if units == ["mix"] else "_" + "+".join(units)) + (f"_mlp{a.hidden}" if a.hidden else "")
     meta = {"model": f"{a.backbone}+" + (f"mlp{a.hidden}" if a.hidden else "linear_probe"),
@@ -93,9 +125,10 @@ def cmd_probe(a) -> int:
             "train_units": units,
             "backbone_license": cmeta["license"],
             "commercial_clean": bool(cmeta["commercial_clean"] and a.commercial_only),
-            "train": {"dataset": "synthetic", "root_name": Path(a.train_root).name,
+            "train": {"dataset": a.train_source, "root_name": Path(a.train_root).name,
                       "n_train": len(X), "n_val": len(Xv), "items_sha": train_hash,
-                      "commercial_only": a.commercial_only},
+                      "commercial_only": a.commercial_only, "train_limit": a.train_limit,
+                      "init_from": str(a.init_from) if a.init_from else None},
             "probe": {"layer_weights": probe.layer_weights(), "epochs_run": len(probe.history),
                       "best_val_map": max(h["val_map"] for h in probe.history)}}
     a.out.mkdir(parents=True, exist_ok=True)
@@ -106,7 +139,7 @@ def cmd_probe(a) -> int:
         if root is None:
             print(f"skip {spec}: --{ds}-root not given")
             continue
-        idx = train_idx if ds == "synthetic" else load_dataset(
+        idx = train_idx if ds == "synthetic" == a.train_source else load_dataset(
             ds, root, **({"audio_root": a.medleydb_audio_root} if ds == "medleydb" else
                          {"check_split_leakage": False} if ds == "openmic" else
                          {"window_start": a.moisesdb_window} if ds == "moisesdb" else {}))
@@ -118,7 +151,7 @@ def cmd_probe(a) -> int:
         scores = probe.predict(_matrix(ids, eids, eemb))
         p = save_predictions(a.out / f"{a.backbone}{tag}_{ds}_{split}_{a.unit}.npz", ids, nodes, scores,
                              tax.version, dataset=ds, meta=meta)
-        print(f"wrote {p} ({len(ids)} items; best synthetic val mAP {meta['probe']['best_val_map']:.3f})")
+        print(f"wrote {p} ({len(ids)} items; best {a.train_source} val mAP {meta['probe']['best_val_map']:.3f})")
     return 0
 
 
@@ -205,6 +238,20 @@ def cmd_scratch(a) -> int:
             rows, y, m = rows[np.sort(keep)], y[np.sort(keep)], m[np.sort(keep)]
         return _Rows(X, rows), y, m
 
+    if a.train_source == "openmic":
+        # Triangle corners 2/3 (docs/debriefs/triangle-plan.md): real OpenMIC train clips
+        # only, early stopping on an artist-disjoint val carve-out of OpenMIC train.
+        oidx = _openmic_trainval(a)
+        ocids, OX = S.load_mel_cache(a.cache / "mels" / "openmic_train_mix.npz")
+        opos = {i: k for k, i in enumerate(ocids)}
+
+        def xy(split):  # noqa: F811
+            recs = oidx.split(split)
+            if split == "train":
+                recs = _limit(recs, a.train_limit)        # real-data curve: nested subsets
+            ids, y, m = label_matrices(label_items(recs, "mix"), tax)
+            return _Rows(OX, [opos[i] for i in ids]), y, m
+
     X, Y, Mk = xy("train")
     Xv, Yv, Mv = xy("val")
     Xv = Xv.materialize()                                  # val is small: keep in RAM
@@ -226,16 +273,23 @@ def cmd_scratch(a) -> int:
         cot = {"dataset": "openmic", "split": "train", "licence": a.cotrain_licence,
                "n": len(keep)}
         print(f"co-training with {len(keep)} OpenMIC train clips (licence={a.cotrain_licence})")
-    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db)
-    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg)
+    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db,
+                          **({"lr": a.lr} if a.lr else {}))
+    init = None
+    if a.init_from:                                   # triangle corner 3: fine-tune
+        import torch
+        init = torch.load(a.init_from, map_location="cpu", weights_only=False)["state"]
+    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg, init_state=init)
     meta = {"model": "scratch_cnn", "n_params": S.n_params(model), "backbone": None,
             "backbone_license": "none (random init)", "commercial_clean": a.commercial_only,
-            "train": {"dataset": "synthetic", "n_train": len(X), "n_val": len(Xv),
-                      "commercial_only": a.commercial_only},
+            "train": {"dataset": a.train_source, "n_train": len(X), "n_val": len(Xv),
+                      "commercial_only": a.commercial_only, "train_limit": a.train_limit,
+                      "init_from": str(a.init_from) if a.init_from else None},
             "best_val_map": max(h["val_map"] for h in hist), "epochs_run": len(hist),
             "cotrain": cot}
     a.out.mkdir(parents=True, exist_ok=True)
-    tag = (f"_{a.mel_prefix}" + (f"_n{a.train_limit}" if a.train_limit else "")
+    tag = (f"_{a.mel_prefix if a.train_source == 'synthetic' else 'openmic'}"
+           + ("_ft" if a.init_from else "") + (f"_n{a.train_limit}" if a.train_limit else "")
            + (f"_cot{a.cotrain_licence}" if a.cotrain_openmic else ""))
     S.save(model, a.out / f"scratch_cnn{tag}.pt", cfg, hist, meta)
     from .embed import _device
@@ -573,6 +627,12 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--seed", type=int, default=0)
     q.add_argument("--hidden", type=int, default=0, help="MLP head width (0 = linear probe)")
     q.add_argument("--lr", type=float, default=0.0)
+    q.add_argument("--train-source", default="synthetic", choices=("synthetic", "openmic"),
+                     help="triangle: train on real OpenMIC train clips instead of synthetic")
+    q.add_argument("--openmic-val-fraction", type=float, default=0.15,
+                     help="--train-source openmic: artist-disjoint val share of OpenMIC train")
+    q.add_argument("--init-from", type=Path, help="triangle corner 3: start from this checkpoint")
+    q.add_argument("--train-limit", type=int, help="nested random subset of N train clips")
     q.add_argument("--out", required=True, type=Path)
     q.set_defaults(fn=cmd_probe)
     mm = sub.add_parser("mels", help="cache log-mel spectrograms for the from-scratch CNN")
@@ -597,6 +657,12 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--openmic-root", type=Path)
     sc.add_argument("--seed", type=int, default=0)
     sc.add_argument("--gain-db", type=float, default=0.0, help="random input gain, +/- dB per clip")
+    sc.add_argument("--train-source", default="synthetic", choices=("synthetic", "openmic"),
+                     help="triangle: train on real OpenMIC train clips instead of synthetic")
+    sc.add_argument("--openmic-val-fraction", type=float, default=0.15,
+                     help="--train-source openmic: artist-disjoint val share of OpenMIC train")
+    sc.add_argument("--init-from", type=Path, help="triangle corner 3: start from this checkpoint")
+    sc.add_argument("--lr", type=float, default=0.0, help="peak LR override (0 = config default)")
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)

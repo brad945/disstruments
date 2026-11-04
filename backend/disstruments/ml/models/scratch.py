@@ -143,14 +143,20 @@ def _val_map(y, s, m) -> float:
 
 
 def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.ndarray,
-          Mv: np.ndarray, cfg: ScratchConfig, device: str | None = None, log=print):
+          Mv: np.ndarray, cfg: ScratchConfig, device: str | None = None, log=print,
+          init_state: dict | None = None):
+    """`init_state` (a saved model's state dict) starts from those weights instead of a
+    random init: the triangle's fine-tune corner. Same architecture required."""
     import torch
 
     from .embed import _device
     dev = device or _device()
     torch.manual_seed(cfg.seed)
     rng = np.random.default_rng(cfg.seed)
-    model = make_model(Y.shape[1], cfg).to(dev)
+    model = make_model(Y.shape[1], cfg)
+    if init_state is not None:
+        model.load_state_dict(init_state)
+    model = model.to(dev)
     Yt = torch.from_numpy(Y.astype(np.float32)); Mt = torch.from_numpy(Mk.astype(np.float32))
     pw = (((1 - Yt) * Mt).sum(0) / (Yt * Mt).sum(0).clamp_min(1)).clamp(1, cfg.max_pos_weight).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
