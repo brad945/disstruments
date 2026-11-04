@@ -1,4 +1,4 @@
-# Triangle experiment: pre-registration (written 2026-11-04, before any run)
+# Triangle experiment: pre-registration (written 2026-11-04, before any run) and results
 
 **Why.** M3's headline is that a 1.22M CNN ties MERT-95M on real music (OpenMIC trained-9
 0.785 vs 0.774) when both are trained on synthetic renders only. "Ties" alone can't say
@@ -91,6 +91,100 @@ Otherwise it is "no detectable difference", whatever the point estimate.
   `~/datasets/disstruments-synth/preds/tri/` and `eval_runs/` with names `tri_<arm>_s<seed>`.
 - One GPU job at a time (16 GB RAM). Estimated ~18 h of compute.
 
-## Results
+## Results (2026-11-04, run complete)
 
-*(pending — never cite)*
+All arms ran to completion with the configs above. Nothing was re-tuned. Tables:
+`~/datasets/disstruments-synth/preds/tri/tables/*.md` (1,000-resample paired artist bootstrap).
+Mean AP over 3 seeds unless noted; "counts" = every seed's paired CI excludes 0, same sign.
+
+**Incident (scoring, not training).** `scratch` tagged its pooled-MoisesDB predictions
+`moisesdb_all`, which the harness rejects, and the run script's error filter hid the message,
+so every CNN arm trained in this run had no MoisesDB score. Fixed in code
+(`models/__main__._pred_dataset`, shared with `scratch-predict`, with a test). The label was
+corrected on the existing files (ids, nodes and scores verified bit-identical), and they were
+scored with the unchanged harness. No predictions were regenerated.
+
+### Main table
+
+| | OpenMIC trained-9 (in-domain for c2/c3) | MoisesDB trained-9 (primary, 6 nodes) | MoisesDB leaves (7) |
+|---|---|---|---|
+| c1 cnn | 0.778 | 0.656 | 0.461 |
+| c1 mert | 0.774 | 0.670 | 0.485 |
+| c2 cnn | 0.901 | 0.652 | (no leaves trained) |
+| c2 mert | 0.867 | 0.666 | (no leaves trained) |
+| c3 cnn | 0.898 | 0.654 | 0.345 |
+| c3 mert | 0.874 | **0.708** | 0.444 |
+| ref: c1 v7sg (served, 1 seed) | 0.805 | 0.703 | 0.566 |
+| ref: c3 v7sg (1 seed) | 0.893 | 0.662 | 0.355 |
+| ref: c3j cnn (joint, 1 seed) | 0.870 | 0.659 | 0.402 |
+
+### Q1. Synthetic-to-real gap (c2 − c1)
+
+| | OpenMIC | MoisesDB |
+|---|---|---|
+| cnn | +0.123, counts | −0.004, no detectable difference |
+| mert | +0.093, counts | −0.004, no detectable difference |
+
+**Gap on OpenMIC but not MoisesDB, for both models.** By the pre-registered reading, the
+OpenMIC "gap" is mostly in-domain advantage, not sim-to-real. On independent real music,
+training only on our synthetic renders matches training on 12,678 human-labelled real clips.
+
+### Q2. Does MERT's advantage only show with real labels? (mert − cnn)
+
+| | OpenMIC | MoisesDB |
+|---|---|---|
+| c1 | −0.004, no difference | +0.014, no difference |
+| c2 | **−0.033 (CNN better)**, counts | +0.014, no difference |
+
+**No.** The 1.22M CNN ties MERT-95M with synthetic labels and with real labels on the primary
+test, and beats it in-domain with real labels. The M3 tie now holds on 3 seeds and both tests.
+
+### Q3. Is synthetic pretraining worth anything once real data exists? (c3 − c2)
+
+| real clips | cnn OpenMIC | cnn MoisesDB | mert OpenMIC | mert MoisesDB |
+|---|---|---|---|---|
+| 254 | −0.012, no | **+0.076, counts** | +0.069, counts | +0.066, counts |
+| 1,268 | −0.046, no | −0.014, no | +0.044, counts | +0.070, counts |
+| 6,339 | −0.004, no | +0.015, no | +0.019, counts | +0.053, counts |
+| 12,678 (all) | −0.003, no | +0.003, no | +0.007, no | **+0.042, counts** |
+
+- **MERT:** the benefit shrinks in-domain as expected (stops counting on OpenMIC only at full
+  data), but on MoisesDB it **never stops counting**. Synthetic-then-real is the best recipe
+  measured (0.708).
+- **CNN:** the benefit counts only at 254 clips and stops counting at 1,268.
+- Likely mechanism (secondary test, not a decision rule): on the OpenMIC untrained-11 classes
+  (learnable only from real data), c3 cnn − c2 cnn = **−0.095 (counts)**, while c3 mert (0.723)
+  is above c2 mert (0.689). The pre-registered CNN fine-tune (peak LR 2e-4, 20 epochs) under-learns
+  the new classes. So the CNN result says "this fine-tune recipe adds nothing", not "synthetic
+  pretraining is worthless for the CNN". Testing a higher LR is a separate, labelled follow-up.
+
+### Q4. Does fine-tuning forget subtypes? (c3 − c1, MoisesDB leaves)
+
+- cnn: **−0.116**, counts.
+- mert: **−0.041**, counts.
+- served v7sg: −0.211 (1 seed, CI excludes 0); its fine-tune also drops MoisesDB trained-9
+  0.703 → 0.662.
+
+**Yes.** Coarse real labels ("piano") overwrite subtype knowledge ("Rhodes"), more so for the
+CNN. The served model stays the synthetic-only v7sg.
+
+### Post hoc (not pre-registered; 300-resample bootstrap)
+
+On MoisesDB, c3 mert − c3 cnn = +0.054 and counts. With this fine-tune recipe, MERT gets more
+out of the synthetic-then-real combination than the CNN does.
+
+### What can be cited
+
+1. The CNN ties MERT-95M on real music when both train on the same synthetic data:
+   - 3 seeds;
+   - both OpenMIC and MoisesDB;
+   - it also ties with real labels on MoisesDB.
+2. On out-of-domain real music (MoisesDB), synthetic-only training matches real-only training
+   on OpenMIC, for both models. The large OpenMIC gap is in-domain advantage.
+3. For MERT, synthetic pretraining then real fine-tuning beats real-only out-of-domain, at
+   every real-data size tested, including all 12,678 clips.
+4. Fine-tuning on coarse real labels erases fine-grained subtype skill (both models).
+
+Caveat on scope:
+- MoisesDB trained-9 is 6 nodes over 720 clips (240 songs).
+- Real training data is one source (OpenMIC / FMA).
