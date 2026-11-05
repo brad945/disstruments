@@ -81,3 +81,14 @@ def test_relative_weight_change_groups_by_block():
     assert all(rel[g] > 0 for g in ("block1", "block2", "head"))    # bn0 affine init is identical (1, 0)
     same = A.relative_weight_change(m1.state_dict(), m1.state_dict())
     assert all(v == pytest.approx(0.0) for v in same.values())
+
+
+def test_swap_bn_stats_moves_only_running_statistics():
+    m1, m3, _ = _two_models()
+    s1, s3 = m1.state_dict(), m3.state_dict()
+    sw = A.swap_bn_stats(s3, s1)
+    assert set(sw) == set(s3)
+    for k in s3:
+        src = s1 if k.endswith(A.BN_STAT_SUFFIXES) else s3
+        assert torch.equal(sw[k], src[k]), k
+    assert any(k.endswith("running_mean") and not torch.equal(s1[k], s3[k]) for k in s1)  # the swap is non-trivial

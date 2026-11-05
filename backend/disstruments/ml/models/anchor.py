@@ -73,6 +73,18 @@ def subset_map(y: np.ndarray, s: np.ndarray, m: np.ndarray, cols: Sequence[int])
     return M.macro(ap, reasons, np.asarray(cols, dtype=int)).value
 
 
+BN_STAT_SUFFIXES = ("running_mean", "running_var", "num_batches_tracked")
+
+
+def swap_bn_stats(dst: dict, src: dict) -> dict:
+    """`dst` with its BatchNorm running statistics replaced by `src`'s (weights untouched).
+    Evaluation-only diagnostic: separates "BN statistics adapted to the new data" from
+    "weights travelled" as causes of a score change."""
+    out = dict(dst)
+    out.update({k: src[k] for k in src if k.endswith(BN_STAT_SUFFIXES)})
+    return out
+
+
 def node_sets(tax: Taxonomy) -> dict[str, list[int]]:
     """Column indices in `tax.nodes` for the plan's node lists."""
     from ..eval.triangle import v1_trained
@@ -269,6 +281,36 @@ def cmd_score(a) -> int:
     return 0
 
 
+def cmd_bnswap(a) -> int:
+    """For each fine-tuned checkpoint: score as is, with c1's BN statistics swapped in, and c1
+    with the checkpoint's BN statistics swapped in."""
+    from .embed import _device
+    dev = _device()
+    tax = Taxonomy.load()
+    sets = node_sets(tax)
+    s1, cfg1 = _load(a.c1)
+    Xo, yo, mo = openmic_val(a.cache, a.openmic_root, tax)
+    Xs, ys, ms = synthetic_split(a.cache, a.train_root, tax, "val")
+    Xo, Xs = Xo.materialize(), Xs.materialize()
+
+    def score(st, cfg):
+        m = _model_from(st, cfg, len(tax), dev)
+        r = {f"openmic_val_{k}": v for k, v in
+             _score(m, Xo, yo, mo, tax, dev, sets, ("trained9", "all20", "untrained11")).items()}
+        r["synthetic_val_leaf"] = _score(m, Xs, ys, ms, tax, dev, sets, ("leaf",))["leaf"]
+        return r
+
+    rows = []
+    for path in a.models:
+        s3, cfg3 = _load(path)
+        rows.append({"model": str(path), "as_is": score(s3, cfg3),
+                     "model_with_c1_bn": score(swap_bn_stats(s3, s1), cfg3),
+                     "c1_with_model_bn": score(swap_bn_stats(s1, s3), cfg1)})
+        print(path.parent.name, {k: round(v["synthetic_val_leaf"], 3) for k, v in rows[-1].items() if k != "model"})
+    _write(a.out, "bnswap", {"c1": str(a.c1), "rows": rows})
+    return 0
+
+
 def _write(out: Path, name: str, doc: dict) -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{name}.json").write_text(json.dumps(doc, indent=1))
@@ -305,6 +347,12 @@ def main(argv: list[str] | None = None) -> int:
     for flag, kw in (("--cache", {}), ("--train-root", {}), ("--openmic-root", {}), ("--out", {})):
         s.add_argument(flag, type=Path, required=True, **kw)
     s.set_defaults(fn=cmd_score)
+    b = sub.add_parser("bnswap", help="BN-statistics swap diagnostic between c1 and fine-tuned checkpoints")
+    b.add_argument("--c1", type=Path, required=True)
+    b.add_argument("--models", type=Path, nargs="+", required=True)
+    for flag in ("--cache", "--train-root", "--openmic-root", "--out"):
+        b.add_argument(flag, type=Path, required=True)
+    b.set_defaults(fn=cmd_bnswap)
     a = p.parse_args(argv)
     return a.fn(a)
 

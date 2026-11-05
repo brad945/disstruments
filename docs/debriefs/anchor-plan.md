@@ -285,3 +285,97 @@ post-fine-tune leaf-head refit is added as a cheap post-hoc step on every Phase-
 - The no-re-warm arm R4 uses a flat LR at LR* for 70% of steps then a linear decay to 0
   (the pre-registered "at most the synthetic run's final LR" is uninformative for OneCycle,
   whose final LR is ~1e-10).
+
+### Phase 1 (2026-11-04 21:13 -> 11-05 15:38, seed 0; `preds/anchor/p1/`, `logs/anchor_p1.log`)
+
+Validation only (OpenMIC-val all-20 / trained-9 / untrained-11 mAP; synthetic-val leaf AP).
+Test predictions were written and not read. c1 (synthetic-only) and c2 (real-only, 2e-3 scratch)
+are scored by the same code as references. Wall-clock: one fine-tune 36-41 min; `AUDIO80`
+2 h 37 min. The Mac was on battery and hibernated 04:45-12:43 at 1% charge; the job paused
+and resumed, every arm completed all its epochs (checked per log), nothing was re-run.
+
+| arm (12,678 clips unless noted) | trained-9 | all-20 | untrained-11 | leaf AP | best ep | block-4 / head weight change |
+|---|---|---|---|---|---|---|
+| c1 reference (no fine-tune) | 0.724 | 0.468 | 0.259 | 0.930 | | |
+| c2 reference (real-only scratch) | 0.891 | 0.793 | 0.714 | 0.265 | | |
+| R1 2e-5 | 0.745 | 0.568 | 0.424 | 0.395 | 16 | 6% / 17% |
+| R1 6e-5 | 0.798 | 0.630 | 0.493 | 0.341 | 17 | 10% / 34% |
+| R1 2e-4 (triangle c3) | 0.872 | 0.737 | 0.626 | 0.385 | | 16% / 40% |
+| **R1 6e-4 = LR\*** | 0.894 | 0.788 | 0.701 | 0.397 | 16 | 31% / 56% |
+| R1 2e-3 | 0.893 | 0.810 | 0.742 | 0.353 | 18 | 75% / 82% |
+| R3 `DISC` | 0.848 | 0.738 | 0.648 | **0.840** | 18 | 3% / 52% |
+| R4 `NOWARM+BNFREEZE` @6e-4 | 0.895 | 0.792 | 0.708 | 0.339 | 17 | 51% / 90% |
+| R5 `AUDIO80` (2e-5, 80 ep) | 0.855 | 0.695 | 0.563 | 0.380 | 76 | 17% / 48% |
+| R6 `MASK11` @2e-4 | 0.884 | (0.584) | (0.339) | 0.585 | 14 | 16% / 42% |
+| R2 2e-5, 1,268 | 0.690 | 0.505 | 0.354 | 0.852 | 5 | |
+| R2 6e-5, 1,268 | 0.677 | 0.503 | 0.360 | 0.816 | 2 | |
+| R2 2e-4, 1,268 (triangle) | 0.711 | 0.541 | 0.401 | 0.414 | | |
+| R2 6e-4, 1,268 | 0.752 | 0.598 | 0.472 | 0.348 | 19 | |
+| R2 2e-3, 1,268 | 0.802 | 0.649 | 0.524 | 0.349 | 16 | |
+| R7 c2 1e-3, 1,268 | 0.806 | 0.668 | 0.555 | 0.259 | 34 | |
+| R7 c2 2e-3, 1,268 (triangle) | 0.791 | 0.658 | 0.549 | 0.247 | | |
+| R7 c2 4e-3, 1,268 | 0.757 | 0.631 | 0.527 | 0.252 | 34 | |
+
+(`MASK11`'s all-20 and untrained-11 are in parentheses: those rows were excluded from its loss.)
+
+**LR\* = 6e-4** by the pre-registered rule: highest all-20 among LRs whose leaf AP is >= the
+2e-4 run's 0.385 (6e-4: 0.397 passes; 2e-3: 0.353 fails). It beats 2e-4 by +0.051 all-20 and
++0.075 untrained-11, far above the 0.005 threshold, so **G1's first clause does not fire**: the
+triangle's fine-tune LR was 3x too cold.
+
+**G1 second clause fires.** c3 - c2 on OpenMIC-val untrained-11: 2e-4 -0.087 (the triangle's
+"under-learning", -0.095 on test); 6e-4 **-0.012**; 2e-3 +0.028; R4 -0.006; `DISC` -0.066.
+An LR >= 6e-4 brings it to >= -0.02, so **H-c3 is pre-declared closed as LR-explained**: the
+untrained-11 deficit was a recipe artefact, not a pretraining cost. Per the gate, W2's c2(2x)
+and c3(2x) arms drop to 1 seed each (sanity) and W1 continues for H-c1 only. Whether the hotter
+fine-tune also moves the out-of-domain numbers is a test-time question (H-b1, final scoring).
+
+**At 1,268 clips pretraining still does not win in-domain at any LR.** c3's best all-20 is
+0.649 (2e-3) and 0.598 at LR\*; validated c2 reaches 0.668 (1e-3). The leaf constraint keeps
+2e-4 at this size (every hotter LR drops leaf AP to ~0.35 vs 0.414), so the Phase 3 W2 grid
+{LR\*/3, LR\*, 3 LR\*} = {2e-4, 6e-4, 1.8e-3} brackets it as intended. R7 shows the triangle's
+c2 LR (2e-3) was within 0.01 of the validated best, so the triangle's real-only control was
+fair.
+
+**Low LRs under-learn and forget anyway.** 2e-5 reaches 0.568 all-20 and still loses leaf AP
+to 0.395 with only 6% weight travel in block 4. `AUDIO80` (the EfficientAT recipe) reaches
+0.695 after 80 epochs, best epoch 76 and still rising, leaf 0.380: at this model size the
+published audio recipe is slow on the coarse axis and no better on the leaf axis.
+
+**Schedule is not a lever.** R4 (flat 6e-4, no warm-up, BN statistics frozen) ties OneCycle
+6e-4 on all-20 (0.792 vs 0.788) and loses more leaf AP (0.339 vs 0.397); without warm-up the
+weights travel further (block 4 51% vs 31%). OneCycle is kept for Phase 2.
+
+**`DISC` is the only arm that keeps the leaves** (0.840 = 90% of c1's 0.930) and it pays for
+it on the coarse axis: 0.738 all-20, the 2e-4 level, because its 2e-5 backbone under-learns
+exactly like R1 2e-5; the hot head rows (1e-3) recover most but not all of the gap. Its weight
+change is <= 2.7% in every block. Coarse learning and leaf retention are not yet obtained
+together by any Phase-1 recipe; that is Phase 2's job.
+
+**`MASK11` (H-b2, validation read).** Removing the 11 never-trained rows from the loss halves
+the leaf loss at the same LR (0.585 vs 0.385) and slightly raises trained-9 (0.884 vs 0.872).
+The randomly initialised untrained-11 rows are a real source of feature distortion (the LP-FT
+mechanism of Kumar et al. 2022: large head gradients from random rows drag the trunk). The
+MoisesDB read of H-b2 waits for the final scoring.
+
+**Post hoc: BN-statistics swap** (`anchor bnswap`, evaluation only, `preds/anchor/p1/bnswap.json`).
+c1's weights with an arm's BatchNorm running statistics lose 0.23-0.34 leaf AP on their own
+(0.930 -> 0.588 at 2e-5, 0.637 at 6e-4, 0.639 at 2e-3, 0.703 after `AUDIO80`, 0.789 after
+`MASK11`). Swapping c1's statistics back into a fine-tuned arm recovers nothing and usually
+hurts (6e-4: 0.397 -> 0.293; 2e-5: 0.394 -> 0.407), because the weights co-adapted to the
+shifted statistics. Reading: **the BN-statistics shift to OpenMIC is a large forgetting
+channel by itself, locked in within the first epoch regardless of LR** (running statistics
+adapt by momentum, not by the optimizer), which is why 2e-5 forgets with 6% weight travel.
+Freezing BN statistics is necessary for retention (`DISC`) but not sufficient once the
+weights travel (R4). Leaf AP is therefore not monotone in weight travel: two channels, BN
+statistics at any LR and weight displacement at high LR.
+
+**Consequences for Phase 2 (proposed to Bradley 2026-11-05, before any Phase-2 run).**
+- LR\* = 6e-4 for F0-F4, OneCycle, 20 epochs, as pre-registered.
+- Two cheap seed-0 arms are added, each promoted to seeds 1-2 only if it passes G2:
+  F0b `BASE*+BNFREEZE` (6e-4 OneCycle with BN statistics frozen; isolates the BN channel from
+  R4's no-warm-up confound) and F5 `LP-FT` (head-only fit of the 20 OpenMIC rows for 3 epochs
+  at 1e-3 with the trunk frozen, then the F0 recipe; the `MASK11` reading says the random
+  untrained-11 rows distort the trunk, and LP-FT is the published fix). If F0b beats F0 on
+  leaf AP at no coarse cost, the anchor arms F1-F3 run on top of BN freeze.
+- Everything else in Phase 2 is unchanged.
