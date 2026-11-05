@@ -182,3 +182,12 @@ def test_commercial_licence_filter_and_concat_view():
     v = _Concat([_Rows(a, [2, 0]), _Rows(b, [1])])
     assert len(v) == 3 and v.shape == (3, 2, 4)
     assert (v[0] == a[2]).all() and (v[2] == b[1]).all() and (v[1, :, 1:3] == a[0, :, 1:3]).all()
+
+
+def test_pred_dataset_maps_cache_prefixes_to_harness_names():
+    """Triangle bug: `scratch` tagged pooled MoisesDB predictions 'moisesdb_all', which the
+    harness rejects; both prediction paths must use the same mapping."""
+    from disstruments.ml.models.__main__ import _pred_dataset
+    assert _pred_dataset("moisesdb_all") == _pred_dataset("moisesdb") == "moisesdb"
+    assert _pred_dataset("openmic") == "openmic" and _pred_dataset("golden") == "golden"
+    assert _pred_dataset("synthetic_v7s") == "synthetic"

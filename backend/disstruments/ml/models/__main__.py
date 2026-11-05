@@ -54,6 +54,16 @@ def _openmic_trainval(a):
                         check_split_leakage=False)
 
 
+def _pred_dataset(prefix: str) -> str:
+    """Mel-cache prefix -> the dataset name the eval harness checks predictions against
+    (`moisesdb_all` is the pooled-window cache of MoisesDB)."""
+    if prefix.startswith("moisesdb"):
+        return "moisesdb"
+    if prefix in ("openmic", "golden") or prefix.startswith("idmt"):
+        return prefix
+    return "synthetic"
+
+
 def _limit(records, n):
     """Nested random subset of N records (seed 0: a smaller N is a subset of a larger)."""
     if not n or n >= len(records):
@@ -303,8 +313,7 @@ def cmd_scratch(a) -> int:
         ids = [i for i in ids if i]
         scores = S.predict(model, Xe, _device())
         p = save_predictions(a.out / f"scratch{tag}_{ds}_{split}_mix.npz", ids, nodes, scores,
-                             tax.version, dataset="synthetic" if ds.startswith("synthetic") else ds,
-                             meta=meta)
+                             tax.version, dataset=_pred_dataset(ds), meta=meta)
         print(f"wrote {p} ({len(ids)} items; best val mAP {meta['best_val_map']:.3f}, "
               f"{meta['n_params']/1e6:.2f}M params)")
     return 0
@@ -417,8 +426,7 @@ def cmd_scratch_predict(a) -> int:
         prefix, split = spec.split(":")
         ids, Xe = S.load_mel_cache(a.cache / "mels" / f"{prefix}_{split}_mix.npz")
         scores = S.predict(model, Xe, dev)
-        ds = ("moisesdb" if prefix.startswith("moisesdb") else
-              prefix if prefix in ("openmic", "golden") or prefix.startswith("idmt") else "synthetic")
+        ds = _pred_dataset(prefix)
         out = a.out / f"{a.model.stem}__{prefix}_{split}_mix.npz"
         save_predictions(out, ids, nodes, scores, tax.version, dataset=ds, meta=meta)
         print(f"wrote {out} ({len(ids)} items)")
