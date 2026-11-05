@@ -8,7 +8,8 @@ Rhodes vs Wurlitzer, nylon vs steel-string, clean vs distorted, 808 vs acoustic 
 The instrument model is my own: a 1.2M-parameter CNN on log-mel spectrograms, trained from
 scratch on synthetic renders only. On real music (OpenMIC) it ties MERT-95M, a music
 foundation model about 80x its size, when both are trained on the same synthetic data
-(0.785 vs 0.774 mean AP; 95% CI of the difference [-0.009, +0.027]).
+(0.785 vs 0.774 mean AP; 95% CI of the difference [-0.009, +0.027]). The tie holds across
+3 training seeds, and also when both models train on real human-labelled music instead.
 
 Later I want to turn this into **Instrumake**: software that turns that breakdown into a
 starting point in a DAW (matching instruments, key, tempo), so you can build on any song at
