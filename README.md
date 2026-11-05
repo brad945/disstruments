@@ -36,13 +36,18 @@ professionally recorded songs that no model trains on (720 ten-second clips). Co
 bass, piano, organ, synth, drums. Subtypes = clean / distorted electric guitar, upright bass,
 acoustic piano, synth pad, synth lead, acoustic kit.
 
-| model | coarse (6) | subtypes (7) |
-|---|---|---|
-| My first model (M3) | 0.660 | 0.457 |
-| + real one-note recordings in the training data (NSynth, Iowa; M4) | 0.668 | 0.468 |
-| **Served now: + ±12 dB gain augmentation (M5)** | **0.703** | **0.566** |
-| Licence-clean version (owned / commercially licensed data only) | 0.674 | 0.539 |
-| *Reference:* MERT-95M probe, same synthetic training data (3 seeds) | 0.670 | 0.485 |
+| # | date | what changed | coarse (6) | subtypes (7) |
+|---|---|---|---|---|
+| 1 | 2026-10-09 | First model (M3): synthetic MIDI renders only | 0.660 | 0.457 |
+| 2 | 2026-10-12 | Added real one-note recordings to the training data (NSynth, Iowa) | 0.668 | 0.468 |
+| 3 | 2026-10-12 | First version served in the app (M5) | 0.674 | 0.461 |
+| 4 | 2026-10-13 | **+ ±12 dB gain augmentation. Served now.** | **0.703** | **0.566** |
+
+Reference: MERT-95M, a published music foundation model ~80× larger, trained on the same
+synthetic data (3 seeds): coarse 0.670, subtypes 0.485.
+
+Side branch: a licence-clean version of #4 (owned or commercially licensed data only, for a
+future commercial release) scores 0.674 / 0.539.
 
 On my own hand-labelled golden set (25 full songs, labels frozen before scoring), the served
 model scores 0.693 on fine-grained nodes, where random guessing scores 0.478.
