@@ -85,25 +85,7 @@ def node_sets(tax: Taxonomy) -> dict[str, list[int]]:
             "leaf": [ix[n] for n in sorted(trained) if tax.is_leaf(n)]}
 
 
-def relative_weight_change(s1: dict, s3: dict, prefix_of=None) -> dict[str, float]:
-    """||theta3 - theta1|| / ||theta1|| per group (default: per conv block + head)."""
-    import torch
-    groups: dict[str, list[float]] = {}
-    for k, t1 in s1.items():
-        if not torch.is_floating_point(t1) or "running" in k:
-            continue
-        g = prefix_of(k) if prefix_of else _block_of(k)
-        d = groups.setdefault(g, [0.0, 0.0])
-        d[0] += float(((s3[k] - t1) ** 2).sum())
-        d[1] += float((t1 ** 2).sum())
-    return {g: (v[0] ** 0.5) / (v[1] ** 0.5 + 1e-12) for g, v in groups.items()}
-
-
-def _block_of(key: str) -> str:
-    # body.<i>.*: 7 modules per block (conv, bn, relu, conv, bn, relu, pool)
-    if key.startswith("body."):
-        return f"block{int(key.split('.')[1]) // 7 + 1}"
-    return key.split(".")[0]
+from .scratch import relative_weight_change  # noqa: E402  (per-block ||d theta|| / ||theta||)
 
 
 # ----------------------------------------------------------------------- model features
@@ -268,6 +250,25 @@ def cmd_cka(a) -> int:
     return 0
 
 
+def cmd_score(a) -> int:
+    """Selection metrics for an existing checkpoint (e.g. the triangle's 2e-4 fine-tunes):
+    OpenMIC-val trained-9 / all-20 / untrained-11 and synthetic-val leaf AP."""
+    from .embed import _device
+    dev = _device()
+    tax = Taxonomy.load()
+    sets = node_sets(tax)
+    st, cfg = _load(a.model)
+    model = _model_from(st, cfg, len(tax), dev)
+    Xo, yo, mo = openmic_val(a.cache, a.openmic_root, tax)
+    Xs, ys, ms = synthetic_split(a.cache, a.train_root, tax, "val")
+    vm = {f"openmic_val_{k}": v for k, v in
+          _score(model, Xo.materialize(), yo, mo, tax, dev, sets, ("trained9", "all20", "untrained11")).items()}
+    vm["synthetic_val_leaf"] = _score(model, Xs.materialize(), ys, ms, tax, dev, sets, ("leaf",))["leaf"]
+    print("val metrics:", {k: round(v, 4) for k, v in vm.items() if v is not None})
+    _write(a.out, "score", {"model": str(a.model), "val_metrics": vm})
+    return 0
+
+
 def _write(out: Path, name: str, doc: dict) -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{name}.json").write_text(json.dumps(doc, indent=1))
@@ -299,6 +300,11 @@ def main(argv: list[str] | None = None) -> int:
     common(c)
     c.add_argument("--n-clips", type=int, default=500)
     c.set_defaults(fn=cmd_cka)
+    s = sub.add_parser("score", help="selection metrics for one existing checkpoint")
+    s.add_argument("--model", type=Path, required=True)
+    for flag, kw in (("--cache", {}), ("--train-root", {}), ("--openmic-root", {}), ("--out", {})):
+        s.add_argument(flag, type=Path, required=True, **kw)
+    s.set_defaults(fn=cmd_score)
     a = p.parse_args(argv)
     return a.fn(a)
 
