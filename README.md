@@ -28,8 +28,32 @@ composition.
 
 Confidence is shown honestly: below 0.30 is hidden, 0.30-0.60 shows "?".
 
+## Metrics at a glance
+
+Mean average precision (AP: 1.0 = perfect, higher is better) on **MoisesDB**, 240 real,
+professionally recorded songs that no model trains on (720 ten-second clips). Coarse = guitar,
+bass, piano, organ, synth, drums. Subtypes = clean / distorted electric guitar, upright bass,
+acoustic piano, synth pad, synth lead, acoustic kit.
+
+| model | coarse (6) | subtypes (7) |
+|---|---|---|
+| My first model (M3) | 0.660 | 0.457 |
+| + real one-note recordings in the training data (NSynth, Iowa; M4) | 0.668 | 0.468 |
+| **Served now: + ±12 dB gain augmentation (M5)** | **0.703** | **0.566** |
+| Licence-clean version (owned / commercially licensed data only) | 0.674 | 0.539 |
+| *Reference:* MERT-95M probe, same synthetic training data (3 seeds) | 0.670 | 0.485 |
+
+On my own hand-labelled golden set (25 full songs, labels frozen before scoring), the served
+model scores 0.693 on fine-grained nodes, where random guessing scores 0.478.
+
 ## What the research found so far
 
+- **Synthetic training holds up on independent music.** In a pre-registered experiment
+  (3 seeds), training on real human-labelled OpenMIC beats synthetic training on OpenMIC's own
+  test set (+0.12 AP), but on MoisesDB the two tie, for both my CNN and MERT. The OpenMIC gap
+  is home-field advantage. My CNN also ties MERT when both train on real labels.
+  Fine-tuning on coarse real labels ("piano") erases subtype skill ("Rhodes"), so the served
+  model stays trained on synthetic data.
 - **Volume doesn't help; diversity does.** 10x more synthetic data left real-music scores
   flat (0.784 -> 0.785) while synthetic validation kept rising. Adding real one-note
   recordings (NSynth, Iowa) nearly doubled AP on unseen nylon/steel guitar.
@@ -45,7 +69,7 @@ Confidence is shown honestly: below 0.30 is hidden, 0.30-0.60 shows "?".
   "golden" sets of full songs (labels frozen before scoring), and adoption rules written
   before each run. One of them rejected my own v8 model.
 
-Details: `docs/debriefs/` (m1-m5, golden, v8), `ML_ENGINEERING.md`,
+Details: `docs/debriefs/` (m1-m5, golden, v8, triangle-plan), `ML_ENGINEERING.md`,
 `docs/research/literature-check.md`.
 
 ## Quick start (Mac, Apple Silicon)
