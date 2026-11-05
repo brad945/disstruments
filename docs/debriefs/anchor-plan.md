@@ -238,4 +238,50 @@ change on synthetic val; validation calibration temperature.
 
 ## Results
 
-*(pending, never cite)*
+### Phase 0 (2026-11-04, 3 seeds, ~8 min; `preds/anchor/p0/`, `logs/anchor_p0.log`)
+
+Validation metrics only (OpenMIC-val is in-domain for c3; synthetic-val rewards staying
+synthetic). MoisesDB untouched.
+
+**P0.1 `WISE`.** Every curve is monotone in alpha for every seed: coarse OpenMIC-val rises,
+synthetic-val leaf AP falls, with no dip anywhere. Mean over seeds:
+
+| alpha | OpenMIC-val trained-9 | all-20 | untrained-11 | synthetic-val leaf |
+|---|---|---|---|---|
+| 0.0 (c1 + c3's untrained-11 rows) | 0.721 | 0.487 | 0.296 | 0.932 |
+| 0.2 | 0.763 | 0.572 | 0.417 | 0.921 |
+| 0.3 | 0.786 | 0.615 | 0.476 | 0.906 |
+| 0.5 | 0.823 | 0.675 | 0.554 | 0.831 |
+| 0.7 | 0.848 | 0.710 | 0.596 | 0.653 |
+| 1.0 (c3) | 0.867 | 0.731 | 0.620 | 0.395 |
+
+- **G0 does not fire:** no barrier, so c1 and c3 share a basin; 2e-4 did not leave it.
+- The pre-registered promotion criterion (>= 95% of c1's leaf AP and >= 90% of c3's coarse
+  gain at one alpha) is **not met** at any alpha: the trade-off is smooth. alpha = 0.3 keeps
+  97% of the leaf AP for 45% of the coarse gain; alpha = 0.5 keeps 89% for 70%.
+- Reading: forgetting here is a continuous weight-displacement effect that interpolation
+  can trade but not undo. theta_alpha is kept as a post-hoc option on every Phase-2 arm,
+  not promoted on its own.
+
+**P0.3 `CKA`.** Blocks 1-2 barely moved (CKA 0.97 / 0.87-0.96); blocks 3-4 moved a lot
+(0.41-0.68 / 0.38-0.44). Relative weight change grows with depth: block 1 ~6%, block 2
+~9%, block 3 ~11%, block 4 ~16%, head 37-46%. Pooled 512-d features changed by ~100% of
+their norm. Reading per the plan: **trunk drift in late layers**; F2/F3 anchors are the
+expected fix, and a freeze-blocks-3-4 surgical arm is justified as an extra in Phase 2.
+
+**P0.2 `REFIT`.** Refitting only the 65 leaf rows on the frozen c3 trunk recovers
+synthetic-val leaf AP 0.385 / 0.369 / 0.431 -> 0.753 / 0.749 / 0.783 (seeds 0-2); the same
+procedure on c1 costs 0.003 (0.930 -> 0.929), so the refit itself is lossless. About
+two-thirds of the lost leaf skill is still readable from c3's features by a new head;
+one-third is gone from the trunk. Reading: **partly suppressed, partly erased**. A
+post-fine-tune leaf-head refit is added as a cheap post-hoc step on every Phase-2 arm
+(alongside WiSE alpha), and the anchors are needed for the remaining third.
+
+**Consequences for Phase 1-2 (decided now, before Phase 1 runs).**
+- Phase 1 runs as pre-registered.
+- Phase 2 adds one surgical arm, F4 `PROP+FREEZE34` (blocks 3-4 and leaf rows frozen, BN
+  running stats frozen), justified by the CKA reading; and two post-hoc steps on every arm:
+  WiSE alpha and leaf-head refit on synthetic train, both selected on validation.
+- The no-re-warm arm R4 uses a flat LR at LR* for 70% of steps then a linear decay to 0
+  (the pre-registered "at most the synthetic run's final LR" is uninformative for OneCycle,
+  whose final LR is ~1e-10).
