@@ -301,6 +301,8 @@ def cmd_scratch(a) -> int:
         extra["weight_decay"] = a.weight_decay
     if a.patience is not None:
         extra["patience"] = a.patience
+    if a.channels:                                     # anchor Phase 3: width (default 32-64-128-256)
+        extra["channels"] = tuple(int(c) for c in a.channels.split(","))
     cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db, schedule=a.schedule,
                           head_lr=a.head_lr, freeze_bn_stats=a.freeze_bn_stats, frozen_rows=frozen_rows,
                           freeze_blocks=tuple(int(b) for b in a.freeze_blocks.split(",") if b),
@@ -753,6 +755,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="anchor F3: synthetic train clips ADDED per batch, as a fraction of the batch size")
     sc.add_argument("--lp-epochs", type=int, default=0, help="anchor F5 LP-FT: head-only epochs first")
     sc.add_argument("--lp-lr", type=float, default=1e-3)
+    sc.add_argument("--channels", default="",
+                    help="anchor Phase 3 width: conv channels per block, e.g. '64,128,256,512' (2x)")
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)

@@ -415,3 +415,134 @@ The rest below are implementation decisions recorded before the first run.
 - Post hoc on every promoted arm x seed: WiSE alpha curve and leaf-head refit, validation only.
 - Budget: 14 seed-0 fine-tunes + up to 12 for seeds 1-2, about 18 h. Script:
   `~/datasets/disstruments-synth/run_anchor_p2.sh`; outputs `preds/anchor/p2/`.
+
+### Phase 2 (2026-11-06 01:45 -> 10:27 seed-0 sweep; seeds 1-2 from 10:35; `preds/anchor/p2/`, `logs/anchor_p2*.log`)
+
+Validation only, as before. All 14 seed-0 arms completed (36-45 min each; the Mac was plugged
+in this time). The seed-1/2 promotion step first failed on a filename (the triangle saved
+seeds 1-2 as `scratch_cnn_synthetic.pt`, seed 0 as `scratch_cnn.pt`); the launcher was pointed
+at both names and resumed with nothing re-run. The pre-registered gate and selection
+(`selection.txt`, `promote.txt`) were applied by the script, not by hand.
+
+| arm (seed 0, LR\* = 6e-4, 20 ep) | trained-9 | all-20 | untrained-11 | leaf AP | best ep | block-1 rel. grad norm, ep 1 | block-4 / head weight change | G2 |
+|---|---|---|---|---|---|---|---|---|
+| c1 reference | 0.724 | 0.468 | 0.259 | 0.930 | | | | |
+| F0 `BASE*` | 0.895 | 0.789 | 0.703 | 0.397 | 16 | 0.174 | 31% / 56% | pass |
+| F0b `BASE*+BNFREEZE` | 0.890 | 0.778 | 0.687 | 0.485 | 19 | 0.153 | 28% / 45% | pass |
+| **F5 `LP-FT`** | 0.884 | **0.803** | **0.736** | 0.552 | 14 | **0.064** | 37% / 81% | pass |
+| F4 `FREEZE34` | 0.836 | 0.687 | 0.565 | 0.332 | 17 | 0.267 | 0% / 42% | drop |
+| F2 `LWF` lambda 0.3 | 0.876 | 0.780 | 0.701 | 0.758 | 17 | 0.181 | 35% / 58% | pass, not promoted |
+| F2 lambda 1 | 0.869 | 0.768 | 0.686 | 0.833 | 19 | 0.213 | 38% / 55% | drop |
+| F2 lambda 3 | 0.848 | 0.742 | 0.655 | 0.868 | 18 | 0.303 | 37% / 56% | drop |
+| F2b lambda 0.3 + BNFREEZE | 0.877 | 0.774 | 0.690 | 0.753 | 17 | 0.180 | 33% / 60% | pass, not promoted |
+| F2b lambda 1 + BNFREEZE | 0.869 | 0.763 | 0.676 | 0.832 | 17 | 0.254 | 36% / 59% | drop |
+| F2b lambda 3 + BNFREEZE | 0.852 | 0.735 | 0.640 | 0.870 | 17 | 0.413 | 37% / 59% | drop |
+| F3 `REPLAY` r 0.1 | 0.838 | 0.740 | 0.661 | 0.919 | 15 | 0.204 | 30% / 68% | drop |
+| F3 r 0.25 | 0.815 | 0.721 | 0.644 | **0.926** | 18 | 0.138 | 29% / 67% | drop |
+| F3b r 0.1 + BNFREEZE | 0.832 | 0.731 | 0.649 | 0.914 | 15 | 0.207 | 30% / 55% | drop |
+| F3b r 0.25 + BNFREEZE | 0.812 | 0.715 | 0.635 | 0.924 | 19 | 0.156 | 29% / 58% | drop |
+
+(G2: leaf AP >= F0's and trained-9 >= F0 - 0.02 = 0.875. Promotion for F2/F3 additionally needs
+trained-9 >= F0 - 0.01 = 0.885. Distillation gate: 7.6% of label entries, 6.5 per clip.)
+
+**F0 reproduces Phase 1.** Same recipe as R1 6e-4: 0.895 / 0.789 / 0.703 / 0.397 vs
+0.894 / 0.788 / 0.701 / 0.397 (epoch 0 bit-identical; the rest is MPS non-determinism).
+
+**`LP-FT` is the only arm that improves the new classes and leaf retention at once:** vs F0,
+all-20 +0.014, untrained-11 +0.033, leaf AP +0.155, trained-9 -0.011. Three head-only epochs on
+the frozen c1 trunk already reach 0.705 all-20 (a linear probe of c1's features; c1 itself scores
+0.468 because its 11 untrained rows are random). The mechanism is the one `MASK11` pointed at:
+with a fitted head, the first-epoch relative gradient norm on block 1 is 0.064 vs 0.174 for F0
+(2.7x smaller), so the trunk is not jolted while the head is random (Kumar et al. 2022). The
+total weight travel ends up similar (block 4 37% vs 31%), but the leaf-head refit recovers 0.852
+from the LP-FT trunk vs 0.787 from F0's: more leaf information survives in the trunk. It also
+converges earliest (best epoch 14, lowest train loss at best).
+
+**BN freeze alone helps (+0.088 leaf AP for -0.005 trained-9), and adds nothing on top of
+distillation or replay:** F2b vs F2 within 0.005 on every metric; F3b vs F3 slightly worse. The
+statistics channel from Phase 1 matters when nothing else keeps synthetic features in use; once
+distillation or replay does, the shift is compensated.
+
+**Distillation trades leaf AP for coarse mAP smoothly:** leaf 0.758 / 0.833 / 0.868 for
+trained-9 -0.019 / -0.026 / -0.047 and all-20 -0.009 / -0.021 / -0.047 at lambda 0.3 / 1 / 3.
+lambda 0.3 passes G2 but misses the pre-registered promotion constraint by 0.009 on trained-9,
+so by the rules **the F2 family stops at seed 0**. It is still the best leaf-per-coarse trade in
+the sweep (+0.36 leaf AP for -0.009 all-20) and the obvious partner for `LP-FT` in a combined
+arm, which was not pre-registered and is proposed to Bradley below rather than run.
+
+**Replay retains the leaves completely and pays the most for it:** 0.919-0.926 leaf AP
+(c1: 0.930) with trained-9 -0.057 (r = 0.1) and -0.080 (r = 0.25), all-20 -0.049 / -0.068. Three
+synthetic clips per 32 real ones cost far more coarse accuracy than their share of the batch:
+the synthetic clips' coarse labels pull the shared coarse nodes toward synthetic-domain decision
+boundaries (the domain gap measured in M3-M4). Replay restricted to leaf nodes (coarse nodes
+masked on replay rows) is the natural follow-up; not pre-registered, proposed below.
+
+**Freezing blocks 3-4 is the wrong lever.** With blocks 3-4, the 65 leaf rows and the BN
+statistics all frozen, leaf AP still collapses, to the lowest value in the sweep (0.332), and
+coarse learning is crippled (0.687 all-20). Only blocks 1-2 could move, and they moved more
+(block-1 gradient norm 0.267 vs 0.174): the frozen late layers were co-adapted to the old early
+features, so early-layer change alone destroys the leaf readout. The Phase-0 CKA reading ("late
+layers drift, so freeze them") identified where the weights move, not what breaks the leaves;
+`DISC` (cold everywhere) in Phase 1 and `LP-FT` here both protect the early layers instead. F4
+is rejected.
+
+**Post hoc (seed 0; WiSE and refit on the three promoted arms).** The alpha curves are again
+smooth and monotone; `LP-FT`'s curve lies above F0's at every alpha on all-20, untrained-11 and
+leaf AP (alpha 0.8: 0.871 / 0.793 / 0.729 / 0.705 vs F0 0.882 / 0.774 / 0.685 / 0.577). Refit:
+F5 0.852 > F0b 0.824 > F0 0.787 > Phase-0 c3 at 2e-4 0.753.
+
+**Against the pre-registered readings.** No arm reaches "retention with no coarse cost" under
+the rules (>= 0.90 x c1's leaf AP within trained-9 -0.01), so by the plan's table **W3 (the
+full-data fine-tune at 2x) becomes essential** in Phase 3. `LP-FT` and `BNFREEZE` go to the final
+scoring with 3 seeds; F2 lambda 0.3 and F3 r 0.1 are scored once at seed 0 as reported arms.
+
+**Seeds 1-2 (F0, F0b, F5; 10:35 -> 15:47, 37-47 min per fine-tune, no failures).** Means over 3
+seeds (sd in parentheses); paired per-seed differences vs F0 in brackets:
+
+| arm, 3 seeds | trained-9 | all-20 | untrained-11 | leaf AP | refit leaf | WiSE alpha 0.8 all-20 / leaf | best ep | block-1 grad norm ep 1 |
+|---|---|---|---|---|---|---|---|---|
+| F0 `BASE*` | 0.886 (0.007) | 0.782 (0.006) | 0.697 (0.005) | 0.415 (0.043) | 0.784 | 0.770 / 0.584 | 16.3 | 0.182 |
+| F0b `+BNFREEZE` | 0.887 (0.003) [-0.004, +0.004, +0.003] | 0.782 (0.003) [-0.010, +0.006, +0.003] | 0.695 (0.007) [-0.016, +0.007, +0.003] | 0.480 (0.008) [+0.088, +0.086, +0.020] | 0.826 | 0.766 / 0.674 | 18.0 | 0.163 |
+| **F5 `LP-FT`** | 0.883 (0.001) [-0.010, -0.002, +0.001] | **0.801** (0.002) [+0.014, +0.023, +0.020] | **0.735** (0.003) [+0.033, +0.043, +0.036] | **0.559** (0.007) [+0.155, +0.180, +0.095] | **0.852** | 0.791 / 0.709 | 14.3 | 0.065 |
+
+- `LP-FT` beats F0 in every seed on all-20, untrained-11 and leaf AP (the triangle's same-sign
+  rule, on validation); its trained-9 cost is not consistent in sign (-0.010 / -0.002 / +0.001),
+  so there is no evidence of a coarse cost. The first-epoch block-1 gradient norm is 0.061-0.068
+  in every seed vs 0.174-0.197 for F0: the mechanism is stable across seeds.
+- `BNFREEZE` raises leaf AP in every seed (+0.02 to +0.09) with no consistent coarse effect.
+- Seed-to-seed spread of F0's leaf AP is large (0.385-0.464, sd 0.043): seed 2 of the plain
+  fine-tune forgets less by chance. `LP-FT` and `BNFREEZE` both cut that spread to < 0.01, so
+  the anchors also make the outcome predictable.
+- `LP-FT` is the Phase-2 recipe carried forward: into the final scoring (3 seeds), and as the
+  recommended fine-tune for any served model from this line (licence-clean re-run required).
+
+
+**Proposed to Bradley (not run; each is a pre-registration amendment):**
+1. `P2x LP-FT+LWF0.3(+BNFREEZE)`: the two mechanisms are different (head-first vs gated
+   teacher), so the gains should add; 2 seed-0 fine-tunes (~1.5 h), promoted to seeds 1-2 under
+   the same G2 + selection rules. Recommended.
+2. `F3c LEAF-REPLAY`: replay rows with the coarse nodes masked, r = 0.1; 1 fine-tune (~40 min).
+   Tests the contamination reading. Recommended if (1) runs.
+3. `W3b`: `LP-FT` at 2x on full data x 3 seeds, the "width + best anchor" product candidate,
+   after W3. Decide after W1 shows whether 2x helps at all.
+
+### Phase 3 amendments (2026-11-06, written before any Phase-3 run)
+
+- `--channels` added to `scratch` (the model, checkpoints, diagnostics and `anchor` tools were
+  already width-agnostic; parameter counts: 1x 1,216,760; 1.5x 2,702,920; 1.75x 3,665,456;
+  2x 4,774,296, with 86 outputs).
+- **G3** is applied by the script: one 2x epoch is timed; if 40 epochs project above 6 h the
+  width drops to 1.75x, and the choice is written to `preds/anchor/p3/g3.txt`.
+- **W0**: 1x scratch grid {1e-3, 4e-3} at seed 0 (2e-3 = c1_s0 exists). Pre-declared: seeds
+  1-2 are re-run at a new 1x LR only if it beats 2e-3 by > 0.005 OpenMIC-val trained-9;
+  otherwise the triangle's c1 seeds stay the 1x reference.
+- **W2 fine-tune LR at 1,268 uses the Phase-1 rule** (highest all-20 subject to leaf AP >= the
+  LR\*/3 = 2e-4 run's), not all-20 alone, so the 2x LR is validated the same way the 1x LR was
+  (2e-4 at this size) and H-c2's difference-in-differences compares like with like.
+- **c3(2x) at 1,268 keeps 3 seeds** (G1 dropped it to 1 for H-c3, but H-c2 needs the three
+  paired differences; cost ~0.5 h); c2(2x) at 1,268 runs at 1 seed as G1 says.
+- **G5 is not applied as written** (it reads MoisesDB mid-plan, which the test-set discipline
+  forbids): W3 runs unconditionally because Phase 2 made it essential, at LR\* = 6e-4 for the
+  same footing as F0; WiSE and refit post hoc on each seed.
+- **G4** is read from best epoch and train loss at best (train mAP is not logged).
+- Script: `~/datasets/disstruments-synth/run_anchor_p3.sh`; outputs `preds/anchor/p3/`.
