@@ -92,6 +92,12 @@ class ScratchConfig:
     freeze_bn_stats: bool = False         # BN running mean/var frozen (affine still trains)
     frozen_rows: tuple[int, ...] = ()     # head rows held at their initial values
     freeze_blocks: tuple[int, ...] = ()   # conv blocks (1-based) excluded from training
+    # Anchor plan Phase 2: anchors against forgetting (all off by default).
+    distill_lambda: float = 0.0           # weight of the hierarchy-gated soft-distillation term
+    distill_T: float = 2.0                # distillation temperature (logits / T, loss x T^2)
+    replay_frac: float = 0.0              # synthetic clips ADDED per batch, as a fraction of batch_size
+    lp_epochs: int = 0                    # LP-FT: head-only epochs (trunk + BN stats frozen) before the main phase
+    lp_lr: float = 1e-3                   # constant LR of that head-only phase
 
 
 def flat_decay_factor(step: int, total: int, flat_fraction: float) -> float:
@@ -120,6 +126,46 @@ def relative_weight_change(s_from: dict, s_to: dict) -> dict[str, float]:
         d[0] += float(((s_to[k].float() - t0.float()) ** 2).sum())
         d[1] += float((t0.float() ** 2).sum())
     return {g: (v[0] ** 0.5) / (v[1] ** 0.5 + 1e-12) for g, v in acc.items()}
+
+
+def descendant_matrix(tax) -> np.ndarray:
+    """(K, K) bool over tax.nodes: D[p, d] = True iff d is a strict descendant of p."""
+    ix = tax.index()
+    D = np.zeros((len(tax), len(tax)), dtype=bool)
+    for n in tax.nodes:
+        for d in tax.descendants(n):
+            D[ix[n], ix[d]] = True
+    return D
+
+
+def distill_gate(Y: np.ndarray, M: np.ndarray, D: np.ndarray, teacher_p: np.ndarray | None = None,
+                 quantile: float = 0.0) -> np.ndarray:
+    """Hierarchy gate for soft distillation (anchor plan F2): entry (i, k) is distilled iff node k
+    is unobserved for clip i and a strict descendant of an observed-positive node of clip i.
+    Observed entries (hard labels, incl. propagated negatives) are never distilled. With
+    `quantile` > 0, additionally require teacher_p[i, k] >= the per-node quantile of the
+    teacher's probabilities over the hierarchy-gated clips of that node."""
+    under_pos = ((Y & M).astype(np.int32) @ D.astype(np.int32)) > 0
+    g = under_pos & ~M
+    if quantile > 0:
+        assert teacher_p is not None
+        for k in range(g.shape[1]):
+            col = g[:, k]
+            if col.any():
+                tau = np.quantile(teacher_p[col, k], quantile)
+                g[:, k] &= teacher_p[:, k] >= tau
+    return g
+
+
+def distill_loss(z, t, g, T: float):
+    """Soft-target BCE between student logits z and teacher logits t on gated entries g
+    (Hinton temperature form for sigmoids): mean over gated entries, scaled by T^2."""
+    import torch
+    n = g.sum()
+    if float(n) == 0.0:
+        return z.sum() * 0.0
+    return torch.nn.functional.binary_cross_entropy_with_logits(
+        z / T, torch.sigmoid(t / T), weight=g, reduction="sum") / n * (T * T)
 
 
 def make_model(n_out: int, cfg: ScratchConfig):
@@ -177,13 +223,53 @@ def _val_map(y, s, m) -> float:
     return float(mac.value) if mac.value is not None else 0.0
 
 
+class _Batcher:
+    """Builds one training batch: random crops of the real rows i (+ `n_replay` fresh random
+    synthetic clips with their own labels), SpecAugment/gain, teacher logits and distillation
+    gate (zeros for replay rows). Module-level so it can be unit-tested."""
+
+    def __init__(self, X, Yt, Mt, cfg, rng, Tl=None, Gt=None, replay=None, n_replay=0):
+        self.X, self.Yt, self.Mt, self.cfg, self.rng = X, Yt, Mt, cfg, rng
+        self.Tl, self.Gt, self.replay, self.n_replay = Tl, Gt, replay, n_replay
+        self.K = Yt.shape[1]
+
+    def crops(self, Xsrc, rows):
+        st = self.rng.integers(0, Xsrc.shape[2] - self.cfg.crop_frames + 1, size=len(rows))
+        return np.stack([Xsrc[j, :, s0:s0 + self.cfg.crop_frames] for j, s0 in zip(rows, st)]).astype(np.float32)
+
+    def make(self, i):
+        import torch
+        xb = self.crops(self.X, i)
+        yb, mb = self.Yt[i], self.Mt[i]
+        tb = self.Tl[i] if self.Tl is not None else torch.zeros(len(i), self.K)
+        gb = self.Gt[i] if self.Gt is not None else torch.zeros(len(i), self.K)
+        if self.n_replay:
+            Xr, Yrt, Mrt = self.replay
+            jr = self.rng.integers(0, len(Xr), size=self.n_replay)
+            xb = np.concatenate([xb, self.crops(Xr, jr)])
+            yb, mb = torch.cat([yb, Yrt[jr]]), torch.cat([mb, Mrt[jr]])
+            z = torch.zeros(self.n_replay, self.K)
+            tb, gb = torch.cat([tb, z]), torch.cat([gb, z])
+        xb = torch.from_numpy(xb)
+        if self.cfg.gain_db > 0:
+            xb = _gain(xb, self.rng, self.cfg.gain_db)
+        return _spec_augment(xb, self.rng), yb, mb, tb, gb
+
+
 def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.ndarray,
           Mv: np.ndarray, cfg: ScratchConfig, device: str | None = None, log=print,
-          init_state: dict | None = None, diag: dict | None = None):
+          init_state: dict | None = None, diag: dict | None = None,
+          distill: tuple | None = None, replay: tuple | None = None):
     """`init_state` (a saved model's state dict) starts from those weights instead of a
     random init: the triangle's fine-tune corner. Same architecture required.
     `diag`, if given, is filled with per-run diagnostics (anchor plan: epoch-1 grad-norm /
-    weight-norm ratios per block, relative weight change from the start, best epoch)."""
+    weight-norm ratios per block, relative weight change from the start, best epoch).
+    Anchor plan Phase 2:
+    `distill` = (teacher_logits (N, K) float32, gate (N, K) bool) aligned to X; adds
+    cfg.distill_lambda x soft BCE on gated entries (see `distill_gate`).
+    `replay` = (Xr, Yr, Mr): round(cfg.replay_frac x batch_size) fresh random synthetic clips
+    are appended to every batch with their own labels (no distillation on them).
+    cfg.lp_epochs > 0 first trains the head alone (trunk and all BN statistics frozen)."""
     import torch
     import torch.nn as nn
 
@@ -210,6 +296,66 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
 
     Yt = torch.from_numpy(Y.astype(np.float32)); Mt = torch.from_numpy(Mk.astype(np.float32))
     pw = (((1 - Yt) * Mt).sum(0) / (Yt * Mt).sum(0).clamp_min(1)).clamp(1, cfg.max_pos_weight).to(dev)
+    K = Y.shape[1]
+    if distill is not None:
+        Tl = torch.from_numpy(np.asarray(distill[0], dtype=np.float32))
+        Gt = torch.from_numpy(np.asarray(distill[1], dtype=np.float32))
+    n_replay = int(round(cfg.replay_frac * cfg.batch_size)) if replay is not None else 0
+    if n_replay:
+        Xr, Yr, Mr = replay
+        Yrt = torch.from_numpy(np.asarray(Yr, dtype=np.float32)); Mrt = torch.from_numpy(np.asarray(Mr, dtype=np.float32))
+
+    batcher = _Batcher(X, Yt, Mt, cfg, rng, Tl if distill is not None else None, Gt if distill is not None else None,
+                       (Xr, Yrt, Mrt) if n_replay else None, n_replay)
+
+    def make_batch(i):
+        return tuple(t.to(dev) for t in batcher.make(i))
+
+    def bce(z, yb, mb):
+        return torch.nn.functional.binary_cross_entropy_with_logits(
+            z, yb, weight=mb, pos_weight=pw, reduction="sum") / mb.sum().clamp_min(1)
+
+    frozen_rows = list(cfg.frozen_rows)
+    with torch.no_grad():
+        w_frozen = model.head.weight[frozen_rows].clone()
+        b_frozen = model.head.bias[frozen_rows].clone()
+
+    def restore_frozen_rows():
+        if frozen_rows:
+            with torch.no_grad():
+                model.head.weight[frozen_rows] = w_frozen
+                model.head.bias[frozen_rows] = b_frozen
+
+    lp_info = None
+    if cfg.lp_epochs > 0:                               # LP-FT (Kumar et al. 2022): head first
+        trunk = [p for n, p in model.named_parameters() if not n.startswith("head.")]
+        was = [p.requires_grad for p in trunk]
+        for p in trunk:
+            p.requires_grad_(False)
+        lp_opt = torch.optim.AdamW(model.head.parameters(), lr=cfg.lp_lr, weight_decay=cfg.weight_decay)
+        lp_hist = []
+        for ep in range(cfg.lp_epochs):
+            model.train()
+            for m in all_bn:                            # trunk frozen => its statistics too
+                m.eval()
+            t0, tot = time.time(), 0.0
+            order = rng.permutation(len(X))
+            for k in range(0, len(X), cfg.batch_size):
+                i = order[k:k + cfg.batch_size]
+                xb, yb, mb, _, _ = make_batch(i)
+                loss = bce(model(xb), yb, mb)
+                lp_opt.zero_grad(); loss.backward(); lp_opt.step()
+                restore_frozen_rows()
+                tot += float(loss.detach()) * len(i)
+            v = _val_map(Yv, predict(model, Xv, dev), Mv)
+            lp_hist.append({"epoch": ep, "train_loss": tot / len(X), "val_map": v, "sec": round(time.time() - t0, 1)})
+            log(f"lp-epoch {ep} loss {tot / len(X):.4f} val_mAP {v:.4f} ({time.time() - t0:.0f}s)")
+        for p, w in zip(trunk, was):
+            p.requires_grad_(w)
+        after_lp = {k: t.detach().cpu().clone() for k, t in model.state_dict().items()}
+        lp_info = {"epochs": cfg.lp_epochs, "lr": cfg.lp_lr, "hist": lp_hist,
+                   "weight_change_after_lp": relative_weight_change(start_state, after_lp)}
+
     head_lr = cfg.head_lr or cfg.lr
     groups = [{"params": [p for n, p in model.named_parameters() if not n.startswith("head.") and p.requires_grad],
                "lr": cfg.lr},
@@ -222,10 +368,6 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
         sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: flat_decay_factor(s, steps, cfg.flat_fraction))
     else:
         raise ValueError(f"unknown schedule {cfg.schedule!r}")
-    frozen_rows = list(cfg.frozen_rows)
-    with torch.no_grad():
-        w_frozen = model.head.weight[frozen_rows].clone()
-        b_frozen = model.head.bias[frozen_rows].clone()
 
     named = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
     rgn: dict[str, list[float]] = {}
@@ -234,20 +376,17 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
         model.train()
         for m in bn_eval:
             m.eval()
-        t0, tot = time.time(), 0.0
+        t0, tot, tot_d = time.time(), 0.0, 0.0
         order = rng.permutation(len(X))
         for k in range(0, len(X), cfg.batch_size):
             i = order[k:k + cfg.batch_size]
-            st = rng.integers(0, X.shape[2] - cfg.crop_frames + 1, size=len(i))
-            xb = np.stack([X[j, :, s:s + cfg.crop_frames] for j, s in zip(i, st)]).astype(np.float32)
-            xb = torch.from_numpy(xb)
-            if cfg.gain_db > 0:
-                xb = _gain(xb, rng, cfg.gain_db)
-            xb = _spec_augment(xb, rng).to(dev)
+            xb, yb, mb, tb, gb = make_batch(i)
             z = model(xb)
-            yb, mb = Yt[i].to(dev), Mt[i].to(dev)
-            loss = torch.nn.functional.binary_cross_entropy_with_logits(
-                z, yb, weight=mb, pos_weight=pw, reduction="sum") / mb.sum().clamp_min(1)
+            loss = bce(z, yb, mb)
+            if distill is not None and cfg.distill_lambda > 0:
+                d = distill_loss(z, tb, gb, cfg.distill_T)
+                loss = loss + cfg.distill_lambda * d
+                tot_d += float(d.detach()) * len(i)
             opt.zero_grad(); loss.backward()
             if ep == 0:                                 # Auto-RGN style: which tensors want to move
                 with torch.no_grad():
@@ -255,14 +394,12 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
                         if p.grad is not None:
                             rgn.setdefault(n, []).append(float(p.grad.norm() / (p.norm() + 1e-12)))
             opt.step(); sched.step()
-            if frozen_rows:
-                with torch.no_grad():
-                    model.head.weight[frozen_rows] = w_frozen
-                    model.head.bias[frozen_rows] = b_frozen
+            restore_frozen_rows()
             tot += float(loss.detach()) * len(i)
         sv = predict(model, Xv, dev)
         v = _val_map(Yv, sv, Mv)
-        hist.append({"epoch": ep, "train_loss": tot / len(X), "val_map": v, "sec": round(time.time() - t0, 1)})
+        hist.append({"epoch": ep, "train_loss": tot / len(X), "val_map": v, "sec": round(time.time() - t0, 1),
+                     **({"distill_loss": tot_d / len(X)} if distill is not None else {})})
         log(f"epoch {ep} loss {tot / len(X):.4f} val_mAP {v:.4f} ({time.time() - t0:.0f}s)")
         if v > best + 1e-4:
             best, bad, best_ep = v, 0, ep
@@ -283,17 +420,24 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
                      "train_loss_at_best": hist[best_ep]["train_loss"] if best_ep >= 0 else None,
                      "n_trainable": int(sum(p.numel() for p in model.parameters() if p.requires_grad)),
                      "frozen_rows": len(frozen_rows), "freeze_blocks": list(cfg.freeze_blocks),
-                     "freeze_bn_stats": cfg.freeze_bn_stats})
+                     "freeze_bn_stats": cfg.freeze_bn_stats,
+                     "distill": None if distill is None else
+                     {"lambda": cfg.distill_lambda, "T": cfg.distill_T,
+                      "gate_density": float(np.asarray(distill[1]).mean()),
+                      "gated_entries_per_clip": float(np.asarray(distill[1]).sum(1).mean())},
+                     "replay_per_batch": n_replay, "lp": lp_info})
     return model, hist
 
 
-def predict(model, X: np.ndarray, dev: str, batch: int = 64) -> np.ndarray:
+def predict(model, X: np.ndarray, dev: str, batch: int = 64, logits: bool = False) -> np.ndarray:
+    """Sigmoid probabilities (default) or raw logits, (N, K)."""
     import torch
     model.eval()
     out = []
     with torch.no_grad():
         for k in range(0, len(X), batch):
-            out.append(torch.sigmoid(model(torch.from_numpy(X[k:k + batch].astype(np.float32)).to(dev))).cpu().numpy())
+            z = model(torch.from_numpy(np.asarray(X[k:k + batch]).astype(np.float32)).to(dev))
+            out.append((z if logits else torch.sigmoid(z)).cpu().numpy())
     return np.concatenate(out)
 
 

@@ -249,6 +249,7 @@ def cmd_scratch(a) -> int:
             rows, y, m = rows[np.sort(keep)], y[np.sort(keep)], m[np.sort(keep)]
         return _Rows(X, rows), y, m
 
+    xy_syn = xy
     if a.train_source == "openmic":
         # Triangle corners 2/3 (docs/debriefs/triangle-plan.md): real OpenMIC train clips
         # only, early stopping on an artist-disjoint val carve-out of OpenMIC train.
@@ -302,14 +303,34 @@ def cmd_scratch(a) -> int:
         extra["patience"] = a.patience
     cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db, schedule=a.schedule,
                           head_lr=a.head_lr, freeze_bn_stats=a.freeze_bn_stats, frozen_rows=frozen_rows,
-                          freeze_blocks=tuple(int(b) for b in a.freeze_blocks.split(",") if b), **extra)
+                          freeze_blocks=tuple(int(b) for b in a.freeze_blocks.split(",") if b),
+                          distill_lambda=a.distill_lambda, distill_T=a.distill_T, replay_frac=a.replay_frac,
+                          lp_epochs=a.lp_epochs, lp_lr=a.lp_lr, **extra)
     init = None
     if a.init_from:                                   # triangle corner 3: fine-tune
         import torch
         init = torch.load(a.init_from, map_location="cpu", weights_only=False)["state"]
-    diag: dict = {}
-    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg, init_state=init, diag=diag)
     from .embed import _device
+    # Anchor plan Phase 2 anchors (docs/debriefs/anchor-plan.md): replay source and teacher.
+    replay = distill = None
+    anchors: dict = {}
+    if a.replay_frac > 0:
+        if a.train_source != "openmic":
+            raise SystemExit("--replay-frac is for --train-source openmic (synthetic clips replayed into real batches)")
+        replay = xy_syn("train")                      # full synthetic train set, fresh random clips per batch
+        anchors["replay"] = {"frac": a.replay_frac, "n_source": len(replay[0]), "mel_prefix": a.mel_prefix}
+    if a.distill_from:
+        teacher = S.load_model(a.distill_from, len(tax), _device())
+        tl = S.predict(teacher, X, _device(), logits=True)   # cached once, full clips, no augmentation
+        gate = S.distill_gate(Y, Mk, S.descendant_matrix(tax), 1 / (1 + np.exp(-tl)), a.distill_quantile)
+        distill = (tl, gate)
+        anchors["distill"] = {"teacher": str(a.distill_from), "lambda": a.distill_lambda, "T": a.distill_T,
+                              "quantile": a.distill_quantile, "gate_density": float(gate.mean()),
+                              "gated_entries_per_clip": float(gate.sum(1).mean()),
+                              "clips_with_any_gate": float(gate.any(1).mean())}
+        print(f"distillation gate: {gate.sum(1).mean():.1f} entries/clip, {gate.any(1).mean():.0%} of clips")
+    diag: dict = {}
+    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg, init_state=init, diag=diag, distill=distill, replay=replay)
     # Selection metrics for the anchor plan: OpenMIC-val subsets and synthetic-val leaf AP.
     vm: dict = {}
     sv = tax.max_propagate(S.predict(model, Xv, _device()))
@@ -333,7 +354,8 @@ def cmd_scratch(a) -> int:
             "recipe": {"lr": cfg.lr, "head_lr": cfg.head_lr, "schedule": cfg.schedule,
                        "weight_decay": cfg.weight_decay, "patience": cfg.patience, "epochs": cfg.epochs,
                        "freeze_bn_stats": cfg.freeze_bn_stats, "frozen_rows": len(frozen_rows),
-                       "freeze_blocks": list(cfg.freeze_blocks), "mask_nodes": a.mask_nodes},
+                       "freeze_blocks": list(cfg.freeze_blocks), "mask_nodes": a.mask_nodes,
+                       "lp_epochs": cfg.lp_epochs, "lp_lr": cfg.lp_lr, "anchors": anchors},
             "val_metrics": vm, "diag": diag,
             "best_val_map": max(h["val_map"] for h in hist), "epochs_run": len(hist),
             "cotrain": cot}
@@ -722,6 +744,15 @@ def main(argv: list[str] | None = None) -> int:
     sc.add_argument("--freeze-blocks", default="", help="conv blocks to freeze, e.g. '3,4'")
     sc.add_argument("--mask-nodes", default="none", choices=("none", "untrained11"),
                     help="drop these nodes from the training loss (D4 distortion test)")
+    sc.add_argument("--distill-from", type=Path, help="anchor F2: teacher checkpoint (same-seed c1)")
+    sc.add_argument("--distill-lambda", type=float, default=0.0, help="weight of the gated distillation term")
+    sc.add_argument("--distill-T", type=float, default=2.0)
+    sc.add_argument("--distill-quantile", type=float, default=0.0,
+                    help="per-node teacher-probability quantile below which gated entries are dropped (0 = hierarchy gate only)")
+    sc.add_argument("--replay-frac", type=float, default=0.0,
+                    help="anchor F3: synthetic train clips ADDED per batch, as a fraction of the batch size")
+    sc.add_argument("--lp-epochs", type=int, default=0, help="anchor F5 LP-FT: head-only epochs first")
+    sc.add_argument("--lp-lr", type=float, default=1e-3)
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)
