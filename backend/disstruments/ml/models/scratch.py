@@ -85,6 +85,41 @@ class ScratchConfig:
     # Renders are loudness-normalised, so without it the model learns a level prior
     # (served model: MoisesDB AP fell steadily from +3 dB to -6 dB).
     gain_db: float = 0.0
+    # Anchor plan Phase 1 (docs/debriefs/anchor-plan.md): fine-tune recipe controls.
+    schedule: str = "onecycle"            # "onecycle" | "flat-decay" (no re-warm: flat, then linear to 0)
+    flat_fraction: float = 0.7            # flat-decay: fraction of steps at the full LR
+    head_lr: float = 0.0                  # 0 = same as lr; else the head gets its own LR
+    freeze_bn_stats: bool = False         # BN running mean/var frozen (affine still trains)
+    frozen_rows: tuple[int, ...] = ()     # head rows held at their initial values
+    freeze_blocks: tuple[int, ...] = ()   # conv blocks (1-based) excluded from training
+
+
+def flat_decay_factor(step: int, total: int, flat_fraction: float) -> float:
+    """LR multiplier: 1 for the first `flat_fraction` of steps, then linear to 0."""
+    flat = int(total * flat_fraction)
+    if step < flat:
+        return 1.0
+    return max(0.0, 1.0 - (step - flat) / max(1, total - flat))
+
+
+def block_of(key: str) -> str:
+    """State-dict key -> parameter group name: body.<i>.* has 7 modules per conv block."""
+    if key.startswith("body."):
+        return f"block{int(key.split('.')[1]) // 7 + 1}"
+    return key.split(".")[0]
+
+
+def relative_weight_change(s_from: dict, s_to: dict) -> dict[str, float]:
+    """||theta_to - theta_from|| / ||theta_from|| per block (float params only, no running stats)."""
+    import torch
+    acc: dict[str, list[float]] = {}
+    for k, t0 in s_from.items():
+        if not torch.is_floating_point(t0) or "running" in k:
+            continue
+        d = acc.setdefault(block_of(k), [0.0, 0.0])
+        d[0] += float(((s_to[k].float() - t0.float()) ** 2).sum())
+        d[1] += float((t0.float() ** 2).sum())
+    return {g: (v[0] ** 0.5) / (v[1] ** 0.5 + 1e-12) for g, v in acc.items()}
 
 
 def make_model(n_out: int, cfg: ScratchConfig):
@@ -144,10 +179,13 @@ def _val_map(y, s, m) -> float:
 
 def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.ndarray,
           Mv: np.ndarray, cfg: ScratchConfig, device: str | None = None, log=print,
-          init_state: dict | None = None):
+          init_state: dict | None = None, diag: dict | None = None):
     """`init_state` (a saved model's state dict) starts from those weights instead of a
-    random init: the triangle's fine-tune corner. Same architecture required."""
+    random init: the triangle's fine-tune corner. Same architecture required.
+    `diag`, if given, is filled with per-run diagnostics (anchor plan: epoch-1 grad-norm /
+    weight-norm ratios per block, relative weight change from the start, best epoch)."""
     import torch
+    import torch.nn as nn
 
     from .embed import _device
     dev = device or _device()
@@ -157,14 +195,45 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
     if init_state is not None:
         model.load_state_dict(init_state)
     model = model.to(dev)
+    start_state = {k: t.detach().cpu().clone() for k, t in model.state_dict().items()}
+
+    # Frozen conv blocks: no gradient, and their BN statistics never update.
+    frozen_bn: list[nn.Module] = []
+    for b in cfg.freeze_blocks:
+        for mod in list(model.body)[7 * (b - 1): 7 * b]:
+            for p in mod.parameters():
+                p.requires_grad_(False)
+            if isinstance(mod, nn.BatchNorm2d):
+                frozen_bn.append(mod)
+    all_bn = [m for m in model.modules() if isinstance(m, nn.BatchNorm2d)]
+    bn_eval = all_bn if cfg.freeze_bn_stats else frozen_bn
+
     Yt = torch.from_numpy(Y.astype(np.float32)); Mt = torch.from_numpy(Mk.astype(np.float32))
     pw = (((1 - Yt) * Mt).sum(0) / (Yt * Mt).sum(0).clamp_min(1)).clamp(1, cfg.max_pos_weight).to(dev)
-    opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
+    head_lr = cfg.head_lr or cfg.lr
+    groups = [{"params": [p for n, p in model.named_parameters() if not n.startswith("head.") and p.requires_grad],
+               "lr": cfg.lr},
+              {"params": list(model.head.parameters()), "lr": head_lr}]
+    opt = torch.optim.AdamW(groups, lr=cfg.lr, weight_decay=cfg.weight_decay)
     steps = cfg.epochs * int(np.ceil(len(X) / cfg.batch_size))
-    sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=cfg.lr, total_steps=steps, pct_start=0.1)
-    best, best_state, bad, hist = -1.0, None, 0, []
+    if cfg.schedule == "onecycle":
+        sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=[cfg.lr, head_lr], total_steps=steps, pct_start=0.1)
+    elif cfg.schedule == "flat-decay":
+        sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: flat_decay_factor(s, steps, cfg.flat_fraction))
+    else:
+        raise ValueError(f"unknown schedule {cfg.schedule!r}")
+    frozen_rows = list(cfg.frozen_rows)
+    with torch.no_grad():
+        w_frozen = model.head.weight[frozen_rows].clone()
+        b_frozen = model.head.bias[frozen_rows].clone()
+
+    named = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
+    rgn: dict[str, list[float]] = {}
+    best, best_state, best_ep, bad, hist = -1.0, None, -1, 0, []
     for ep in range(cfg.epochs):
         model.train()
+        for m in bn_eval:
+            m.eval()
         t0, tot = time.time(), 0.0
         order = rng.permutation(len(X))
         for k in range(0, len(X), cfg.batch_size):
@@ -179,20 +248,42 @@ def train(X: np.ndarray, Y: np.ndarray, Mk: np.ndarray, Xv: np.ndarray, Yv: np.n
             yb, mb = Yt[i].to(dev), Mt[i].to(dev)
             loss = torch.nn.functional.binary_cross_entropy_with_logits(
                 z, yb, weight=mb, pos_weight=pw, reduction="sum") / mb.sum().clamp_min(1)
-            opt.zero_grad(); loss.backward(); opt.step(); sched.step()
+            opt.zero_grad(); loss.backward()
+            if ep == 0:                                 # Auto-RGN style: which tensors want to move
+                with torch.no_grad():
+                    for n, p in named:
+                        if p.grad is not None:
+                            rgn.setdefault(n, []).append(float(p.grad.norm() / (p.norm() + 1e-12)))
+            opt.step(); sched.step()
+            if frozen_rows:
+                with torch.no_grad():
+                    model.head.weight[frozen_rows] = w_frozen
+                    model.head.bias[frozen_rows] = b_frozen
             tot += float(loss.detach()) * len(i)
         sv = predict(model, Xv, dev)
         v = _val_map(Yv, sv, Mv)
         hist.append({"epoch": ep, "train_loss": tot / len(X), "val_map": v, "sec": round(time.time() - t0, 1)})
         log(f"epoch {ep} loss {tot / len(X):.4f} val_mAP {v:.4f} ({time.time() - t0:.0f}s)")
         if v > best + 1e-4:
-            best, bad = v, 0
+            best, bad, best_ep = v, 0, ep
             best_state = {k: t.detach().cpu().clone() for k, t in model.state_dict().items()}
         else:
             bad += 1
             if bad >= cfg.patience:
                 break
     model.load_state_dict(best_state)
+    if diag is not None:
+        per_block: dict[str, list[float]] = {}
+        for n, vals in rgn.items():
+            per_block.setdefault(block_of(n), []).append(float(np.mean(vals)))
+        diag.update({"rgn_epoch1": {g: float(np.mean(v)) for g, v in per_block.items()},
+                     "relative_weight_change": relative_weight_change(start_state, best_state),
+                     "lr_groups": [cfg.lr, head_lr], "schedule": cfg.schedule,
+                     "best_epoch": best_ep, "epochs_run": len(hist),
+                     "train_loss_at_best": hist[best_ep]["train_loss"] if best_ep >= 0 else None,
+                     "n_trainable": int(sum(p.numel() for p in model.parameters() if p.requires_grad)),
+                     "frozen_rows": len(frozen_rows), "freeze_blocks": list(cfg.freeze_blocks),
+                     "freeze_bn_stats": cfg.freeze_bn_stats})
     return model, hist
 
 
@@ -214,7 +305,9 @@ def load_model(path: Path, n_out: int, device: str):
     import torch
     ck = torch.load(path, map_location="cpu", weights_only=False)
     c = dict(ck["cfg"])
-    c["channels"] = tuple(c["channels"])
+    for key in ("channels", "frozen_rows", "freeze_blocks"):
+        if key in c:
+            c[key] = tuple(c[key])
     cfg = ScratchConfig(**c)
     model = make_model(n_out, cfg)
     model.load_state_dict(ck["state"])

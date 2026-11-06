@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 
 from ..datasets import load_dataset
+from ..datasets.openmic import class_to_node
 from ..eval.harness import label_items, label_matrices
 from ..eval.predictions import save_predictions
 from ..taxonomy import Taxonomy
@@ -283,18 +284,57 @@ def cmd_scratch(a) -> int:
         cot = {"dataset": "openmic", "split": "train", "licence": a.cotrain_licence,
                "n": len(keep)}
         print(f"co-training with {len(keep)} OpenMIC train clips (licence={a.cotrain_licence})")
-    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db,
-                          **({"lr": a.lr} if a.lr else {}))
+    # Anchor plan Phase 1 recipe controls (docs/debriefs/anchor-plan.md).
+    from .anchor import node_sets, subset_map
+    sets = node_sets(tax)
+    om_nodes = set(class_to_node(tax).values())
+    frozen_rows: tuple[int, ...] = ()
+    if a.freeze_leaf_rows:                             # leaves no real label can reach stay put
+        ix = tax.index()
+        frozen_rows = tuple(ix[n] for n in tax.leaves() if n not in om_nodes)
+    if a.mask_nodes == "untrained11":                  # D4: drop the random head rows from the loss
+        Mk = Mk.copy()
+        Mk[:, sets["untrained11"]] = False
+    extra = {"lr": a.lr} if a.lr else {}
+    if a.weight_decay is not None:
+        extra["weight_decay"] = a.weight_decay
+    if a.patience is not None:
+        extra["patience"] = a.patience
+    cfg = S.ScratchConfig(seed=a.seed, epochs=a.epochs, gain_db=a.gain_db, schedule=a.schedule,
+                          head_lr=a.head_lr, freeze_bn_stats=a.freeze_bn_stats, frozen_rows=frozen_rows,
+                          freeze_blocks=tuple(int(b) for b in a.freeze_blocks.split(",") if b), **extra)
     init = None
     if a.init_from:                                   # triangle corner 3: fine-tune
         import torch
         init = torch.load(a.init_from, map_location="cpu", weights_only=False)["state"]
-    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg, init_state=init)
+    diag: dict = {}
+    model, hist = S.train(X, Y, Mk, Xv, Yv, Mv, cfg, init_state=init, diag=diag)
+    from .embed import _device
+    # Selection metrics for the anchor plan: OpenMIC-val subsets and synthetic-val leaf AP.
+    vm: dict = {}
+    sv = tax.max_propagate(S.predict(model, Xv, _device()))
+    if a.train_source == "openmic":
+        vm.update({f"openmic_val_{k}": subset_map(Yv, sv, Mv, sets[k]) for k in ("trained9", "all20", "untrained11")})
+        try:
+            from .anchor import synthetic_split
+            Xs, ys, ms = synthetic_split(a.cache, a.train_root, tax, "val")
+            ss = tax.max_propagate(S.predict(model, Xs.materialize(), _device()))
+            vm["synthetic_val_leaf"] = subset_map(ys, ss, ms, sets["leaf"])
+        except FileNotFoundError as e:
+            print(f"synthetic val leaf AP skipped: {e}")
+    else:
+        vm["synthetic_val_leaf"] = subset_map(Yv, sv, Mv, sets["leaf"])
+    print("val metrics:", {k: round(v, 4) for k, v in vm.items() if v is not None})
     meta = {"model": "scratch_cnn", "n_params": S.n_params(model), "backbone": None,
             "backbone_license": "none (random init)", "commercial_clean": a.commercial_only,
             "train": {"dataset": a.train_source, "n_train": len(X), "n_val": len(Xv),
                       "commercial_only": a.commercial_only, "train_limit": a.train_limit,
                       "init_from": str(a.init_from) if a.init_from else None},
+            "recipe": {"lr": cfg.lr, "head_lr": cfg.head_lr, "schedule": cfg.schedule,
+                       "weight_decay": cfg.weight_decay, "patience": cfg.patience, "epochs": cfg.epochs,
+                       "freeze_bn_stats": cfg.freeze_bn_stats, "frozen_rows": len(frozen_rows),
+                       "freeze_blocks": list(cfg.freeze_blocks), "mask_nodes": a.mask_nodes},
+            "val_metrics": vm, "diag": diag,
             "best_val_map": max(h["val_map"] for h in hist), "epochs_run": len(hist),
             "cotrain": cot}
     a.out.mkdir(parents=True, exist_ok=True)
@@ -671,6 +711,17 @@ def main(argv: list[str] | None = None) -> int:
                      help="--train-source openmic: artist-disjoint val share of OpenMIC train")
     sc.add_argument("--init-from", type=Path, help="triangle corner 3: start from this checkpoint")
     sc.add_argument("--lr", type=float, default=0.0, help="peak LR override (0 = config default)")
+    # Anchor plan Phase 1 (docs/debriefs/anchor-plan.md) recipe controls.
+    sc.add_argument("--head-lr", type=float, default=0.0, help="separate LR for the head (0 = same as --lr)")
+    sc.add_argument("--schedule", default="onecycle", choices=("onecycle", "flat-decay"))
+    sc.add_argument("--weight-decay", type=float, help="AdamW weight decay override")
+    sc.add_argument("--patience", type=int, help="early-stopping patience override")
+    sc.add_argument("--freeze-bn-stats", action="store_true", help="BN running stats frozen (affine trains)")
+    sc.add_argument("--freeze-leaf-rows", action="store_true",
+                    help="head rows of leaves no OpenMIC class maps to stay at their initial values")
+    sc.add_argument("--freeze-blocks", default="", help="conv blocks to freeze, e.g. '3,4'")
+    sc.add_argument("--mask-nodes", default="none", choices=("none", "untrained11"),
+                    help="drop these nodes from the training loss (D4 distortion test)")
     sc.add_argument("--commercial-only", action="store_true")
     sc.add_argument("--out", required=True, type=Path)
     sc.set_defaults(fn=cmd_scratch)
