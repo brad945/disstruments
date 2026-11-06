@@ -496,7 +496,26 @@ the rules (>= 0.90 x c1's leaf AP within trained-9 -0.01), so by the plan's tabl
 full-data fine-tune at 2x) becomes essential** in Phase 3. `LP-FT` and `BNFREEZE` go to the final
 scoring with 3 seeds; F2 lambda 0.3 and F3 r 0.1 are scored once at seed 0 as reported arms.
 
-**Seeds 1-2 (F0, F0b, F5): SEEDS_PENDING**
+**Seeds 1-2 (F0, F0b, F5; 10:35 -> 15:47, 37-47 min per fine-tune, no failures).** Means over 3
+seeds (sd in parentheses); paired per-seed differences vs F0 in brackets:
+
+| arm, 3 seeds | trained-9 | all-20 | untrained-11 | leaf AP | refit leaf | WiSE alpha 0.8 all-20 / leaf | best ep | block-1 grad norm ep 1 |
+|---|---|---|---|---|---|---|---|---|
+| F0 `BASE*` | 0.886 (0.007) | 0.782 (0.006) | 0.697 (0.005) | 0.415 (0.043) | 0.784 | 0.770 / 0.584 | 16.3 | 0.182 |
+| F0b `+BNFREEZE` | 0.887 (0.003) [-0.004, +0.004, +0.003] | 0.782 (0.003) [-0.010, +0.006, +0.003] | 0.695 (0.007) [-0.016, +0.007, +0.003] | 0.480 (0.008) [+0.088, +0.086, +0.020] | 0.826 | 0.766 / 0.674 | 18.0 | 0.163 |
+| **F5 `LP-FT`** | 0.883 (0.001) [-0.010, -0.002, +0.001] | **0.801** (0.002) [+0.014, +0.023, +0.020] | **0.735** (0.003) [+0.033, +0.043, +0.036] | **0.559** (0.007) [+0.155, +0.180, +0.095] | **0.852** | 0.791 / 0.709 | 14.3 | 0.065 |
+
+- `LP-FT` beats F0 in every seed on all-20, untrained-11 and leaf AP (the triangle's same-sign
+  rule, on validation); its trained-9 cost is not consistent in sign (-0.010 / -0.002 / +0.001),
+  so there is no evidence of a coarse cost. The first-epoch block-1 gradient norm is 0.061-0.068
+  in every seed vs 0.174-0.197 for F0: the mechanism is stable across seeds.
+- `BNFREEZE` raises leaf AP in every seed (+0.02 to +0.09) with no consistent coarse effect.
+- Seed-to-seed spread of F0's leaf AP is large (0.385-0.464, sd 0.043): seed 2 of the plain
+  fine-tune forgets less by chance. `LP-FT` and `BNFREEZE` both cut that spread to < 0.01, so
+  the anchors also make the outcome predictable.
+- `LP-FT` is the Phase-2 recipe carried forward: into the final scoring (3 seeds), and as the
+  recommended fine-tune for any served model from this line (licence-clean re-run required).
+
 
 **Proposed to Bradley (not run; each is a pre-registration amendment):**
 1. `P2x LP-FT+LWF0.3(+BNFREEZE)`: the two mechanisms are different (head-first vs gated
