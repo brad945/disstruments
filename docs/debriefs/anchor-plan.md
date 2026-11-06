@@ -379,3 +379,39 @@ statistics at any LR and weight displacement at high LR.
   untrained-11 rows distort the trunk, and LP-FT is the published fix). If F0b beats F0 on
   leaf AP at no coarse cost, the anchor arms F1-F3 run on top of BN freeze.
 - Everything else in Phase 2 is unchanged.
+
+### Phase 2 amendments (2026-11-06, written before any Phase-2 run)
+
+Bradley approved adding F0b and F5 ("include it too, whatever aids the training results").
+The rest below are implementation decisions recorded before the first run.
+
+- **F1 `PROP` is already in force and is not run.** The OpenMIC loader
+  (`datasets/openmic.py`) builds `positive = close_upward(positives)` and
+  `negative = close_downward(negatives) - positive - masked`, and marks both as observed. Every
+  triangle and Phase-1 arm therefore already trained with exact upward/downward propagation;
+  F1 is identical to F0 and the "PROP+" prefix in F2-F4 adds nothing. This also sharpens the
+  Phase-0 reading: leaf rows did receive gradients during fine-tuning, as hard negatives under
+  OpenMIC-negative parents, so the leaf loss is not drift alone.
+- **F2 gate = hierarchy gate only (quantile 0).** Distilled entries are the unobserved strict
+  descendants of each clip's observed-positive nodes; observed entries (hard labels, including
+  propagated negatives) are never distilled. The per-leaf quantile is implemented
+  (`--distill-quantile`) but left at 0: with soft targets it would delete the teacher's "low"
+  signal, which belongs to hard pseudo-labelling, not to distillation. Smoke on 64 clips: 6.4
+  gated entries per clip, 67% of clips have a gate.
+- Teacher logits are cached once per run on the full 10 s clips without augmentation; the
+  student sees random 8 s crops with SpecAugment (standard offline distillation). T = 2 with the
+  T^2 gradient scaling; lambda in {0.3, 1, 3} as pre-registered.
+- **Replay appends** round(r x 32) fresh random synthetic train clips to every batch (3 for
+  r = 0.1, 8 for r = 0.25) with their full labels; the 32 real clips per step and the number of
+  steps are unchanged from F0, and the positive weights come from the real labels only.
+- **BN-statistics freeze is crossed with F2 and F3 at seed 0** (arms `F2b`, `F3b`), because
+  Phase 1 showed the statistics shift is a forgetting channel of its own; lambda* and r* are
+  selected over both variants. F0b (`BASE*+BNFREEZE`) is the plain control for that factor.
+- **F5 `LP-FT`**: 3 head-only epochs at a constant 1e-3 (every trunk parameter and all BN
+  statistics frozen), then the F0 recipe (OneCycle 6e-4, 20 epochs, all parameters).
+- Promotion to seeds 1-2: F0 always; F2* and F3* = highest synthetic-val leaf AP subject to
+  OpenMIC-val trained-9 >= F0 - 0.01, among arms that pass G2; F0b, F4, F5 if they pass G2
+  (leaf AP >= F0's and trained-9 >= F0 - 0.02). Arms that fail stay at seed 0 and are reported.
+- Post hoc on every promoted arm x seed: WiSE alpha curve and leaf-head refit, validation only.
+- Budget: 14 seed-0 fine-tunes + up to 12 for seeds 1-2, about 18 h. Script:
+  `~/datasets/disstruments-synth/run_anchor_p2.sh`; outputs `preds/anchor/p2/`.
