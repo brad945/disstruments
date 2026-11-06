@@ -128,6 +128,15 @@ def test_replay_appends_synthetic_clips_with_their_own_labels():
     assert S.predict(m, Xr, "cpu")[:, 3].mean() > S.predict(m0, Xr, "cpu")[:, 3].mean()
 
 
+@pytest.mark.parametrize("channels, expected", [((32, 64, 128, 256), 1.22e6), ((48, 96, 192, 384), 2.7e6),
+                                                ((56, 112, 224, 448), 3.66e6), ((64, 128, 256, 512), 4.8e6)])
+def test_width_arms_have_the_planned_parameter_counts(channels, expected):
+    """Anchor Phase 3: 1x / 1.5x / 1.75x / 2x widths (anchor-plan.md), 86 taxonomy outputs."""
+    m = S.make_model(86, S.ScratchConfig(channels=channels))
+    assert S.n_params(m) == pytest.approx(expected, rel=0.05)
+    assert m.head.in_features == 2 * channels[-1]
+
+
 def test_lp_ft_trains_only_the_head_first_then_everything():
     X, Y, M = _toy()
     base, _, = S.train(X[::2], Y[::2], M[::2], X[1::2], Y[1::2], M[1::2], _cfg(), device="cpu", log=lambda *_: None)
